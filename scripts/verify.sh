@@ -3,12 +3,14 @@
 # 실패해도 끝까지 돌린다. 커밋은 이 명령이 종료 코드 0 일 때만 한다: bash scripts/verify.sh > 로그 && git commit ...
 #
 # 사용: bash scripts/verify.sh            # 전체
-#       bash scripts/verify.sh --quick    # Docker 단계(Python 3.12·3.14 시험·브라우저 스모크)를 뺀다
+#       bash scripts/verify.sh --quick    # 느린 Docker 단계(Python 3.12·3.14 시험·Chromium 두 단계)를 뺀다. Node 단계는 돈다
 #       bash scripts/verify.sh --release  # 설계 문서까지 문서 검사(배포 전)
 # 단계: 0 환경 · 1 시험 3.9 · 2 시험 3.11 · 3 시험 3.12(Docker) · 4 시험 3.14(Docker, DeprecationWarning 은 실패)
 #       · 5 3.9 문법 · 6 커버리지 · 7 문서 · 8 공개 전 점검 · 9 브라우저 점검 정적 검사 · 10 브라우저 스모크(Chromium)
 #       · 11 반입 묶음 재현성·외부 URL 0
-# 문서: docs/P1_요구사항정의서_Probe.md FR-102, docs/P1_테스트결과서_Probe.md 1절
+#       · 12 시험 JS(Node 22, web/core 줄 커버리지 90%) · 13 core JS 정적 검사 · 14 골든 벡터 복사본(MWL 기준 커밋)
+#       · 15 기록 왕복(S3, 실제 파일) · 16 MWL 실데이터 대조(MWL 저장소가 없으면 건너뜀) · 17 렌더러 Chromium(XSS)
+# 문서: docs/P1_요구사항정의서_Probe.md FR-102, docs/P1_테스트결과서_Probe.md 1절, docs/P2_테스트결과서_Core.md 1절
 set -u
 cd "$(dirname "$0")/.." || exit 1
 . scripts/dev_tools.env
@@ -68,6 +70,16 @@ run "8 공개 전 점검" python3 scripts/check_publish_safety.py
 run "9 브라우저 점검 정적 검사" python3 scripts/check_probe_html.py
 if [ $QUICK = 0 ]; then run "10 브라우저 스모크(Chromium)" python3 scripts/browser_smoke.py; else skip "10 브라우저 스모크(Chromium)" "quick"; fi
 run "11 반입 묶음 재현·외부 URL 0" python3 scripts/pack_probe.py --check
+run "12 시험 JS(Node 22)+커버리지" bash scripts/run_js_tests.sh
+run "13 core JS 정적 검사" python3 scripts/check_core_js.py
+run "14 골든 벡터 복사본(MWL)" python3 scripts/import_mwl_fixtures.py --check
+run "15 기록 왕복(S3)" docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD:/w:ro" -w /w "$NODE_IMAGE" node scripts/check_log_roundtrip.js
+if [ -d "${MWL_REPO:-/nonexistent}/.git" ]; then
+  run "16 MWL 실데이터 대조" python3 scripts/check_mwl_real.py
+else
+  skip "16 MWL 실데이터 대조" "MWL 저장소 없음(${MWL_REPO:-})"
+fi
+if [ $QUICK = 0 ]; then run "17 렌더러 Chromium(XSS)" python3 scripts/render_smoke.py; else skip "17 렌더러 Chromium(XSS)" "quick"; fi
 
 echo
 printf '%-30s %-8s %s\n' "단계" "결과" "초"

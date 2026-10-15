@@ -1,0 +1,197 @@
+[
+ {
+  "name": "headings",
+  "md": "# 제목\n## 둘 ##\n###셋 아님\n####### 일곱\n###### 여섯 #\n#   공백   ",
+  "html": "<h1>제목</h1>\n<h2>둘</h2>\n<p>###셋 아님\n####### 일곱</p>\n<h6>여섯</h6>\n<h1>공백</h1>"
+ },
+ {
+  "name": "paragraphs",
+  "md": "  첫 줄  \n둘째 줄\n\n\n셋째 문단",
+  "html": "<p>첫 줄\n둘째 줄</p>\n<p>셋째 문단</p>"
+ },
+ {
+  "name": "inline",
+  "md": "**굵게** *기울임* `코드` ***셋*** a*b*c 한*글*자 *한글* **굵게 *안* 끝** _밑줄_ *열린",
+  "html": "<p><strong>굵게</strong> <em>기울임</em> <code>코드</code> <strong><em>셋</strong></em> a*b*c 한*글*자 <em>한글</em> <strong>굵게 <em>안</em> 끝</strong> _밑줄_ *열린</p>"
+ },
+ {
+  "name": "inline_edge",
+  "md": "** 빈 **, *  *, **a**b**c**, 2*3*4, x **y**z",
+  "html": "<p><strong> 빈 </strong>, <em>  </em>, <strong>a</strong>b<strong>c</strong>, 2*3*4, x <strong>y</strong>z</p>"
+ },
+ {
+  "name": "code_span",
+  "md": "`a < b` 와 c > d & e, `**not bold**`, ``, `a`b`c`",
+  "html": "<p><code>a &lt; b</code> 와 c &gt; d &amp; e, <code>**not bold**</code>, `<code>, </code>a<code>b</code>c`</p>"
+ },
+ {
+  "name": "escape_text",
+  "md": "<script>x</script> &amp; <img src=x onerror=alert(1)> \"따옴표\" 'apos'",
+  "html": "<p>&lt;script&gt;x&lt;/script&gt; &amp;amp; &lt;img src=x onerror=alert(1)&gt; \"따옴표\" 'apos'</p>"
+ },
+ {
+  "name": "fence",
+  "md": "```bash\necho <hi>\n  **x**\n```\n\n```\nplain\n```\n\n``` js extra\nz\n```",
+  "html": "<pre><code class=\"language-bash\">echo &lt;hi&gt;\n  **x**\n</code></pre>\n<pre><code>plain\n</code></pre>\n<pre><code class=\"language-js extra\">z\n</code></pre>"
+ },
+ {
+  "name": "fence_unclosed",
+  "md": "```xml\n<a/>\n끝 없음",
+  "html": "<pre><code class=\"language-xml\">&lt;a/&gt;\n끝 없음\n</code></pre>"
+ },
+ {
+  "name": "fence_indented",
+  "md": "   ```python\n   x = 1\n   ```",
+  "html": "<pre><code class=\"language-python\">   x = 1\n</code></pre>"
+ },
+ {
+  "name": "lists",
+  "md": "- a\n- b\n\n1. a\n2. b\n\n* star\n* two",
+  "html": "<ul>\n<li>a</li>\n<li>b</li>\n</ul>\n<ol>\n<li>a</li>\n<li>b</li>\n</ol>\n<ul>\n<li>star</li>\n<li>two</li>\n</ul>"
+ },
+ {
+  "name": "lists_nested",
+  "md": "- a\n  - a1\n  - a2\n- b\n    - b deep\n- c\n  이어지는 줄\n- d",
+  "html": "<ul>\n<li>a\n<ul>\n<li>a1</li>\n<li>a2</li>\n</ul>\n</li>\n<li>b\n<ul>\n<li>b deep</li>\n</ul>\n</li>\n<li>c 이어지는 줄</li>\n<li>d</li>\n</ul>"
+ },
+ {
+  "name": "lists_mixed",
+  "md": "1. 하나\n- 둘\n2. 셋\n\n- x\n1. y",
+  "html": "<ol>\n<li>하나</li>\n<li>둘</li>\n<li>셋</li>\n</ol>\n<ul>\n<li>x</li>\n<li>y</li>\n</ul>"
+ },
+ {
+  "name": "lists_unicode_digits",
+  "md": "１. 전각\n٢. 아랍\n3. 보통",
+  "html": "<ol>\n<li>전각</li>\n<li>아랍</li>\n<li>보통</li>\n</ol>"
+ },
+ {
+  "name": "list_then_para",
+  "md": "- a\n문단처럼\n\n- b",
+  "html": "<ul>\n<li>a</li>\n</ul>\n<p>문단처럼</p>\n<ul>\n<li>b</li>\n</ul>"
+ },
+ {
+  "name": "table",
+  "md": "| 항목 | 값 |\n|---|---|\n| a | **1** |\n| `x|y` | <b> |\n| 하나만 |",
+  "html": "<table>\n<thead><tr><th>항목</th><th>값</th></tr></thead>\n<tbody>\n<tr><td>a</td><td><strong>1</strong></td></tr>\n<tr><td>`x</td><td>y`</td><td>&lt;b&gt;</td></tr>\n<tr><td>하나만</td></tr>\n</tbody>\n</table>"
+ },
+ {
+  "name": "table_align",
+  "md": "|:--|:-:|--:|\n|---|---|---|\n|l|c|r|\n",
+  "html": "<table>\n<thead><tr><th>:--</th><th>:-:</th><th>--:</th></tr></thead>\n<tbody>\n<tr><td>l</td><td>c</td><td>r</td></tr>\n</tbody>\n</table>"
+ },
+ {
+  "name": "table_no_outer",
+  "md": "a | b\n--- | ---\n1 | 2",
+  "html": "<p>a | b\n--- | ---\n1 | 2</p>"
+ },
+ {
+  "name": "not_table",
+  "md": "| 그냥 파이프\n다음 줄",
+  "html": "<p>| 그냥 파이프\n다음 줄</p>"
+ },
+ {
+  "name": "quote",
+  "md": "> 답: 정답\n> 둘째\n>셋째\n\n> > 겹침\n> - 목록",
+  "html": "<blockquote><p>답: 정답\n둘째\n셋째</p></blockquote>\n<blockquote><blockquote><p>겹침</p></blockquote>\n<ul>\n<li>목록</li>\n</ul></blockquote>"
+ },
+ {
+  "name": "hr",
+  "md": "---\n----\n--- \n- - -",
+  "html": "<hr>\n<hr>\n<hr>\n<ul>\n<li>- -</li>\n</ul>"
+ },
+ {
+  "name": "links",
+  "md": "[링크](https://x.example/z) [h](http://a.example) [앵커](#절-하나) [**굵은 링크**](https://b.example) 앞[붙음](https://c.example)뒤",
+  "html": "<p><a href=\"https://x.example/z\">링크</a> <a href=\"http://a.example\">h</a> <a href=\"#절-하나\">앵커</a> <a href=\"https://b.example\"><strong>굵은 링크</strong></a> 앞<a href=\"https://c.example\">붙음</a>뒤</p>"
+ },
+ {
+  "name": "links_text",
+  "md": "[여러 단어 링크](https://x.example/a_b) 그리고 [괄호](https://x.example/(a)) [빈]() [](https://x.example)",
+  "html": "<p><a href=\"https://x.example/a_b\">여러 단어 링크</a> 그리고 <a href=\"https://x.example/(a\">괄호</a>) [빈]() [](https://x.example)</p>"
+ },
+ {
+  "name": "unsupported",
+  "md": "~~취소~~ 그리고 ==강조== 와 <u>밑줄</u>",
+  "html": "<p>~~취소~~ 그리고 ==강조== 와 &lt;u&gt;밑줄&lt;/u&gt;</p>"
+ },
+ {
+  "name": "crlf",
+  "md": "# 제목\r\n문단\r\n\r\n- a\r\n- b\r\n",
+  "html": "<h1>제목</h1>\n<p>문단</p>\n<ul>\n<li>a</li>\n<li>b</li>\n</ul>"
+ },
+ {
+  "name": "cr_only",
+  "md": "# 제목\r문단\r둘째",
+  "html": "<h1>제목</h1>\n<p>문단\n둘째</p>"
+ },
+ {
+  "name": "unicode_ws",
+  "md": "　들여쓴 줄\n 앞 공백\n- 항목　\n문단다음 또 끝\f폼\u001c분리\u000b세로",
+  "html": "<p>들여쓴 줄\n앞 공백</p>\n<ul>\n<li>항목</li>\n</ul>\n<p>문단\n다음\n또\n끝\n폼\n분리\n세로</p>"
+ },
+ {
+  "name": "unicode_ws_list",
+  "md": "　- 전각 공백 목록\n  - 하위?",
+  "html": "<ul>\n<li>전각 공백 목록\n<ul>\n<li>하위?</li>\n</ul>\n</li>\n</ul>"
+ },
+ {
+  "name": "heading_ws",
+  "md": "#　전각 공백 제목\n## nbsp 제목",
+  "html": "<h1>전각 공백 제목</h1>\n<h2>nbsp 제목</h2>"
+ },
+ {
+  "name": "empty",
+  "md": "",
+  "html": ""
+ },
+ {
+  "name": "spaces_only",
+  "md": "   \n\t\n",
+  "html": ""
+ },
+ {
+  "name": "mixed_doc",
+  "md": "## 결론 먼저\n한 줄.\n\n- 항목\n\n```xml\n<a/>\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |\n",
+  "html": "<h2>결론 먼저</h2>\n<p>한 줄.</p>\n<ul>\n<li>항목</li>\n</ul>\n<pre><code class=\"language-xml\">&lt;a/&gt;\n</code></pre>\n<table>\n<thead><tr><th>a</th><th>b</th></tr></thead>\n<tbody>\n<tr><td>1</td><td>2</td></tr>\n</tbody>\n</table>"
+ },
+ {
+  "name": "refs_plain",
+  "md": "선수 강의는 `A1-1` 과 `B2-10`, 아닌 것 `X1-1` `A1`.",
+  "html": "<p>선수 강의는 <code>A1-1</code> 과 <code>B2-10</code>, 아닌 것 <code>X1-1</code> <code>A1</code>.</p>"
+ },
+ {
+  "name": "lesson_like",
+  "md": "## 스스로 확인\n\n1. 질문 1?\n\n> 답: 답 1\n\n1. 질문 2?\n\n> 답: `A2-1` 참고 — **굵게**\n",
+  "html": "<h2>스스로 확인</h2>\n<ol>\n<li>질문 1?</li>\n</ol>\n<blockquote><p>답: 답 1</p></blockquote>\n<ol>\n<li>질문 2?</li>\n</ol>\n<blockquote><p>답: <code>A2-1</code> 참고 — <strong>굵게</strong></p></blockquote>"
+ },
+ {
+  "name": "nbsp_bold",
+  "md": "**a b** *c d*",
+  "html": "<p><strong>a b</strong> <em>c d</em></p>"
+ },
+ {
+  "name": "emoji",
+  "md": "😀 *별* **😀**",
+  "html": "<p>😀 <em>별</em> <strong>😀</strong></p>"
+ },
+ {
+  "name": "trailing_hashes",
+  "md": "## 제목 ### \n# #\n#",
+  "html": "<h2>제목</h2>\n<h1></h1>\n<p>#</p>"
+ },
+ {
+  "name": "quote_empty",
+  "md": ">\n> \n>a",
+  "html": "<blockquote><p>a</p></blockquote>"
+ },
+ {
+  "name": "list_marker_only",
+  "md": "-\n- \n1.\n",
+  "html": "<p>-</p>\n<ul>\n<li></li>\n</ul>\n<p>1.</p>"
+ },
+ {
+  "name": "star_list_vs_italic",
+  "md": "* 항목 *기울임*\n*기울임 문단*",
+  "html": "<ul>\n<li>항목 <em>기울임</em></li>\n</ul>\n<p><em>기울임 문단</em></p>"
+ }
+]

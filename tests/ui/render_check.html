@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>렌더러 점검 — XSS 사례·classic script(시험 전용)</title>
+<!-- 실제 Chromium 으로 web/core/*.js 를 file:// 에서 classic script 로 싣고, XSS 사례 모음(tests/fixtures/xss_cases.js)을 innerHTML 로 넣는다.
+     CSP 를 일부러 두지 않는다 — 렌더러 출력만으로 안전한지 본다. 결과는 #selftest 의 JSON, 끝나면 <body data-done="1">.
+     트리거: scripts/render_smoke.py(tests/ui/cdp.js). 문서: docs/P2_설계서_Core.md 3.6절, FR-201·253 -->
+<script src="../../web/core/constants.js"></script>
+<script src="../../web/core/dates.js"></script>
+<script src="../../web/core/hash.js"></script>
+<script src="../../web/core/srs.js"></script>
+<script src="../../web/core/grade.js"></script>
+<script src="../../web/core/course.js"></script>
+<script src="../../web/core/log.js"></script>
+<script src="../../web/core/replay.js"></script>
+<script src="../../web/core/plan.js"></script>
+<script src="../../web/core/mastery.js"></script>
+<script src="../../web/core/stats.js"></script>
+<script src="../../web/core/markdown.js"></script>
+<script src="../../web/core/mwl_import.js"></script>
+<script src="../fixtures/xss_cases.js"></script>
+</head>
+<body>
+<h1>렌더러 점검</h1>
+<pre id="selftest"></pre>
+<div id="out"></div>
+<script>
+(function () {
+  'use strict';
+  window.__xss = 0;
+  var ML = window.MyLearner, res = { classic: Object.keys(ML || {}).length, cases: 0, problems: [], xss: null, parity: null, scripts: 0 };
+  var IMG = 'data:image/png;base64,iVBORw0KGgo=';
+  var OPTS = { badRef: { lessonRef: function () { return 'javascript:window.__xss=1'; } }, badImage: { image: function () { return 'javascript:window.__xss=1'; } },
+    goodImage: { image: function () { return IMG; } } };
+  var ALLOW = { H1: [], H2: [], H3: [], H4: [], H5: [], H6: [], P: [], STRONG: [], EM: [], CODE: ['class'], PRE: [], BLOCKQUOTE: [], UL: [], OL: [], LI: [],
+    TABLE: [], THEAD: [], TBODY: [], TR: [], TH: [], TD: [], HR: [], A: ['href', 'class'], IMG: ['src', 'alt'], SPAN: ['class'] };
+  function check(root, name) {
+    root.querySelectorAll('*').forEach(function (el) {
+      if (!ALLOW.hasOwnProperty(el.tagName)) res.problems.push(name + ': 태그 ' + el.tagName);
+      Array.prototype.forEach.call(el.attributes, function (a) {
+        if ((ALLOW[el.tagName] || []).indexOf(a.name) < 0) res.problems.push(name + ': 속성 ' + el.tagName + '.' + a.name);
+      });
+      if (el.tagName === 'A' && el.hasAttribute('href')) {
+        var h = el.getAttribute('href');
+        if (!(h.charAt(0) === '#' || el.protocol === 'http:' || el.protocol === 'https:')) res.problems.push(name + ': href ' + el.protocol);
+      }
+      if (el.tagName === 'IMG' && !/^data:image\/(png|jpeg|gif|webp);base64,/.test(el.getAttribute('src') || '')) res.problems.push(name + ': src');
+    });
+  }
+  try {
+    var box = document.getElementById('out');
+    window.XSS_CASES.forEach(function (c) {
+      var div = document.createElement('div');
+      div.innerHTML = ML.markdown.render(c.md, OPTS[c.opts] || { lessonRef: function (id) { return '#/learn/mwl/' + id; } });
+      box.appendChild(div);
+      res.cases += 1;
+      check(div, c.name);
+    });
+    if (location.hash === '#control') {   // 대조군: 렌더러를 거치지 않은 날것의 HTML — 이 점검이 실행을 잡는지 본다
+      var raw = document.createElement('div');
+      raw.innerHTML = '<img src="x" onerror="window.__xss=1"><a href="javascript:void(0)">x</a>';
+      box.appendChild(raw);
+      check(raw, 'control');
+    }
+    // 이벤트 처리기가 숨어 있다면 깨운다(클릭은 하지 않는다 — 링크가 페이지를 떠나지 않게)
+    box.querySelectorAll('*').forEach(function (el) {
+      ['mouseover', 'mouseenter', 'focus', 'error', 'load', 'animationstart'].forEach(function (t) { el.dispatchEvent(new Event(t)); });
+    });
+    res.scripts = document.querySelectorAll('script').length;
+    res.parity = ML.markdown.render('# 제목\n\n- `A1-1` **굵게** 한*글*\n\n１. 전각', { lessonRef: function (id) { return '#/learn/mwl/' + id; } });
+  } catch (e) {
+    res.problems.push('예외: ' + e.message);
+  }
+  setTimeout(function () {
+    res.xss = window.__xss;
+    document.getElementById('selftest').textContent = JSON.stringify(res);
+    document.body.dataset.done = '1';
+  }, 800);
+})();
+</script>
+</body>
+</html>

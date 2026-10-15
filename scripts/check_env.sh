@@ -43,10 +43,16 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   else
     ng "이미지 $PY314_IMAGE 이 없다(약 180MB). docker pull $PY314_IMAGE"
   fi
+  if docker image inspect "$NODE_IMAGE" >/dev/null 2>&1; then
+    ok "이미지 $NODE_IMAGE (JS 시험 - quick 에서도 쓴다)"
+  else
+    ng "이미지 $NODE_IMAGE 이 없다(약 60MB). docker pull $NODE_IMAGE"
+  fi
+  if [ -d "${MWL_REPO:-/nonexistent}/.git" ]; then ok "MWL 저장소(읽기만) - 골든 벡터·실데이터 대조"; else note "MWL 저장소가 없다 - 실데이터 대조는 건너뛴다"; fi
 elif [ $QUICK = 1 ]; then
   note "docker 를 쓸 수 없다 - quick 이라 넘어간다"
 else
-  ng "docker 를 쓸 수 없다(브라우저 스모크·Python 3.12·3.14 시험에 필요)"
+  ng "docker 를 쓸 수 없다(JS 시험·브라우저 스모크·Python 3.12·3.14 시험에 필요)"
 fi
 free_kb=$(df -Pk . | awk 'NR==2 {print $4}')
 if [ "${free_kb:-0}" -ge 2097152 ]; then
