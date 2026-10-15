@@ -32,7 +32,7 @@
 
 ## 4. 다음 단계
 
-0. `impl-phase1` 브랜치 push — 사용자가 승인했으나(2026-10-15) 비용 보고를 먼저 하라는 지시로 멈춤. 사용자가 진행을 말하면 `git log --oneline origin/main..HEAD` 확인 → `git push -u origin impl-phase1` → `git ls-remote origin` 으로 확인
+0. ~~`impl-phase1` 브랜치 push~~ → 2026-10-15 사용자 승인으로 올림(커밋 7개, `main` 은 그대로). 이 뒤 커밋도 Phase 1 끝까지 같은 브랜치에 올릴지는 그때 묻는다(CLAUDE.md 1절 8단계)
 1. 사용자: [`docs/P1_체크리스트_Probe.md`](../docs/P1_체크리스트_Probe.md)(GitHub 브랜치 `impl-phase1` 에서도 보인다) 대로 `dist/mylearner-probe-v1.tgz`(sha256 앞 8글자 `9193c63e`)를 반입해 폐쇄망에서 두 도구를 돌리고, 결과 코드 줄(`e`, `s…`, `s…m…`, `b` 두 줄)과 피드백 칸을 전한다. 오전 판 묶음(`8c046ecb…`)은 쓰지 않는다
 2. 결과 코드를 받으면: `python3 tools/ai_probe.py --decode "<줄>" …` → 테스트결과서 10절, CLAUDE.md 1절 보류 결정 7 을 닫고, scope 13절 '확인할 사실'을 고친다. 체크리스트 피드백(MWL 을 여는 방식 등)은 테스트결과서나 P2 인터뷰결과서로 옮긴다. `e=!p` 가 있으면 3절 둘째 줄대로 사용자와 정한다
 3. Phase 1 끝: 사용자가 병합을 요청하면 종료 루틴(CLAUDE.md 1절 9단계 — 전체 검증 → history → 커밋 → `merge --no-ff` → push). `impl-phase1` 은 이미 origin 에 있으니 push 는 `main` 과 브랜치 둘 다 한다
