@@ -13,7 +13,7 @@
 - 사용자가 GitHub `main` 에서 체크리스트를 찾지 못했다 — push 하지 않았기 때문(지난 보고에 "push 안 함"만 쓰고 GitHub 에서 못 본다는 것을 알리지 않음). 사용자 결정: ① `impl-phase1` 브랜치만 push(`main` 병합은 Phase 1 끝) ② 체크리스트는 묶음에 넣지 않는다 — 인터넷 PC·폰에서 GitHub 로 보며 따라 한다(묶음 `9193c63e` 그대로). push 전에 공개 전 점검 규칙으로 올라갈 커밋 4개의 파일 판 68개·커밋 메시지까지 훑어 0건. CLAUDE.md 1절 8단계에 '체크리스트를 알릴 때 브랜치 push 여부를 함께 묻는다', README 상태 줄, 체크리스트 0절에 GitHub 주소
 - 사용자 지시: 작업 전·후 보고에 누적 비용($)을 적고 refresh 요청 전까지 누적한다 → `scripts/usage_cost.py`(Claude Code 가 세션마다 남기는 cost-state = `/cost` 값 + 진행 중 세션 나머지 추정)·`scripts/usage_prices.json`(가격 페이지 2026-10-15 확인: Opus 5.5 입력 $4·1시간 캐시 쓰기 $8·캐시 읽기 $0.20·출력 $20, Sonnet 5.5 $2·$4·$0.10·$10)·`history/usage_ledger.json`, 시험 11건(`tests/integration/py/test_usage_cost.py`, 먼저 써서 실패 확인), CLAUDE.md 11절 '비용 보고'. 응답 기록의 usage 는 서브에이전트 출력 토큰이 스트리밍 중간 값으로 남아(1,576 대 cost-state 249,587) 그대로 더하면 모자란다 — cost-state 를 기준으로 삼았다
 - 17시: 사용자가 GitHub 에서 받는 곳을 물음 → 체크리스트 0절에 '나. GitHub `tools/` 에서 세 파일'(`ai_probe.py`·`browser_probe.html` 은 묶음 안 것과 바이트가 같고 `README_KO.txt` 는 BOM 만 다름, `certutil` 해시 앞자리 — 문서와 도구가 어긋나면 `test_verify_tools.py` 가 잡는다). 사용자 승인으로 브랜치 다시 push
-- 처음 받은 결과 코드(`b`, `g=h`): 검사합 맞음, Chrome 155 — 풀이와 걸리는 점은 P1 테스트결과서 10절
+- 처음 받은 결과 코드(`b`, `g=h`): 검사합 맞음, Chrome 155. 사용자 답으로 인터넷 PC 시험이었고 `r`·`s` 는 뜻 없는 값 — 폐쇄망 결과는 아직(P1 테스트결과서 10절)
 - effort: 16:05(KST) `/model` 뒤 응답부터 기록이 `max` → `xhigh` 로 바뀌었다(이 세션 133개 중 마지막 24개). 그전에는 `~/.bashrc` 의 환경 변수 때문에 `/effort xhigh` 가 안 먹었다. `/model` 화면이 effort 도 바꾼 것으로 보이나 원인은 확인하지 않았다
 
 ## 2. 최종 검증
@@ -35,7 +35,7 @@
 ## 4. 다음 단계
 
 0. ~~`impl-phase1` 브랜치 push~~ → 2026-10-15 사용자 승인으로 올림(커밋 7개, `main` 은 그대로). 이 뒤 커밋도 Phase 1 끝까지 같은 브랜치에 올릴지는 그때 묻는다(CLAUDE.md 1절 8단계)
-1. 사용자에게 물은 것(17시 보고): ① 받은 `b` 줄이 어느 PC 인가 — Chrome 155 는 폐쇄망 Chrome 150 과 다르다 ② `r=nn` 이 http 페이지(포트 8770)에서 크롬을 모두 닫았다 다시 연 뒤 누른 것인가 — 그렇다면 '닫으면 지움' 정책일 수 있어 보류 결정 7 에 크다 ③ `s=n` 은 http 페이지에서 `file://` 전용 단추를 눌러 생긴 값 — `browser_probe.html` 이 http 에서 그 단추를 막도록 고칠지(묶음 해시가 바뀐다)
+1. ~~사용자에게 물은 것(17시 보고) — 받은 `b` 줄의 PC, `r=nn`, `s=n`~~ → 2026-10-15 사용자 답: 인터넷 PC 시험, 크롬을 다시 열지 않고 누름, 도구는 고치지 않고 `g=h` 줄의 `s` 는 무시(P1 테스트결과서 10절)
 1-1. 사용자: [`docs/P1_체크리스트_Probe.md`](../docs/P1_체크리스트_Probe.md)(GitHub 브랜치 `impl-phase1` 에서도 보인다) 대로 `dist/mylearner-probe-v1.tgz`(sha256 앞 8글자 `9193c63e`)를 반입해 폐쇄망에서 두 도구를 돌리고, 결과 코드 줄(`e`, `s…`, `s…m…`, `b` 두 줄 — `b`(http) 한 줄은 받음)과 피드백 칸을 전한다. 오전 판 묶음(`8c046ecb…`)은 쓰지 않는다
-2. 결과 코드를 받으면: `python3 tools/ai_probe.py --decode "<줄>" …` → 테스트결과서 10절, CLAUDE.md 1절 보류 결정 7 을 닫고, scope 13절 '확인할 사실'을 고친다. 체크리스트 피드백(MWL 을 여는 방식 등)은 테스트결과서나 P2 인터뷰결과서로 옮긴다. `e=!p` 가 있으면 3절 둘째 줄대로 사용자와 정한다
+2. 결과 코드를 받으면: `python3 tools/ai_probe.py --decode "<줄>" …` → 테스트결과서 10절(`g=h` 줄의 `s` 는 무시, `r` 은 크롬을 다시 연 뒤 누른 것만 — 10절), CLAUDE.md 1절 보류 결정 7 을 닫고, scope 13절 '확인할 사실'을 고친다. 체크리스트 피드백(MWL 을 여는 방식 등)은 테스트결과서나 P2 인터뷰결과서로 옮긴다. `e=!p` 가 있으면 3절 둘째 줄대로 사용자와 정한다
 3. Phase 1 끝: 사용자가 병합을 요청하면 종료 루틴(CLAUDE.md 1절 9단계 — 전체 검증 → history → 커밋 → `merge --no-ff` → push). `impl-phase1` 은 이미 origin 에 있으니 push 는 `main` 과 브랜치 둘 다 한다
