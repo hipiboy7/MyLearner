@@ -33,6 +33,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import warnings
 import webbrowser
 from pathlib import Path
 
@@ -49,6 +50,9 @@ HUGE_MAX_TOKENS = 10000000
 SERVE_PORT = 8770                                     # MWL 서버(8765)와 다르게
 SERVE_BODY_LIMIT = 8 * 1024 * 1024
 RESULT_LIMIT = 2048
+MAX_LINE, MAX_TOKEN = 600, 64                          # 결과 코드 한 줄·한 칸의 최대 길이(--decode 가 큰 입력에 멈추지 않게)
+MAX_COUNT = 10 ** 9                                   # 토큰 수·문맥 길이로 믿는 최대값
+SECRET_WINDOW = 8                                     # 비밀값의 영문·숫자가 이만큼 이어져 보이면 가린다
 SMALL_Q = "1부터 40까지의 정수 가운데 3의 배수이면서 4의 배수가 아닌 수는 모두 몇 개인가? 숫자만 답하라."
 JSON_Q = "사과 3개와 배 4개가 있다. 과일은 모두 몇 개인가? answer 에 정수, unit 에 단위를 넣은 JSON 으로만 답하라."
 RESP_Q = "2 더하기 3 은? 숫자만 답하라."
@@ -76,7 +80,8 @@ ERR = {
     "!a": "인증 필요 또는 거부(401, 403)", "!n": "없음(404)", "!l": "길이 초과(400, 413)", "!4": "요청 거부(4xx)",
     "!5": "서버 오류(5xx)", "!h": "HTML 답(게이트웨이 화면)", "!j": "JSON 아님 또는 모양이 다름",
     "!q": "호출 상한에 걸려 하지 않음", "!s": "멈춤 또는 앞 단계 실패로 건너뜀", "-": "해당 없음 또는 하지 않음",
-    "?": "판정 못 함",
+    "!p": "키를 보내지 않음(http 주소가 프록시를 거치고, 프록시 없이는 닿지 않음)",
+    "!e": "예상하지 못한 오류(화면에 오류 이름만 찍음)", "?": "판정 못 함 또는 가림",
 }
 
 
@@ -125,7 +130,7 @@ def model_short(model_id) -> str:
 def make_line(tag, fields, name=None) -> str:
     parts = [str(tag).lower()]
     if name is not None:
-        parts.append(model_short(name))
+        parts.append("?" if name == "?" else model_short(name))   # '?' = 주소·키처럼 보여 가린 이름
     parts += ["%s=%s" % (k, _value(v)) for k, v in fields]
     content = " ".join(parts)
     return content + " /" + checksum(content)
@@ -134,6 +139,8 @@ def make_line(tag, fields, name=None) -> str:
 def parse_line(text) -> dict:
     """결과 코드 한 줄을 읽는다. 모양이 틀리면 ValueError, 검사합이 틀리면 ok=False."""
     s = canonical(text)
+    if len(s) > MAX_LINE:
+        raise ValueError("줄이 너무 깁니다")
     if " /" not in s:
         raise ValueError("끝의 검사합(/두 글자)이 없습니다")
     content, got = s.rsplit(" /", 1)
@@ -141,6 +148,8 @@ def parse_line(text) -> dict:
     if not re.fullmatch(r"[0-9a-z]{2}", got):
         raise ValueError("검사합은 두 글자입니다")
     tokens = content.split()
+    if any(len(t) > MAX_TOKEN for t in tokens):
+        raise ValueError("칸이 너무 깁니다")
     if not tokens or not _TAG_RE.match(tokens[0]):
         raise ValueError("줄 머리(e, s1, s1m1, b)를 알 수 없습니다")
     tag, rest, name = tokens[0], tokens[1:], None
@@ -272,12 +281,14 @@ SPECS = {
           ("q", "프록시 설정", {"n": "없음", "e": "환경 변수", "r": "Windows 레지스트리", "b": "환경 변수와 레지스트리"}),
           ("a", "PAC(자동 구성 스크립트)", {"y": "있음 - Python 은 PAC 를 읽지 못한다(크롬과 경로가 다를 수 있다)", "n": "없음"}),
           ("s", "점검한 서버 수", None)],
-    "s": [("k", "서버 종류", _kind_meaning), ("h", "Server 헤더", {"-": "없음"}), ("n", "목록의 모델 수", None),
+    "s": [("k", "서버 종류", _kind_meaning),
+          ("h", "Server 헤더", {"-": "없음", "?": "제품 이름 모양이 아니라 뺐다(호스트, 주소 등)"}), ("n", "목록의 모델 수", None),
           ("m", "시험한 모델 수", None),
           ("a", "키 필요", {"y": "필요(키 없이 401, 403)", "n": "필요 없음(키 없이 200)"}),
           ("x", "CORS(file:// 에서 직접, 추정)", {"y": "됨", "p": "출처는 되나 Authorization 헤더가 허용 목록에 없음",
                                               "n": "안 됨"}),
-          ("q", "경로", {"d": "프록시 없이", "p": "프록시를 거쳐", "f": "프록시로 안 돼 직접 연결해서 됨"}),
+          ("q", "경로", {"d": "프록시 없이", "p": "프록시를 거쳐", "f": "프록시로 안 돼 직접 연결해서 됨",
+                       "k": "http 주소에 프록시가 걸려, 키를 보내기 전에 직접 연결로 바꿈"}),
           ("l", "전송", {"h": "http(암호화 없음)", "s": "https(인증서 검증됨)", "i": "https(검증 없이, --insecure)"}),
           ("d", "리다이렉트", {"n": "없음", "s": "같은 호스트", "o": "다른 호스트(키를 보내지 않았다)",
                           "t": "https 로(주소를 https 로 바꿔 다시)"}),
@@ -376,16 +387,27 @@ def normalize_base(text):
         s = "http://" + s
     if any(ch.isspace() for ch in s):
         raise ValueError("주소에 빈칸이 있습니다")
-    u = urllib.parse.urlsplit(s)
+    # 오류 글에 입력한 주소를 되풀이하지 않는다 - urllib 의 ValueError 는 주소를 그대로 싣는다(독립 점검 F-06)
+    try:
+        u = urllib.parse.urlsplit(s)
+        host = u.hostname
+    except ValueError:
+        raise ValueError("주소 모양이 올바르지 않습니다(대괄호, 쓸 수 없는 글자)") from None
     scheme = u.scheme.lower()
     if scheme not in ("http", "https"):
         raise ValueError("주소는 http:// 또는 https:// 로 시작해야 합니다")
     try:
         u.port
     except ValueError:
-        raise ValueError("포트가 숫자가 아닙니다") from None
-    if not u.netloc or not u.hostname:
+        raise ValueError("포트가 올바르지 않습니다(0~65535 의 숫자)") from None
+    if "@" in u.netloc:   # 사용자:비밀번호@ 는 프록시로 가는 요청 줄과 Host 에 실린다(독립 점검 F-05)
+        raise ValueError("주소에 사용자 이름이나 비밀번호(@ 앞)를 넣지 않습니다 - 키는 따로 묻습니다")
+    if not u.netloc or not host:
         raise ValueError("호스트가 없습니다")
+    if not host.isascii():
+        raise ValueError("호스트 이름은 영문, 숫자, 점, 하이픈으로 적습니다")
+    if any(len(part) > 63 for part in host.split(".")):
+        raise ValueError("호스트 이름의 한 칸(점 사이)이 63자를 넘습니다")
     path = u.path.rstrip("/")
     for suffix in ("/chat/completions", "/completions", "/responses", "/models"):
         if path.lower().endswith(suffix):
@@ -417,6 +439,9 @@ def secrets_of(url, key=""):
 
 
 _IPV4 = re.compile(r"(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])")
+_IPV6 = re.compile(r"(?i)(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}")
+_HOSTLIKE = re.compile(r"(?i)[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*\.[a-z]"
+                       r"|[a-z0-9]\.(?:local|localdomain|localhost|internal|intranet|intra|corp|lan|home|private)(?![a-z0-9])")
 
 
 def redact(text, secret_values) -> str:
@@ -427,21 +452,80 @@ def redact(text, secret_values) -> str:
     return _IPV4.sub("<IP>", s)
 
 
+def _skeleton(text) -> str:
+    return re.sub(r"[^0-9a-z]", "", str(text).lower())
+
+
+def leaks(text, secret_values) -> bool:
+    """글에 주소(IPv4, IPv6, 호스트 이름 꼴)나 비밀값이 보이는가. 잘리거나 글자가 바뀐 것도 본다 -
+    비밀값의 영문·숫자가 SECRET_WINDOW 글자 이어져 보이면 참(독립 점검 F-03)."""
+    s = str(text)
+    if _IPV4.search(s) or _IPV6.search(s) or _HOSTLIKE.search(s):
+        return True
+    low, sk = s.lower(), _skeleton(s)
+    for sec in secret_values or ():
+        if not sec:
+            continue
+        if sec.lower() in low:
+            return True
+        ss = _skeleton(sec)
+        if len(ss) < 4:            # ':80' 같은 짧은 조각은 판 숫자와 겹친다
+            continue
+        w = min(len(ss), SECRET_WINDOW)
+        if any(ss[i:i + w] in sk for i in range(len(ss) - w + 1)):
+            return True
+    return False
+
+
 def scrub(value, secret_values):
-    """결과 코드에 들어갈 자유 글(서버 헤더, 판, 모델 이름)에 주소, 키, IP 가 있으면 '?' 로 바꾼다."""
+    """결과 코드와 화면에 쓰는 자유 글(서버 헤더, 판, 모델 이름)이 주소·키처럼 보이면 '?' 로 바꾼다."""
     if value is None:
         return None
-    s = str(value)
-    low = s.lower()
-    if _IPV4.search(s) or any(sec and sec.lower() in low for sec in secret_values):
+    return "?" if leaks(value, secret_values) else value
+
+
+def model_label(model_id, secret_values=()) -> str:
+    """모델 이름 - 마지막 경로 조각. 조각이 주소·키처럼 보이면 '?'(줄이기 전 글자로도 본다)."""
+    raw = str(model_id or "").strip().rstrip("/").rsplit("/", 1)[-1]
+    if leaks(raw, secret_values):
         return "?"
-    return value
+    return scrub(model_short(raw), secret_values)
+
+
+def clean_key(text):
+    """입력한 키 -> 보낼 키. 앞뒤 빈칸과 앞의 'Bearer ' 를 뗀다. 비면 '', 헤더에 실을 수 없는 글자
+    (한글, 빈칸, 줄바꿈 등)가 있으면 None."""
+    s = str(text or "").strip()
+    if s[:7].lower() == "bearer ":
+        s = s[7:].strip()
+    if not s:
+        return ""
+    return s if re.fullmatch(r"[\x21-\x7e]{1,4096}", s) else None
+
+
+def auth_challenge(status, headers, body) -> str:
+    """401·403 이 API 의 JSON 답인가('json'), 프록시·게이트웨이 화면 같은 그 밖의 것인가('page'). 다른 상태는 ''.
+    키는 'json' 일 때만 보낸다 - HTML, 글, 빈 본문, BOM 붙은 화면은 API 답이 아니라고 본다(독립 점검 F-01)."""
+    if status not in (401, 403):
+        return ""
+    ctype = str((headers or {}).get("content-type", "")).lower()
+    if "html" in ctype or "xml" in ctype:
+        return "page"
+    try:
+        data = json.loads(bytes(body or b"").decode("utf-8-sig"))
+    except (UnicodeDecodeError, ValueError, RecursionError):
+        return "page"
+    return "json" if isinstance(data, dict) else "page"
 
 
 def classify_redirect(src, location) -> str:
-    old = urllib.parse.urlsplit(src)
-    new = urllib.parse.urlsplit(urllib.parse.urljoin(src, location or ""))
-    if (new.hostname or "") != (old.hostname or ""):
+    try:
+        old = urllib.parse.urlsplit(src)
+        new = urllib.parse.urlsplit(urllib.parse.urljoin(src, location or ""))
+        new_host = new.hostname or ""
+    except ValueError:   # 읽을 수 없는 Location(닫히지 않은 IPv6 대괄호 등)은 다른 곳으로 본다(독립 점검 O-1)
+        return "o"
+    if new_host != (old.hostname or ""):
         return "o"
     if old.scheme == "http" and new.scheme == "https":
         return "t"
@@ -469,15 +553,16 @@ def pac_flag(reg) -> str:
 
 
 def proxy_applies(url, proxies, bypass) -> bool:
+    """urllib 가 이 주소에 프록시를 쓰는가. urllib 는 ALL_PROXY('all')를 쓰지 않는다(독립 점검 F-02)."""
     u = urllib.parse.urlsplit(url)
-    proxy = (proxies or {}).get(u.scheme) or (proxies or {}).get("all")
+    proxy = (proxies or {}).get(u.scheme)
     if not proxy:
         return False
     return not bypass(u.netloc)
 
 
 def _posint(v):
-    return v if isinstance(v, int) and not isinstance(v, bool) and v > 0 else None
+    return v if isinstance(v, int) and not isinstance(v, bool) and 0 < v < MAX_COUNT else None
 
 
 def ctx_from_model_entry(d):
@@ -500,11 +585,12 @@ def ctx_from_tokenize(d):
     return (count, _posint(d.get("max_model_len")))
 
 
+_NUM = r"(\d{1,10})(?!\d)"    # 숫자는 10자리까지만 읽는다(아주 긴 숫자에서 int() 가 멈추지 않게)
 _CTX_PATTERNS = [
-    re.compile(r"maximum context length is (\d+)", re.I),
-    re.compile(r"max(?:imum)?[_ ]model[_ ]len(?:gth)?\D{0,20}?(\d+)", re.I),
-    re.compile(r"must be <= (\d+)", re.I),
-    re.compile(r"context (?:length|window|size) (?:of|is) (\d+)", re.I),
+    re.compile(r"maximum context length is " + _NUM, re.I),
+    re.compile(r"max(?:imum)?[_ ]model[_ ]len(?:gth)?\D{0,20}?" + _NUM, re.I),
+    re.compile(r"must be <= " + _NUM, re.I),
+    re.compile(r"context (?:length|window|size) (?:of|is) " + _NUM, re.I),
 ]
 
 
@@ -529,16 +615,36 @@ def ctx_from_ollama_show(d):
     win = None
     params = d.get("parameters")
     if isinstance(params, str):
-        m = re.search(r"(?m)^\s*num_ctx\s+(\d+)", params)
+        m = re.search(r"(?m)^\s*num_ctx\s+" + _NUM, params)
         if m:
-            win = int(m.group(1))
+            win = _posint(int(m.group(1)))
     return (ctx, win)
 
 
+_VERSION = re.compile(r"v?(\d{1,4}(?:\.\d{1,4}){1,2}(?:\.?(?:dev|rc|post|a|b)\d{0,6})?)")
+_SERVER_TOKEN = re.compile(r"[a-z][a-z_-]{1,23}(?:/[0-9][0-9a-z.+_-]{0,15})?")
+
+
 def _ver(d):
-    if isinstance(d, dict) and isinstance(d.get("version"), str) and d["version"].strip():
-        return _value(d["version"])[:16]
-    return None
+    """판 글 -> 숫자 모양의 앞부분('0.10.2rc2')만. 그 밖의 글은 싣지 않는다(독립 점검 F-03)."""
+    if not (isinstance(d, dict) and isinstance(d.get("version"), str)):
+        return None
+    raw = d["version"].strip().lower()
+    if _IPV4.search(raw):
+        return None
+    m = _VERSION.match(raw)
+    return m.group(1) if m else None
+
+
+def _server_token(header) -> str:
+    """Server 헤더의 첫 낱말이 '제품/판' 모양(nginx/1.24.0, uvicorn)일 때만 싣는다. 숫자·점이 든 이름
+    (호스트 이름, IP)이나 이상한 글자는 '?'."""
+    if header is None or not str(header).strip():
+        return "-"
+    first = str(header).split()[0].lower()
+    if _IPV4.search(first) or not _SERVER_TOKEN.fullmatch(first):
+        return "?"
+    return first
 
 
 def server_kind(models, version, api_version, server_header):
@@ -554,10 +660,7 @@ def server_kind(models, version, api_version, server_header):
         kind = "v/" + v
     else:
         kind = "-"
-    h = "-"
-    if server_header and str(server_header).strip():
-        h = _value(str(server_header).split()[0])[:24]
-    return kind, h
+    return kind, _server_token(server_header)
 
 
 def _acao_ok(h) -> bool:
@@ -654,8 +757,8 @@ def usage_of(data):
     MWL mwl/agent/aiserver.py usage_of 를 옮겼다(기준 커밋 e053470)."""
     u = data.get("usage") if isinstance(data, dict) and isinstance(data.get("usage"), dict) else {}
 
-    def num(v):
-        return v if isinstance(v, int) and not isinstance(v, bool) else None
+    def num(v):   # 터무니없이 큰 수(10**400 등)는 버린다 - 나눗셈에서 OverflowError 가 난다(독립 점검 O-1)
+        return v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v < MAX_COUNT else None
 
     det = u.get("output_tokens_details") if isinstance(u.get("output_tokens_details"), dict) else (
         u.get("completion_tokens_details") if isinstance(u.get("completion_tokens_details"), dict) else None)
@@ -812,10 +915,14 @@ class Budget:
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    """리다이렉트를 따르지 않는다 - Python urllib 는 따를 때 Authorization 을 다른 호스트로 넘긴다(BRIEF 5.8)."""
+    """리다이렉트를 따르지 않는다 - Python urllib 는 따를 때 Authorization 을 다른 호스트로 넘긴다(BRIEF 5.8).
+    redirect_request 만 막으면 그 앞에서 Location 을 읽다가 ValueError 가 난다(닫히지 않은 IPv6 대괄호) - 3xx 처리 자체를
+    하지 않고 HTTPError 로 돌려받는다(독립 점검 O-1, 트러블슈팅 T-003)."""
 
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
+    def http_error_302(self, req, fp, code, msg, headers):
         return None
+
+    http_error_301 = http_error_303 = http_error_307 = http_error_308 = http_error_302
 
 
 def make_ssl_context(cafile=None, insecure=False):
@@ -839,13 +946,17 @@ def _read_limited(f) -> bytes:
 
 
 class Client:
-    """서버 하나에 대한 호출. 예외를 밖으로 내지 않고 Resp.error(!...)로 돌려준다."""
+    """서버 하나에 대한 호출. 예외를 밖으로 내지 않고 Resp.error(!...)로 돌려준다.
+    키는 key_on 일 때만 싣는다 - probe_server 가 'JSON 401·403 을 받았고 평문 프록시를 지나지 않는다'를 확인한 뒤
+    켠다(독립 점검 F-01·F-02·F-04)."""
 
     def __init__(self, root, v1, key="", timeout=DEFAULT_TIMEOUT, ssl_ctx=None, budget=None, direct=False):
         self.root, self.v1, self.key, self.timeout = root, v1, key, timeout
         self.ssl_ctx = ssl_ctx or make_ssl_context()
         self.budget = budget or Budget(DEFAULT_MAX_CALLS)
         self.direct = direct
+        self.key_on = False
+        self.secrets = secrets_of(root, key)
 
     def _opener(self):
         handlers = [_NoRedirect(), urllib.request.HTTPSHandler(context=self.ssl_ctx)]
@@ -862,12 +973,12 @@ class Client:
             data = json.dumps(body, ensure_ascii=False).encode("utf-8")
             hdrs["Content-Type"] = "application/json"
         hdrs.update(headers or {})
-        if use_key and self.key:
+        if use_key and self.key and self.key_on:
             hdrs["Authorization"] = "Bearer " + self.key
-        req = urllib.request.Request(url, data=data, method=method, headers=hdrs)
         r = Resp()
         t0 = time.monotonic()
         try:
+            req = urllib.request.Request(url, data=data, method=method, headers=hdrs)
             with self._opener().open(req, timeout=timeout or self.timeout) as f:
                 r.status = f.getcode()
                 r.headers = {k.lower(): v for k, v in f.headers.items()}
@@ -879,6 +990,8 @@ class Client:
                 r.body = _read_limited(e)
             except (OSError, http.client.HTTPException):
                 r.body = b""
+            finally:
+                e.close()
             r.error = status_code(e.code, r.text())
             if 300 <= e.code < 400:
                 r.redirect = classify_redirect(url, r.headers.get("location", ""))
@@ -888,7 +1001,7 @@ class Client:
             r.error = "!t"
         except ssl.SSLError:
             r.error = "!x"
-        except (http.client.HTTPException, OSError):
+        except (http.client.HTTPException, OSError, ValueError):   # ValueError 에는 UnicodeError(IDNA)도 든다
             r.error = "!c"
         r.seconds = time.monotonic() - t0
         if r.status and 200 <= r.status < 300 and want_json and not r.error:
@@ -898,29 +1011,43 @@ class Client:
             else:
                 try:
                     r.data = json.loads(r.body.decode("utf-8"))
-                except (UnicodeDecodeError, ValueError):
+                except (UnicodeDecodeError, ValueError, RecursionError):
                     r.error = "!j"
         return r
 
 
 # ================================================================ B 등급: 입출력과 환경
 class IO:
-    """시험이 바꿔 끼우는 입출력. 화면 글은 모두 safe_text(cp949)를 지난다."""
+    """시험이 바꿔 끼우는 입출력. 화면 글은 모두 safe_text(cp949)를 지나고, 서버 주소와 키를 받은 뒤에는
+    redact 도 지난다(마지막 그물 - 설계서 5절)."""
 
     def __init__(self, ask=None, secret=None, out=None, interactive=None):
         self._ask = ask or input
         self._secret = secret or getpass.getpass
         self._out = out or print
         self.interactive = sys.stdin.isatty() if interactive is None else interactive
+        self.secrets = []
+
+    def add_secrets(self, values):
+        self.secrets = sorted(set(self.secrets) | {v for v in values if v}, key=len, reverse=True)
 
     def ask(self, prompt):
         return self._ask(safe_text(prompt))
 
     def secret(self, prompt):
-        return self._secret(safe_text(prompt))
+        """키 입력. 글자를 가릴 수 없는 창(IDLE 등)이면 getpass 가 경고와 함께 화면에 보이게 받는다 - 그 경우
+        키를 받지 않고 '' 를 돌려준다."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", getpass.GetPassWarning)
+            try:
+                return self._secret(safe_text(prompt))
+            except getpass.GetPassWarning:
+                self.say("이 창에서는 키를 가릴 수 없습니다(IDLE 등). 명령 프롬프트(cmd)에서 다시 실행하세요. "
+                         "이 서버는 키 없이 잽니다.")
+                return ""
 
     def say(self, text=""):
-        self._out(safe_text(text))
+        self._out(safe_text(redact(text, self.secrets) if self.secrets else text))
 
     def pause(self):
         if self.interactive:
@@ -977,14 +1104,22 @@ def _done(io, label, what, r, note=""):
     io.say("  [%s] %s: %s (%.1f초)%s" % (label, what, state, r.seconds, (" " + note) if note else ""))
 
 
-def probe_server(client, io, label, insecure=False):
-    """서버 점검 -> (서버 결과 dict, 모델 목록). 설계서 3.3절 순서."""
-    s = {"kind": "-", "server": "-", "n": 0, "m": 0, "auth": "?", "cors": "?", "route": "d", "tls": "h",
-         "redir": "n", "error": None}
-    if urllib.parse.urlsplit(client.v1).scheme == "https":
+def new_server_result():
+    return {"kind": "-", "server": "-", "n": 0, "m": 0, "auth": "?", "cors": "?", "route": "d", "tls": "h",
+            "redir": "n", "error": None}
+
+
+def probe_server(client, io, label, insecure=False, s=None):
+    """서버 점검 -> (서버 결과 dict, 모델 목록). 설계서 3.3절 순서. s 를 주면 거기에 차례로 채운다(도중에 멈춰도 남는다).
+    키는 키 없이 부른 목록이 JSON 401·403 일 때만, http 주소면 프록시를 지나지 않을 때만 보낸다."""
+    s = new_server_result() if s is None else s
+    plain = urllib.parse.urlsplit(client.v1).scheme == "http"
+    if not plain:
         s["tls"] = "i" if insecure else "s"
     proxied = proxy_applies(client.v1, urllib.request.getproxies(), urllib.request.proxy_bypass)
     s["route"] = "p" if proxied else "d"
+    if proxied and plain:
+        io.say("  [%s] 이 http 주소는 프록시를 거칩니다 - 키는 프록시로 보내지 않습니다" % label)
     models_url = client.v1 + "/models"
     r1 = client.call("GET", models_url, use_key=False, headers={"Origin": "null"})
     _done(io, label, "모델 목록(키 없이)", r1)
@@ -1002,14 +1137,27 @@ def probe_server(client, io, label, insecure=False):
     if r1.error == "!x":
         s["tls"] = "!x"
     listing = r1
-    html_page = "html" in r1.headers.get("content-type", "").lower() or r1.body.lstrip()[:1] == b"<"
-    if r1.status in (401, 403) and html_page:
-        # 프록시·게이트웨이의 차단 화면이다(API 는 JSON 으로 답한다) - 키를 실어 다시 보내지 않는다
+    challenge = auth_challenge(r1.status, r1.headers, r1.body)
+    if challenge == "page":
+        # 프록시·게이트웨이의 차단 화면(HTML, 글, 빈 본문)이다 - API 는 JSON 으로 답한다. 키를 실어 다시 보내지 않는다
         s["error"] = "!h"
         return s, []
-    if r1.status in (401, 403):
+    if challenge == "json":
         s["auth"] = "y"
-        if client.key:
+        if client.key and plain and proxied and not client.direct:
+            # 평문 http 의 키는 프록시가 읽는다 - 키를 보내기 전에 프록시 없이 닿는지 본다(독립 점검 F-02)
+            client.direct = True
+            rd = client.call("GET", models_url, use_key=False, headers={"Origin": "null"})
+            _done(io, label, "모델 목록(키 없이, 프록시 없이)", rd)
+            if not rd.ok and auth_challenge(rd.status, rd.headers, rd.body) != "json":
+                client.direct = False
+                s["error"] = "!p"
+                io.say("  [%s] 프록시 없이는 닿지 않아 키를 보내지 않았습니다 - 이 서버는 여기까지 잽니다" % label)
+                return s, []
+            s["route"] = "k"
+            listing = rd
+        if client.key and not listing.ok:
+            client.key_on = True
             listing = client.call("GET", models_url, headers={"Origin": "null"})
             _done(io, label, "모델 목록(키로)", listing)
             if listing.redirect:
@@ -1032,8 +1180,8 @@ def probe_server(client, io, label, insecure=False):
                       headers={"Origin": "null", "Access-Control-Request-Method": "POST",
                                "Access-Control-Request-Headers": "authorization, content-type"})
     s["cors"] = cors_verdict(pre.headers if pre.status else None, pre.status, r1.headers if r1.status else None)
-    s["kind"], s["server"] = server_kind(data, version, api_version,
-                                         r1.headers.get("server") or listing.headers.get("server"))
+    kind, server = server_kind(data, version, api_version, r1.headers.get("server") or listing.headers.get("server"))
+    s["kind"], s["server"] = scrub(kind, client.secrets), scrub(server, client.secrets)   # 화면에도 가린 값
     io.say("  [%s] 서버 종류 %s, 모델 %d개, CORS 추정 %s" % (label, s["kind"], s["n"], s["cors"]))
     return s, entries
 
@@ -1141,7 +1289,7 @@ def probe_model(client, entry, kind, io, label, m):
     return m
 
 
-def choose_models(entries, models_arg, io, interactive, label):
+def choose_models(entries, models_arg, io, interactive, label, secret_values=()):
     if not entries:
         return []
     if models_arg:
@@ -1153,7 +1301,7 @@ def choose_models(entries, models_arg, io, interactive, label):
         return entries
     io.say("  [%s] 모델 %d개:" % (label, len(entries)))
     for i, e in enumerate(entries, 1):
-        io.say("    %d) %s" % (i, model_short(e["id"])))
+        io.say("    %d) %s" % (i, model_label(e["id"], secret_values)))
     text = io.ask("  시험할 모델 번호를 쉼표로 적으세요(빈칸 = 전부, 0 = 건너뜀): ").strip()
     if not text:
         return entries
@@ -1169,8 +1317,9 @@ def choose_models(entries, models_arg, io, interactive, label):
 def save_result(summary, out_dir, io):
     name = "ai_probe_result_%s.txt" % datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     path = Path(out_dir) / name
+    text = redact(summary, io.secrets) if io.secrets else summary   # 화면과 같은 글
     try:
-        path.write_text(summary + "\n", encoding="utf-8")
+        path.write_text(text + "\n", encoding="utf-8")
         io.say("결과를 남겼습니다: %s (주소와 키는 들어 있지 않습니다)" % path.name)
         return path
     except OSError:
@@ -1179,6 +1328,28 @@ def save_result(summary, out_dir, io):
 
 
 _UNSET = object()
+
+
+def read_key(args, io, interactive):
+    """키를 받아 clean_key 로 정리한다. 대화형이면 쓸 수 없는 글자일 때 세 번까지 다시 묻는다.
+    --key-env 의 이름은 화면에 찍지 않는다(키를 이름 자리에 잘못 줄 수 있다 - 독립 점검 F-07)."""
+    if interactive:
+        for _ in range(3):
+            got = clean_key(io.secret("키(화면에 보이지 않습니다, 없으면 엔터): "))
+            if got is not None:
+                return got
+            io.say("키에 쓸 수 없는 글자(한글, 빈칸, 줄바꿈 등)가 있습니다. 다시 적어 주세요.")
+        io.say("키 없이 잽니다.")
+        return ""
+    if not args.key_env:
+        return ""
+    got = clean_key(os.environ.get(args.key_env, ""))
+    if got is None:
+        io.say("키 환경 변수에 쓸 수 없는 글자가 있습니다 - 키 없이 잽니다.")
+        return ""
+    if not got:
+        io.say("키 환경 변수가 비어 있습니다 - 키 없이 잽니다.")
+    return got
 
 
 def cmd_probe(args, io, reg=_UNSET, env_proxies=None):
@@ -1194,7 +1365,11 @@ def cmd_probe(args, io, reg=_UNSET, env_proxies=None):
     io.say("호출은 하나씩 하고 한 번 실행에 %d번까지 합니다. 모델마다 6~9번, 큰 모델은 몇 분 걸릴 수 있습니다." % args.max_calls)
     io.say("Ctrl+C 로 멈추면 그때까지의 결과를 냅니다.")
     budget = Budget(args.max_calls)
-    ssl_ctx = make_ssl_context(args.cafile, args.insecure)
+    try:
+        ssl_ctx = make_ssl_context(args.cafile, args.insecure)
+    except (OSError, ssl.SSLError, ValueError):
+        io.say("인증서 파일(--cafile)을 읽지 못했습니다. 경로와 PEM 형식을 확인하세요.")
+        return 2
     interactive = not args.server
     queue = list(args.server)
     servers, all_secrets, interrupted = [], [], False
@@ -1215,25 +1390,33 @@ def cmd_probe(args, io, reg=_UNSET, env_proxies=None):
                 continue
             if "://" not in text:
                 io.say("주소 앞에 http:// 를 붙여 보았습니다.")
-            if interactive:
-                key = io.secret("키(화면에 보이지 않습니다, 없으면 엔터): ").strip()
-            else:
-                key = os.environ.get(args.key_env, "") if args.key_env else ""
             label = "S%d" % (len(servers) + 1)
-            all_secrets.extend(secrets_of(root, key))
-            client = Client(root, v1, key, args.timeout, ssl_ctx, budget)
-            s, entries = probe_server(client, io, label, args.insecure)
-            models = []
+            client = Client(root, v1, read_key(args, io, interactive), args.timeout, ssl_ctx, budget)
+            all_secrets.extend(client.secrets)
+            io.add_secrets(client.secrets)
+            s, models = new_server_result(), []
             servers.append((s, models))
+            try:
+                s, entries = probe_server(client, io, label, args.insecure, s)
+            except Exception as e:   # 한 서버의 예상 밖 오류로 결과 전체를 잃지 않는다(독립 점검 O-1)
+                io.say("  [%s] 예상하지 못한 오류(%s) - 이 서버는 여기까지 잽니다" % (label, type(e).__name__))
+                s["error"] = s["error"] or "!e"
+                continue
             if s["error"]:
                 io.say("  [%s] 서버 점검을 마치지 못했습니다: %s" % (label, ERR.get(s["error"], s["error"])))
                 continue
-            chosen = choose_models(entries, args.models, io, interactive, label)
+            chosen = choose_models(entries, args.models, io, interactive, label, client.secrets)
             s["m"] = len(chosen)
             for j, entry in enumerate(chosen, 1):
-                m = new_model_result(entry["id"])
+                m = new_model_result(model_label(entry["id"], client.secrets))
                 models.append(m)
-                probe_model(client, entry, s["kind"], io, "%sM%d %s" % (label, j, model_short(entry["id"])), m)
+                try:
+                    probe_model(client, entry, s["kind"], io, "%sM%d %s" % (label, j, m["name"]), m)
+                except Exception as e:   # 같은 까닭 - 남은 단계는 !e
+                    io.say("  [%sM%d] 예상하지 못한 오류(%s) - 다음 모델로 갑니다" % (label, j, type(e).__name__))
+                    for k, v in list(m.items()):
+                        if v == "!s":
+                            m[k] = "!e"
     except KeyboardInterrupt:
         interrupted = True
         io.say("\n멈췄습니다 - 그때까지의 결과를 냅니다.")
@@ -1245,7 +1428,7 @@ def cmd_probe(args, io, reg=_UNSET, env_proxies=None):
         s["kind"], s["server"] = scrub(s["kind"], all_secrets), scrub(s["server"], all_secrets)
         lines.append(server_line(i, s))
         for j, m in enumerate(models, 1):
-            m["name"] = scrub(model_short(m["name"]), all_secrets)
+            m["name"] = scrub(m["name"], all_secrets)   # 다른 서버의 주소·키도 본다
             lines.append(model_line(i, j, m))
     summary = render_summary(lines)
     io.say(summary)
@@ -1294,7 +1477,7 @@ def make_probe_server(port, token, html, results, io, host="127.0.0.1"):
             except http.cookies.CookieError:
                 return False
             v = c.get("mlprobe")
-            return v is not None and hmac.compare_digest(v.value, token)
+            return v is not None and hmac.compare_digest(v.value.encode("utf-8"), token.encode("ascii"))
 
         def _send(self, code, body, ctype="application/json; charset=utf-8", extra=None):
             self.send_response(code)
@@ -1317,7 +1500,8 @@ def make_probe_server(port, token, html, results, io, host="127.0.0.1"):
             u = urllib.parse.urlsplit(self.path)
             if u.path == "/":
                 t = (urllib.parse.parse_qs(u.query).get("t") or [""])[0]
-                if t and hmac.compare_digest(t, token):
+                # 바이트로 비교한다 - str 은 ASCII 가 아니면 TypeError 를 낸다(독립 점검 O-2)
+                if t and hmac.compare_digest(t.encode("utf-8"), token.encode("ascii")):
                     self.send_response(303)
                     self.send_header("Location", "/probe")
                     self.send_header("Set-Cookie", "mlprobe=%s; HttpOnly; SameSite=Strict; Path=/" % token)
@@ -1363,7 +1547,7 @@ def make_probe_server(port, token, html, results, io, host="127.0.0.1"):
             if path == "/probe/echo":
                 return self._json(200, {"bytes": len(body)})
             text = body.decode("utf-8", "replace").strip()
-            if not text.startswith("b ") or "\n" in text:
+            if not re.fullmatch(r"b [\x20-\x7e]{1,%d}" % RESULT_LIMIT, text):   # 콘솔 제어 글자를 받지 않는다(O-3)
                 return self._json(400, {"ok": False})
             results.append(text)
             io.say("브라우저 결과 코드: " + text)
@@ -1426,9 +1610,15 @@ def serve_test(port, io, open_browser=True, seconds=None, html_path=None):
 
 
 # ================================================================ 진입점
+class _Parser(argparse.ArgumentParser):
+    def error(self, message):   # argparse 는 받은 인자를 오류 글에 되풀이한다 - 명령줄에 키를 잘못 줬을 수 있다
+        self.exit(2, "인자를 읽지 못했습니다. 키는 명령줄에 쓰지 않고 물을 때 적습니다(도움말: ai_probe.py --help).\n")
+
+
 def build_parser():
-    ap = argparse.ArgumentParser(prog="ai_probe.py", description="MyLearner 폐쇄망 AI 점검 도구 (결과 코드 판 %d)"
-                                 % CODE_VERSION)
+    # allow_abbrev=False: '--key <키>' 가 --key-env 의 줄임으로 받아들여져 키가 이름 자리로 가지 않게(독립 점검 F-07)
+    ap = _Parser(prog="ai_probe.py", description="MyLearner 폐쇄망 AI 점검 도구 (결과 코드 판 %d)" % CODE_VERSION,
+                 allow_abbrev=False)
     ap.add_argument("--server", action="append", default=[], help="(시험용) 서버 주소. 여러 번 줄 수 있다")
     ap.add_argument("--key-env", default=None, help="(시험용) 키를 읽을 환경 변수 이름")
     ap.add_argument("--models", default=None, help="all 또는 쉼표로 모델 이름")

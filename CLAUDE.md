@@ -6,7 +6,7 @@
 - **어떻게**: [`docs/설계서_Architecture.md`](docs/설계서_Architecture.md)
 - **어떤 규칙으로**: 이 문서. 다른 문서와 부딪히면 이 문서가 이긴다
 
-<!-- 정정 이력(HTML 주석이라 세션마다 컨텍스트에 실리지 않는다): 2026-10-14 착수 세션이 임시본을 만들었다 — 사용자가 준 '사용자와 말하는 방식'과 Learn 루트 규칙 가져오기(사용자 지시). / 2026-10-15 착수 인터뷰(docs/P1_인터뷰결과서_Scope.md)를 반영해 agentic-sdlc 골격 0·0-1·1~13절로 채웠다. / 2026-10-15 Phase 1 에서 만든 것(Architecture·check_env·verify·verify_docs·dev_tools.env)을 '만든다'에서 현재형으로 고쳤다. / 2026-10-15 0절 디스크 여유를 다시 쟀다(`/` 20G→17G·`/data` 66G→61G — Learn 루트 7절과 함께, 사용자 지시). -->
+<!-- 정정 이력(HTML 주석이라 세션마다 컨텍스트에 실리지 않는다): 2026-10-14 착수 세션이 임시본을 만들었다 — 사용자가 준 '사용자와 말하는 방식'과 Learn 루트 규칙 가져오기(사용자 지시). / 2026-10-15 착수 인터뷰(docs/P1_인터뷰결과서_Scope.md)를 반영해 agentic-sdlc 골격 0·0-1·1~13절로 채웠다. / 2026-10-15 Phase 1 에서 만든 것(Architecture·check_env·verify·verify_docs·dev_tools.env)을 '만든다'에서 현재형으로 고쳤다. / 2026-10-15 0절 디스크 여유를 다시 쟀다(`/` 20G→17G·`/data` 66G→61G — Learn 루트 7절과 함께, 사용자 지시). / 2026-10-15 Python 3.14 시험 이미지를 0·7·11절에 적었다(사용자 승인). / 2026-10-15 11절 effort 에 환경 변수가 이긴다는 것을 더했다(세션 화면으로 확인). -->
 
 **Learn 워크스페이스 공통 규칙**: 이 폴더는 Learn 워크스페이스 밖이지만 그 루트 공통 규칙을 따른다(사용자 결정, BRIEF 7절). 그 2절 경계 규칙은 이 프로젝트가 완화할 수 없다. 나머지 절이 이 파일과 부딪히면 이 파일을 따른다. 아래 줄이 그 파일을 가져온다 — 작업 폴더 밖이라 Claude Code 가 처음 한 번 승인을 묻고, 거절하면 꺼진 채 다시 묻지 않는다(공식 문서 2026-10-14). 내용이 보이지 않으면 그 파일을 직접 읽는다.
 
@@ -16,10 +16,10 @@
 - **목적**: 사용자 본인(1인, 여러 기기)이 과목 제한 없이 자기 자료로 배우고 복습한다. 학습이 우선이고 통계 화면이 있어야 한다
 - **완성의 정의**: scope-definition 2절 S1~S7. 한 줄로 — 사용자가 `.tgz` 를 풀거나 APK 를 설치만 하고(S4) '오늘 학습'을 열면 미들웨어 과정·Learn 자료·내 자료로 만든 과정을 배우고 복습하며, 세 기기의 기록이 사라지지 않고 합쳐지고(S3) 통계로 보인다(S7)
 - **핵심 도메인 사실**: 간격 반복은 MWL 의 SM-2(골든 벡터는 MWL `tests/fixtures/srs_vectors.json`·`scheduler_cases.json`). 기록 = 기기별 사건 목록(기기, 순번, 시각, 학습일). 폐쇄망은 들여오기만 — 안의 기록·과정은 반출 불가. 사내 AI 문맥은 128k~256k 로 작다. MWL 과정 = 강의 135·카드 1,350·실습 91·드릴 24·퀴즈 55·용어 350·진단 35, MWL `web/data/bundle.js` 5,470,752 B. MWL 코드를 복사할 때 기준 커밋을 적는다(2026-10-15 현재 `e053470`)
-- **개발 환경**: 이 VM — RHEL 9.6, 4코어, 메모리 15Gi, 디스크 여유 `/` 17G·`/data` 61G(2026-10-15 `df -h`. 여러 계정이 같이 쓴다 — 쓰기 전에 잰다). Python 3.9.21(`python3`)·3.11.9(`/usr/bin/python3.11`), Docker 29.6.1, Node 없음 → JS 시험은 Docker `node:22-alpine`(Phase 2 에서 받는다)
+- **개발 환경**: 이 VM — RHEL 9.6, 4코어, 메모리 15Gi, 디스크 여유 `/` 17G·`/data` 61G(2026-10-15 `df -h`. 여러 계정이 같이 쓴다 — 쓰기 전에 잰다). Python 3.9.21(`python3`)·3.11.9(`/usr/bin/python3.11`), Docker 29.6.1(Python 3.12·3.14 시험은 이미지로 — `scripts/dev_tools.env`), Node 없음 → JS 시험은 Docker `node:22-alpine`(Phase 2 에서 받는다)
 - **운영 환경**: 폐쇄망 PC — Windows, Python 3.14(3.12·3.9 도 있음), Chrome 150.0.7871.125, 사내 AI API, `.tgz` 반입(2026-10-15 사용자). 내 PC — ⚠️ 판 미확인(Phase 3 에서 묻는다). 폰 — 안드로이드 APK, 인터넷 권한 0. 그래서 코드는 **Python 3.9 이상 표준 라이브러리**, 브라우저는 **Chrome(Chromium·WebView)** 기준이다
 - **네트워크·인증**: 밖으로는 사내 프록시를 거친다(`HTTPS_PROXY`·`NO_PROXY` 설정됨). `origin` = `https://github.com/hipiboy7/MyLearner.git`(private). 시스템 git 설정이 `https://github.com/` 를 SSH 로 바꾸는데 이 계정의 SSH 는 `Permission denied (publickey)` 다 → 이 저장소에만 `url.https://github.com/hipiboy7/.insteadOf`(HTTPS 로 남김)와 `credential.helper '!gh auth git-credential'` 을 두었다. `gh` 는 저장소 주인 계정으로 로그인돼 있다(관리자 권한 — 다른 계정에 넘기지 않는다). 확인: `git ls-remote origin`(2026-10-15 성공)
-- **외부 서비스**: GitHub(push, 전체) · Docker 이미지 받기(P2 `node:22-alpine`, P3 Playwright) · 사내 AI(P6 — 개발 에이전트는 닿지 못한다. 사용자가 점검 결과 코드를 말로 전한다) · 외부 AI(P6, 유료 — 보류 결정 5)
+- **외부 서비스**: GitHub(push, 전체) · Docker 이미지 받기(P1 `python:3.14-slim`, P2 `node:22-alpine`, P3 Playwright) · 사내 AI(P6 — 개발 에이전트는 닿지 못한다. 사용자가 점검 결과 코드를 말로 전한다) · 외부 AI(P6, 유료 — 보류 결정 5)
 - **핵심 상수**: 아직 없다. 파일 형식 머리 `{format, version, min_reader}` 의 값 등은 Phase 2 설계서에서 정한다
 
 ## 0-1. 세션을 시작하면 읽는 순서
@@ -121,7 +121,7 @@
 ## 7. 실행 환경과 배포
 - 1차 실행 경로: Chrome + Python 로컬 서버(127.0.0.1, `py -3 -m <패키지> serve` — 패키지 이름은 설계서_Architecture). Python 이 없으면 HTML 더블클릭(`file://`). 폰은 APK(WebView)
 - 의존성: 런타임은 Python 3.9 이상 표준 라이브러리와 외부 라이브러리 0 인 JS 다. 개발 전용 도구(Docker 이미지·시험 도구)는 버전을 고정해 `scripts/dev_tools.env` 한 곳에 적는다
-- 개발·운영 환경 차이: 개발 VM(RHEL, Python 3.9·3.11) ↔ 폐쇄망 PC(Windows, Python 3.14·3.12·3.9, Chrome 150) ↔ 폰. OS 패키지에 의존하지 않는다. 한국어 Windows 콘솔에서 깨지지 않는 글자만 출력한다(BRIEF 5.8)
+- 개발·운영 환경 차이: 개발 VM(RHEL, Python 3.9·3.11, Docker 로 3.12·3.14) ↔ 폐쇄망 PC(Windows, Python 3.14·3.12·3.9, Chrome 150) ↔ 폰. OS 패키지에 의존하지 않는다. 한국어 Windows 콘솔에서 깨지지 않는 글자만 출력한다(BRIEF 5.8)
 - 배포·반입 묶음: 폐쇄망 `.tgz`, 인터넷판 ZIP·`.tgz`(Phase 3), APK(Phase 4). 스크립트는 그 Phase 에서 `scripts/` 에 만든다
 
 ## 8. 외부 서비스 연동
@@ -152,7 +152,7 @@
 - PR 은 쓰지 않는다(사용자 결정 2026-10-15). 리뷰는 체크리스트와 피드백으로 한다(1절 8단계)
 - 세션마다 `history/<날짜>_<작업자>_<주제>.md` 에 종료 상태와 다음 단계를 남긴다. 작업자 칸에는 사람 이름·계정 대신 `claude-opus` 처럼 에이전트를 적는다
 - 커밋 금지: 비밀 파일·토큰·키, 실운영 로그·데이터(마스킹 여부와 무관), 사내 서버 주소·IP·계정, 폐쇄망 안에서 만든 과정·기록, 사람의 메일
-- 사람 확인이 필요한 일: push, 저장소 공개 범위, 이력 재작성·강제 push·삭제, 비용이 드는 외부 호출, 공용 서버 설정 변경(Learn 루트 2절). 허락받은 것: 개발용 Docker 이미지 `node:22-alpine`(Phase 2)·Playwright(Phase 3) 받기(2026-10-15)
+- 사람 확인이 필요한 일: push, 저장소 공개 범위, 이력 재작성·강제 push·삭제, 비용이 드는 외부 호출, 공용 서버 설정 변경(Learn 루트 2절). 허락받은 것: 개발용 Docker 이미지 `node:22-alpine`(Phase 2)·Playwright(Phase 3)·`python:3.14-slim`(Phase 1) 받기(2026-10-15)
 - **push**: Phase 끝에 사용자가 병합을 요청하면 전체 검증 통과 뒤 push 까지 허락한 것으로 본다(사용자 결정 2026-10-15). 그 밖의 push 는 따로 묻는다. push 전에 `git log --oneline origin/main..HEAD` 로 올라갈 커밋을 확인한다. 공개 범위는 private 그대로 둔다
 
 ### 사용자와 말하는 방식
@@ -177,7 +177,7 @@
 - 사용자의 답이 필요한 질문은 덩어리 끝에 번호를 달아 모은다. 선택지가 있으면 추천과 이유를 함께 적는다(agentic-sdlc 골격 11절)
 - Learn 루트 CLAUDE.md 8절의 표지(이모지 없는 옛 판)와 다르면 이 절을 따른다
 - 결과 보고는 개발자 기준으로 짧게 쓴다. 풀이가 필요하면 사용자가 묻는다(사용자 결정 2026-10-15)
-- 토큰을 아끼려면 effort 를 바꾸는 편이 나을 때 사용자에게 먼저 말한다(사용자 지시 2026-10-14). 세션 중에는 `/effort <low|medium|high|xhigh|max>` 를 **한 줄에 그것만** 친다(뒤에 글을 붙이면 "Invalid argument" 로 적용되지 않는다 — 2026-10-15). `max` 는 그 세션에만 적용된다. 기준: 답을 문서로 옮기기·일반 구현 high, 기록 합치기·렌더러 XSS·비밀값 같은 핵심 설계 xhigh, 문서 갱신·커밋·검증 돌리기 medium
+- 토큰을 아끼려면 effort 를 바꾸는 편이 나을 때 사용자에게 먼저 말한다(사용자 지시 2026-10-14). 세션 중에는 `/effort <low|medium|high|xhigh|max>` 를 **한 줄에 그것만** 친다(뒤에 글을 붙이면 "Invalid argument" 로 적용되지 않는다 — 2026-10-15). `max` 는 그 세션에만 적용된다. 환경 변수 `CLAUDE_CODE_EFFORT_LEVEL` 이 있으면 그것이 `/effort` 를 이긴다 — 이 계정은 `~/.bashrc` 에 `max` 로 있다(2026-10-15 화면 `CLAUDE_CODE_EFFORT_LEVEL=max overrides this session`, 바꾸려면 사용자가 그 줄을 지우고 새 셸에서 연다). 기준: 답을 문서로 옮기기·일반 구현 high, 기록 합치기·렌더러 XSS·비밀값 같은 핵심 설계 xhigh, 문서 갱신·커밋·검증 돌리기 medium
 - 작업 단위가 끝나 다음 일이 이 대화 없이 CLAUDE.md·history 만으로 이어질 수 있으면, 결과 보고 끝에 `/clear` 를 권하고 clear 뒤 붙여 넣을 프롬프트를 코드 블록으로 준다(사용자 지시 2026-10-15). 그 전에 history 의 "다음 단계"를 최신으로 적고 커밋해 둔다
 
 ## 12. 에이전트

@@ -36,10 +36,17 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   else
     ng "이미지 $PLAYWRIGHT_IMAGE 이 없다(약 3.5GB). df -h /data 로 여유를 본 뒤 docker pull 한다"
   fi
+  if docker image inspect "$PY314_IMAGE" >/dev/null 2>&1; then
+    ok "이미지 $PY314_IMAGE (Python 3.14 시험 - 폐쇄망 PC 의 기본 판)"
+  elif [ $QUICK = 1 ]; then
+    note "이미지 $PY314_IMAGE 이 없다 - quick 이라 넘어간다"
+  else
+    ng "이미지 $PY314_IMAGE 이 없다(약 180MB). docker pull $PY314_IMAGE"
+  fi
 elif [ $QUICK = 1 ]; then
   note "docker 를 쓸 수 없다 - quick 이라 넘어간다"
 else
-  ng "docker 를 쓸 수 없다(브라우저 스모크·Python 3.12 시험에 필요)"
+  ng "docker 를 쓸 수 없다(브라우저 스모크·Python 3.12·3.14 시험에 필요)"
 fi
 free_kb=$(df -Pk . | awk 'NR==2 {print $4}')
 if [ "${free_kb:-0}" -ge 2097152 ]; then

@@ -2,6 +2,8 @@
 
 - 작성 2026-10-15 / 대응 요구사항: [`P1_요구사항정의서_Probe.md`](P1_요구사항정의서_Probe.md) FR-101~169, NFR-101~107 / 상위 문서: [`설계서_Architecture.md`](설계서_Architecture.md)
 - 코드: `tools/ai_probe.py`, `tools/browser_probe.html`, `scripts/` / 시험: `tests/unit/py/`, `tests/integration/py/`
+- 정정 이력: 2026-10-15 — Python 3.14 시험 이미지(4절), 스모크 방식을 `--dump-dom` 에서 CDP 로 바로잡음(2·3.6절, 트러블슈팅 T-001), `verify.sh` 단계 표 위치
+- 정정 이력: 2026-10-15 — 독립 점검(P1 테스트결과서 5.2절)을 받아 키를 보내는 조건(3.3절 '키 정책'), 자유 글 거르기(3.1·3.2절), 새 값 `q=k`·`e=!p`·`!e`·이름 `?`, 줄·칸 길이 상한, 예상 밖 오류 처리(5절), 시험 서버 비교·결과 줄(3.4절)
 
 ## 1. 데이터 흐름
 
@@ -24,15 +26,15 @@
 | `tools/ai_probe.py` | AI 점검(대화형)·`--serve-test`·`--decode`. 파일 하나 — 폐쇄망에 그대로 들고 간다 | 판정·코드 함수 A, 나머지 B(함수 단위 배정 — 3.6절) |
 | `tools/browser_probe.html` | 브라우저 점검. 인라인 CSS·JS, 외부 자원 0 | C |
 | `scripts/check_env.sh` | 0단계 환경 확인 → `READY` | C |
-| `scripts/verify.sh` | 전체 검증 명령(단계 표 → 4절) | C |
+| `scripts/verify.sh` | 전체 검증 명령(단계는 그 파일 머리, 실행 결과는 테스트결과서 1.1절) | C |
 | `scripts/verify_docs.py` + `verify_docs_planned.txt` | 문서의 링크·경로·명령 검사 | C(음성 시험 있음) |
 | `scripts/coverage_lite.py` + `coverage_grades.json` | 표준 라이브러리 줄 커버리지, 파일·함수 단위 등급 | C(음성 시험 있음) |
 | `scripts/check_publish_safety.py` | 추적·새 파일의 IP·토큰·메일·금지 파일 | C(음성 시험 있음) |
 | `scripts/check_probe_html.py` | `browser_probe.html` 정적 검사(외부 자원 0·접근성 기초·필수 요소) | C |
-| `scripts/browser_smoke.py` | 헤드리스 Chromium(Playwright 이미지)으로 `file://`·`http://127.0.0.1` 실행 | C |
+| `scripts/browser_smoke.py` + `tests/ui/cdp.js` | 헤드리스 Chromium(Playwright 이미지)으로 `file://`·`http://127.0.0.1` 실행. `cdp.js` 는 그 이미지의 Node 내장 WebSocket 으로 CDP 를 몬다(외부 패키지 없음) | C |
 | `scripts/pack_probe.py` | 반입 묶음(재현 가능한 tar.gz) + 외부 URL 검사 | C |
 | `scripts/dev_tools.env` | 개발 전용 도구 판 고정(이미지 이름) — 셸·파이썬이 함께 읽는다 | — |
-| `tests/integration/py/fakes.py` | 가짜 AI 서버(vLLM 꼴·Ollama 꼴·게이트웨이 꼴) | 시험 지원 |
+| `tests/integration/py/fakes.py` | 가짜 AI 서버(vLLM 꼴·Ollama 꼴·게이트웨이 꼴 — 글·빈 본문·BOM 차단 화면, 깨진 Location, 깊은 JSON, 큰 수)와 정방향 프록시 꼴(`CaptureProxy` — 받은 요청을 남기고 스스로 답한다) | 시험 지원 |
 
 MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대상 문서 두 묶음·코드 블록 안 명령 검사 추가), `coverage_lite.py`(측정 폴더 설정·함수 단위 등급 추가), `check_publish_safety.py`(사설 IP 도 막도록 판정 바꿈, 새 파일 포함), `fake_ai.py` 의 응답 모양(`fakes.py`), `aiserver.py` 의 사용량 읽기(`usage_of`).
 
@@ -47,8 +49,9 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 | 줄 모양 | `<표지> <칸> <칸> … /<검사합>` — 칸은 `글자=값`(모델 줄만 표지 뒤에 모델 이름 하나) |
 | 글자 | ASCII 소문자·숫자·`. _ / ! : -`. 대문자로 적어도 소문자로 바꿔 읽는다 |
 | 검사합 | 내용(마지막 ` /` 앞)을 소문자·공백 하나로 맞춘 뒤 UTF-8 바이트의 CRC-16/CCITT-FALSE(다항식 0x1021, 초기값 0xFFFF) 하위 10비트 → Crockford base32 소문자 2글자(`0123456789abcdefghjkmnpqrstvwxyz`, 읽을 때 `i`·`l`→`1`, `o`→`0`). 검산 값: `123456789` → CRC `0x29b1` → `dh` |
-| 공통 값 | `-` 해당 없음·안 함, `?` 판정 못 함, `!t` 시간 초과, `!c` 연결 안 됨, `!x` TLS 오류, `!r` 리다이렉트, `!a` 401·403, `!n` 404, `!l` 길이 초과 400, `!4` 그 밖 4xx, `!5` 5xx, `!h` HTML 답(게이트웨이 화면), `!j` JSON 아님·모양 다름, `!q` 호출 상한, `!s` 멈춤·앞 단계 실패로 건너뜀 |
-| 넣지 않는 것 | 주소·IP·포트·키·경로. 모델 이름은 마지막 `/` 뒤 조각을 `[a-z0-9._-]` 32자 이내로 |
+| 공통 값 | `-` 해당 없음·안 함, `?` 판정 못 함 또는 가림, `!t` 시간 초과, `!c` 연결 안 됨, `!x` TLS 오류, `!r` 리다이렉트, `!a` 401·403, `!n` 404, `!l` 길이 초과 400, `!4` 그 밖 4xx, `!5` 5xx, `!h` HTML 답(게이트웨이 화면 — 401·403 이면 JSON 이 아닌 모든 답), `!j` JSON 아님·모양 다름, `!q` 호출 상한, `!s` 멈춤·앞 단계 실패로 건너뜀, `!p` 키를 보내지 않음(평문 http 가 프록시를 거치고 직접은 닿지 않음), `!e` 예상 밖 오류(이름만 화면에) |
+| 넣지 않는 것 | 주소·IP·포트·키·경로. 모델 이름은 마지막 `/` 뒤 조각을 `[a-z0-9._-]` 32자 이내로. 서버가 준 자유 글(모델 이름·Server 헤더·판)이 주소처럼 보이면(IPv4, IPv6, 호스트 이름 꼴 — 점으로 이은 영문 칸 셋, `.local`·`.internal`·`.corp` 등) 또는 입력한 호스트·키가 보이면(대소문자·기호를 뺀 영문·숫자 8글자가 이어지면 — 잘리거나 바뀐 것 포함) `?` 로 싣는다(`leaks`) |
+| 길이 | 한 줄 600자, 한 칸 64자까지 읽는다(넘으면 '읽지 못한 줄') |
 
 **`e` 줄 — 환경**: `e v=1 p=3.14.0 o=w10.0.26100 q=r a=n s=2 /..`
 
@@ -65,15 +68,15 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 
 | 칸 | 뜻 |
 |---|---|
-| `k` | 종류/판 — `vllm/<판>`(모델의 `owned_by=vllm` 또는 `/version`), `ollama/<판>`(`/api/version`), `v/<판>`(그 밖의 `/version`), `-` |
-| `h` | `Server` 헤더의 첫 낱말(`uvicorn`, `nginx/1.24.0`), 없으면 `-` |
+| `k` | 종류/판 — `vllm/<판>`(모델의 `owned_by=vllm` 또는 `/version`), `ollama/<판>`(`/api/version`), `v/<판>`(그 밖의 `/version`), `-`. 판은 숫자 모양의 앞부분만(`0.10.2rc2.dev36+g…` → `0.10.2rc2`, IP 꼴이면 버린다) |
+| `h` | `Server` 헤더의 첫 낱말이 `제품/판` 모양일 때만(`uvicorn`, `nginx/1.24.0` — 제품 이름은 영문·`-`·`_`, 판은 숫자로 시작), 아니면 `?`, 없으면 `-` |
 | `n`·`m` | 목록의 모델 수·시험한 모델 수 |
 | `a` | 키가 필요한가 — 키 없이 부른 `/v1/models` 가 401·403 이면 `y`, 200 이면 `n` |
 | `x` | CORS 추정(`file://` 의 `Origin: null` + `Authorization`) — `y` 됨, `p` 출처는 되나 `authorization` 이 허용 헤더에 없음(`*` 만 있음 포함), `n` 안 됨, `?` |
-| `q` | 경로 — `d` 프록시 없이, `p` 프록시로, `f` 프록시 실패 → 직접 됨 |
+| `q` | 경로 — `d` 프록시 없이, `p` 프록시로, `f` 프록시 실패 → 직접 됨, `k` 평문 http 에 프록시가 걸려 키를 보내기 전에 직접 연결로 바꿈 |
 | `l` | 전송 — `h` http, `s` https 검증됨, `i` https 검증 없이(`--insecure`), `!x` |
 | `d` | 리다이렉트 — `n` 없음, `s` 같은 호스트, `o` 다른 호스트, `t` https 로 |
-| `e` | 서버 단계 치명 오류(목록을 못 받음). 있으면 모델 줄이 없다 |
+| `e` | 서버 단계 치명 오류(목록을 못 받음, `!h`·`!p`·`!e` 포함). 있으면 모델 줄이 없다 |
 
 **`s<번호>m<번호>` 줄 — 모델**: `s1m1 gpt-oss-120b c=131072m t=1.62 p=2400 d=38 k=n r=40/910t f=c h=n z=- j=y o=y /..`
 
@@ -117,12 +120,15 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 
 | 함수 | 입력 → 출력 |
 |---|---|
-| `normalize_base(text)` | 입력 주소 → `(root, v1)`. `…/v1/chat/completions`·`…/v1/responses`·`…/v1`·뒤 `/` 를 정리. http(s) 가 아니면 `ValueError` |
+| `normalize_base(text)` | 입력 주소 → `(root, v1)`. `…/v1/chat/completions`·`…/v1/responses`·`…/v1`·뒤 `/` 를 정리. http(s) 가 아니거나, `@`(계정 정보)·ASCII 가 아닌 호스트·63자 넘는 칸이 있으면 `ValueError`(정해진 글 — 입력을 싣지 않는다) |
+| `clean_key(text)` | 키 → 앞뒤 빈칸·`Bearer ` 를 뗀 키, 비면 `''`, 헤더에 실을 수 없는 글자(인쇄 가능한 ASCII 밖)면 `None` |
+| `auth_challenge(status, headers, body)` | 401·403 → `json`(본문이 JSON 객체, BOM 허용) / `page`(HTML·XML·글·빈 본문·그 밖). 다른 상태 `''` |
+| `leaks(text, secrets)`·`scrub(value, secrets)`·`model_label(id, secrets)` | 자유 글이 주소·키처럼 보이는가 / 그러면 `?` / 모델 이름(줄이기 전 조각으로도 본다) |
 | `secrets_of(url, key)`·`redact(text, secrets)` | 가릴 값(호스트·`호스트:포트`·`:포트`·키) → 글에서 `<서버>`·`<키>` 로 바꿈 |
 | `classify_redirect(src, location)` | `s`·`o`·`t` |
 | `proxy_kind(env_proxies, reg)`·`proxy_applies(url, proxies, bypass)` | 프록시 설정 종류, 이 주소에 프록시가 걸리는지 |
 | `ctx_from_model_entry(d)`·`ctx_from_tokenize(d)`·`ctx_from_error(text)`·`ctx_from_ollama_show(d)` | 문맥 길이(없으면 `None`). 400 메시지는 `maximum context length is N`·`must be <= N` 꼴 |
-| `server_kind(models, version, api_version, server_header)` | `k`·`h` 칸 값 |
+| `server_kind(models, version, api_version, server_header)` | `k`·`h` 칸 값(판은 `_ver`, 헤더는 `_server_token` 의 정해진 모양만) |
 | `cors_verdict(preflight, actual)` | 헤더 → `y`·`p`·`n`·`?` |
 | `make_long_prompt(n)` | 결정적인 한국어 글(가상 매뉴얼, 앞·끝 표지) → `(prompt, start, end)` |
 | `chat_parts(data)`·`usage_of(data)` | 답 본문·추론 글·끝난 이유, 사용량 `{input, output, reasoning}` |
@@ -138,13 +144,14 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 | 함수·클래스 | 책임 |
 |---|---|
 | `Resp` | `status`·`headers`(소문자 키)·`body`·`data`(JSON)·`seconds`·`error`(`!…`)·`redirect`(`s`/`o`/`t`) |
-| `Client(base, key, timeout, ssl_ctx, budget, direct)` | 호출 하나: 리다이렉트 처리기를 끄고(`redirect_request` → `None`), 본문 상한 8 MiB, 예외를 `!…` 로 바꾼다. 키는 `use_key=True` 일 때만 `Authorization: Bearer` 로 |
+| `Client(base, key, timeout, ssl_ctx, budget, direct)` | 호출 하나: 3xx 처리기를 끄고(`http_error_30x` → `None` — `redirect_request` 만 끄면 그 앞에서 Location 을 읽다 `ValueError`, T-003), 본문 상한 8 MiB, 예외를 `!…` 로 바꾼다(`ValueError`·`UnicodeError` → `!c`, 깊은 JSON → `!j`). 키는 `key_on` 이고 `use_key=True` 일 때만 `Authorization: Bearer` 로. `secrets` = 이 서버의 가릴 값 |
 | `Budget(max_calls)` | 호출 수 세기 — 넘으면 네트워크에 나가지 않고 `!q` |
 | `probe_env(env, reg)` | `e` 줄 재료 |
-| `probe_server(client, io)` | 키 없이 목록 → (JSON 401·403 이면) 키로 목록, HTML 401·403 은 프록시·게이트웨이 화면으로 보고 `e=!h` 로 멈춤(키를 보내지 않는다) → 연결 실패 + 프록시가 걸리면 직접 한 번 → `/version`·`/api/version` → OPTIONS 사전 요청 |
+| `probe_server(client, io, label, insecure, s)` | 키 없이 목록 → 연결 실패 + 프록시가 걸리면 직접 한 번 → 아래 '키 정책' → `/version`·`/api/version` → OPTIONS 사전 요청 → `k`·`h` 를 가려(`scrub`) 화면과 결과에 같이 쓴다. `s` 에 차례로 채운다 |
 | `probe_model(client, entry, kind, io)` | 문맥 길이(목록 → `/tokenize` → 400 → `/api/show`) → 긴 질문 → 추론 low·high → 생각 끄기 → json_schema → Responses |
-| `run(argv, io)` | 인자 읽기 → 환경 → 서버 반복 → 요약·코드·결과 파일 → 멈춤. Ctrl+C 면 남은 단계를 `!s` 로 두고 요약한다 |
-| `IO` | `ask`·`secret`·`say`·`pause` — 시험이 바꿔 끼운다 |
+| `run(argv, io)` | 인자 읽기(줄임 안 받음, 오류 글에 값을 싣지 않음) → 환경 → 서버 반복(`read_key` → `Client` → `probe_server` → 모델마다 `probe_model`, 각각 예상 밖 오류는 `!e` 로 두고 다음으로) → 요약·코드·결과 파일 → 멈춤. Ctrl+C 면 남은 단계를 `!s` 로 두고 요약한다. `--cafile` 을 못 읽으면 알리고 종료 코드 2 |
+| `read_key(args, io, interactive)` | `clean_key` 로 정리. 대화형이면 쓸 수 없는 글자일 때 세 번까지 다시 묻는다. `--key-env` 의 이름은 찍지 않는다 |
+| `IO` | `ask`·`secret`·`say`·`pause` — 시험이 바꿔 끼운다. `secret` 은 `GetPassWarning`(가릴 수 없는 창)을 오류로 받아 키를 받지 않는다. 서버를 받은 뒤 `say` 와 결과 파일은 `redact` 를 지난다(마지막 그물) |
 | `read_registry_proxy()` | Windows 레지스트리(`winreg`)의 `ProxyEnable`·`ProxyServer`·`ProxyOverride`·`AutoConfigURL`. 값은 화면에 찍지 않는다 |
 | `serve_test(...)`·`ProbeHandler` | 3.4 |
 
@@ -159,6 +166,19 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 | json_schema | `response_format: {"type":"json_schema", …, "strict": true}` (`answer` 정수·`unit` 글자) | 1024 |
 | Responses | `POST /v1/responses {"input", "max_output_tokens", "reasoning":{"effort":"low"}}` | 1024 |
 
+**키 정책**(독립 점검 F-01·F-02·F-04 — Phase 6 의 AI 대리 호출도 따른다, 설계서_Architecture 6절):
+
+| 키 없이 부른 목록의 답 | 경로 | 키 | 결과 |
+|---|---|---|---|
+| 200 | 아무것 | 보내지 않는다(그 서버의 모든 호출) | `a=n` |
+| 401·403, 본문이 JSON 객체 | https, 또는 프록시 없음 | 보낸다 | `a=y` |
+| 같음 | 평문 http + 프록시가 걸림 | 먼저 프록시 없이 키 없이 다시 — 닿으면 직접 연결로 보낸다, 안 닿으면 보내지 않는다 | `q=k` / `e=!p` |
+| 401·403, 그 밖(HTML·XML·글·빈 본문·BOM 붙은 화면) | 아무것 | 보내지 않는다 | `e=!h` |
+| 3xx | 아무것 | 따르지 않고 보내지 않는다 | `d=…`, `e=!r` |
+
+- JSON 객체면 `Content-Type` 이 `text/plain` 이어도 API 로 본다(Go 의 `http.Error` 처럼 글 형식으로 JSON 을 보내는 서버가 있다). HTML·XML 형식이면 본문이 JSON 이어도 화면으로 본다
+- 프록시 판정은 urllib 와 같다(`getproxies`·`proxy_bypass` — `NO_PROXY` 의 CIDR·`*`·`;` 목록은 urllib 가 읽지 못한다, T-004). 판정이 틀려도 평문 키는 프록시로 가지 않는다 — 키를 보내는 호출은 직접 연결이다
+
 ### 3.4 `--serve-test` — B
 
 | 경로 | 동작 |
@@ -167,8 +187,8 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 | `GET /probe` | `browser_probe.html`(같은 폴더). CSP `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self' http: https:; base-uri 'none'; form-action 'none'`, `Cache-Control: no-store` |
 | `GET /probe/ping` | 쿠키가 맞으면 200 `{"ok":true,"py":"…"}`, 아니면 403 |
 | `POST /probe/echo` | 쿠키 필요. 본문 8 MiB 까지(넘으면 413, 길이 없으면 411) → `{"bytes":N}` |
-| `POST /probe/result` | 쿠키 필요. 2 KB 이하의 `b …` 한 줄 → 콘솔에 찍고 기억 |
-| 모든 요청 | `Host` 가 `127.0.0.1:<포트>`·`localhost:<포트>` 가 아니면 403. 127.0.0.1 에만 묶는다 |
+| `POST /probe/result` | 쿠키 필요. 2 KB 이하의 `b …` 한 줄(인쇄 가능한 ASCII 만 — 콘솔 제어 글자를 받지 않는다) → 콘솔에 찍고 기억 |
+| 모든 요청 | `Host` 가 `127.0.0.1:<포트>`·`localhost:<포트>` 가 아니면 403. 127.0.0.1 에만 묶는다. 토큰·쿠키는 바이트로 비교한다(ASCII 가 아닌 값에 `TypeError` 가 나지 않게) |
 
 포트 기본값은 8770(MWL 서버 8765 와 다르게). 쓰는 중이면 다음 10개를 차례로 본다. `--port 0` 은 빈 포트.
 
@@ -199,7 +219,7 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 | `coverage_lite.py [--enforce] [--json F]` | `coverage_grades.json`: `roots`(측정 폴더), `A`·`B`(경로 앞부분 또는 `경로::함수이름패턴`), `exclude`, `thresholds`. 함수 단위 항목은 그 최상위 함수의 줄을, 나머지 줄은 파일 단위 항목을 따른다. 등급이 없는 줄이 있으면 `--enforce` 에서 실패 |
 | `check_publish_safety.py` | 대상 = `git ls-files --cached --others --exclude-standard`. 막음 = IPv4(127/8·0.0.0.0·RFC 5737 세 대역 빼고, 줄에 `ip-ok` 가 있으면 뺌)·토큰 꼴(`gh?_`·`sk-`·`AKIA`·개인 키 머리·JWT)·메일(예시 도메인·`noreply@anthropic.com` 빼고)·금지 파일(`.env`·`*.key`·`*.pem`·`*.jks`·`*.keystore`·`secrets/`·`ai_probe_result*.txt`) |
 | `check_probe_html.py` | 파일 하나·크기·`lang="ko"`·`charset`·외부 자원 0(`src`·`href`·`@import`·`url()`)·`<script src>` 없음·입력마다 라벨·단추마다 글·필수 요소 id |
-| `browser_smoke.py [--shots DIR]` | Playwright 이미지의 `chrome-headless-shell --dump-dom`. ① `file://` 두 경로(같은 프로필, 프로세스를 다시 띄움 — 공유·다시 연 뒤 남음까지) ② `--serve-test`(호스트 네트워크) ③ 가짜 AI 서버 두 가지(CORS 있음·없음). 검사 = `data-done`, 코드 검사합(Python 과 같은지), 검산 값, 오류 0, 기대 칸 값 |
+| `browser_smoke.py [--shots DIR]` | Playwright 이미지의 `chrome-headless-shell` 을 `tests/ui/cdp.js` 가 CDP 로 몬다 — `body[data-done="1"]` 까지 기다린다(`--dump-dom` 은 비동기 작업 전에 끝나 쓰지 않는다, T-001). ① `file://` 두 경로(같은 프로필, 프로세스를 다시 띄움 — 공유·다시 연 뒤 남음까지) ② `--serve-test`(호스트 네트워크) ③ 가짜 AI 서버 두 가지(CORS 있음·없음). 검사 = `data-done`, 코드 검사합(Python 과 같은지), 검산 값, 오류 0, 기대 칸 값 |
 | `pack_probe.py [--out DIR]` | `dist/mylearner-probe-v<판>.tgz`. 이름순·mtime 고정·uid/gid 0·gzip mtime 0 → 같은 입력이면 같은 바이트. 묶음 안 외부 URL 검사(루프백·RFC 5737 만 허용) |
 
 ## 4. 설정 — 외부화한 값과 기본값
@@ -213,7 +233,7 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 | 시험 서버 포트 | 8770 | `--port` |
 | 브라우저 IndexedDB 목표 | 64 MB | 화면의 고르기(16·64·256) |
 | 긴 질문 길이 | 9,000자 | 상수 `LONG_CHARS`(바꾸면 코드 판을 올린다) |
-| 개발 이미지 | `mcr.microsoft.com/playwright:v1.63.0-noble` | `scripts/dev_tools.env` |
+| 개발 이미지 | 스모크·Python 3.12: `mcr.microsoft.com/playwright:v1.63.0-noble`, Python 3.14: `python:3.14.8-slim` | `scripts/dev_tools.env` |
 
 대화형 입력을 쓰지 않는 실행(시험용): `--server URL`(여러 번), `--key-env 이름`(키를 환경 변수에서), `--no-pause`, `--out-dir`.
 
@@ -225,9 +245,11 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 | 서버 목록을 못 받음 | 서버 줄에 `e=!…`, 그 서버의 모델 점검은 건너뛴다 |
 | 호출 상한 | 그 뒤 단계는 `!q` |
 | Ctrl+C | 남은 단계 `!s`, 요약·코드·결과 파일을 낸다 |
-| 예상 밖 예외 | 예외 이름만 찍고(가린 뒤) 멈춰 창을 연 채 둔다 — 코드는 낸 데까지 |
+| 예상 밖 예외 | 서버·모델 하나에서 나면 이름만 찍고 그 칸을 `!e` 로 두고 다음으로 간다 — 결과 코드는 끝까지 낸다. 그 밖(시작 전)에서 나면 이름만 찍고 창을 연 채 둔다 |
+| `--cafile` 을 못 읽음 | 알리고 종료 코드 2(서버를 부르기 전) |
+| 인자 오류 | 정해진 글만 찍고 종료 코드 2 — argparse 의 오류 글은 받은 값을 되풀이한다(키를 명령줄에 잘못 줬을 수 있다) |
 | 출력 인코딩 | `sys.stdout.reconfigure(errors="replace")`, 글은 `safe_text` 로 |
-| 오류 문구의 주소·키 | 모두 `redact` 를 지난다 |
+| 오류 문구의 주소·키 | 주소를 읽지 못한 까닭은 정해진 글로만. 서버를 받은 뒤 화면 글과 결과 파일은 모두 `redact` 를 지난다(`IO.say`) |
 
 ## 6. 요구사항 추적
 
@@ -241,14 +263,14 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 | 106 | `scripts/pack_probe.py` | verify 묶음 단계, `test_verify_tools.py` |
 | 110 | `ai_probe.py` 전체 | `test_ai_probe_static.py`(3.9 문법·제거된 모듈) |
 | 111 | `probe_env`·`read_registry_proxy`·`proxy_kind` | 단위·통합 |
-| 112 | `run`·`normalize_base` | 단위·통합 |
+| 112 | `run`·`normalize_base`·`clean_key`·`read_key`·`IO.secret`·`_Parser` | 단위·통합(`test_ai_probe_keyleak.py` 두 벌) |
 | 113 | `Budget`·`Client`·`run`(Ctrl+C) | 통합 |
 | 114 | `Client`(리다이렉트)·`classify_redirect` | 통합(키 미전달)·단위 |
-| 115 | `probe_server`·`proxy_applies` | 통합(죽은 프록시 → 직접) |
+| 115 | `probe_server`·`proxy_applies` | 통합(죽은 프록시 → 직접, 가짜 프록시 `CaptureProxy` — 키를 못 봄) |
 | 116 | `make_ssl_context`·`Client` | 통합(자체 서명 인증서) |
-| 120~123 | `probe_server`·`server_kind`·`ctx_from_*`·`cors_verdict` | 단위·통합 |
+| 120~123 | `probe_server`·`auth_challenge`·`server_kind`·`ctx_from_*`·`cors_verdict` | 단위·통합 |
 | 130~136 | `probe_model`·`make_long_prompt`·`judge_*` | 단위·통합 |
-| 140~142 | `checksum`·`make_line`·`parse_line`·`*_line`·`explain`·`render_summary`·`--decode` | 단위·통합 |
+| 140~142 | `checksum`·`make_line`·`parse_line`·`*_line`·`explain`·`render_summary`·`leaks`·`scrub`·`model_label`·`--decode` | 단위·통합 |
 | 143 | `safe_text`, 소스의 모든 글자 cp949 검사 | 단위 |
 | 144 | `IO.pause`·`run` | 통합 |
 | 150 | `serve_test`·`ProbeHandler` | 통합, 스모크 |
@@ -259,7 +281,7 @@ MWL 에서 복사해 고친 것(기준 커밋 `e053470`): `verify_docs.py`(대�
 | 것 | 어디로 |
 |---|---|
 | 브라우저 저장 방식과 한도 | 보류 결정 7 — 이 Phase 의 결과 코드로 Phase 2 시작 때 정한다 |
-| Python 3.14 실행 시험 | 테스트결과서 8절(사용자에게 묻는다) |
+| ~~Python 3.14 실행 시험~~ | → 전체 검증 4단계(`python:3.14.8-slim`, 사용자 승인 2026-10-15) |
 
 ## 8. 화면 — `browser_probe.html`
 

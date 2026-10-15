@@ -2,6 +2,8 @@
 
 - 작성 2026-10-15(Phase 1) / 상위 문서: [`scope-definition.md`](scope-definition.md) / 기획 원문: [`BRIEF.md`](BRIEF.md) / 규칙: [`../CLAUDE.md`](../CLAUDE.md)
 - 계속 고치는 문서다. Phase 마다 정한 것을 해당 절에 더하고, 아직 정하지 않은 것은 "Phase N 에서 정한다"로 남긴다
+- 정정 이력: 2026-10-15 — 7절 시험(Python)에 3.14(`python:3.14.8-slim`)를 더했다(사용자 승인)
+- 정정 이력: 2026-10-15 — 6절 '비밀'에 AI 키를 보내는 조건을 더했다(P1 독립 점검 — Phase 6 의 AI 대리 호출도 따른다)
 
 ## 1. 범위 문서와의 경계
 
@@ -70,7 +72,7 @@
 | 파일 머리 | 코드 파일 첫 주석·docstring 에 입력·출력·트리거·대응 문서(요구사항·설계서 경로)를 적는다(CLAUDE.md 4·6절) |
 | 도메인 상수 | Python 은 `mylearner/constants.py`, JS 는 `web/core/constants.js` 한 곳(Phase 2). **예외**: `tools/` 의 단독 도구는 들고 다니는 파일 하나라 자기 상수를 머리에 둔다 |
 | 판별 설정 | `config/*.json`(AI 프리셋·허용 행선지·저장 어댑터·포장). 코드 분기 없음 |
-| 비밀 | 키는 로컬 서버가 읽는 파일에만, 커밋은 `*.example` 만. 화면·로그·결과 요약에 주소·키를 찍지 않는다 |
+| 비밀 | 키는 로컬 서버가 읽는 파일에만, 커밋은 `*.example` 만. 화면·로그·결과 요약에 주소·키를 찍지 않는다. **AI 키를 보내는 조건**(P1 독립 점검, `docs/P1_설계서_Probe.md` 3.3절 '키 정책'): 리다이렉트를 따르지 않는다(3xx 처리기 자체를 끈다 — T-003), 서버가 JSON 401·403 으로 요구할 때만, 평문 http 는 프록시를 지나지 않게(urllib 의 `NO_PROXY` 판정을 믿지 않는다 — T-004). 서버가 준 글(Server 헤더·판·모델 이름)은 정해진 모양만 화면·결과로 낸다 |
 | 브라우저 JS | **classic script 만 쓴다** — `file://` 에서 `<script type="module">` 은 돌지 않고 `new Worker()` 는 `SecurityError` 다(2026-10-15 헤드리스 Chromium 153 으로 확인, 폐쇄망 Chrome 150 은 `browser_probe.html` 결과로 다시 본다). 파일마다 즉시 실행 함수로 감싸 전역 이름 하나(`MyLearner`)에만 붙이고, Node 시험을 위해 `module.exports` 도 둔다(Phase 2 에서 확정) |
 | 자기 파일 읽기 | `file://` 에서 `fetch` 가 막힌다(같은 확인) → 데이터는 `<script>` 로 싣는 묶음 파일 또는 사용자가 고른 파일로 읽는다(Phase 3) |
 | 콘솔 출력 | cp949 로 나타낼 수 있는 글자만(한국어 Windows). 이모지·특수 기호를 쓰지 않는다 |
@@ -84,7 +86,7 @@
 | 런타임 서버·도구 | Python 표준 라이브러리 | 3.9 이상(폐쇄망 PC 3.14·3.12·3.9) |
 | 런타임 화면 | 바닐라 JS + 토큰 CSS, 외부 라이브러리 0 | Chrome 150 기준 |
 | 안드로이드 | WebView 껍데기(MWL 시제품 이식) | Phase 4 |
-| 시험(Python) | `unittest` + `scripts/coverage_lite.py` | 개발 VM 3.9.21·3.11.9, Playwright 이미지의 3.12.3 |
+| 시험(Python) | `unittest` + `scripts/coverage_lite.py` | 개발 VM 3.9.21·3.11.9, Playwright 이미지의 3.12.3, `python:3.14.8-slim` 의 3.14.8(2026-10-15 받음 — DeprecationWarning 은 실패) |
 | 시험(JS) | Node 내장 시험 실행기(⚠️ 커버리지 방식은 Phase 2 에서 확인) | `node:22-alpine`(Phase 2 에서 받아 태그를 고정한다) |
 | 화면 확인 | Playwright 이미지의 Chromium(헤드리스) | `mcr.microsoft.com/playwright:v1.63.0-noble` — Chromium 153.0.8010.12, 이 VM 에 이미 있다(2026-10-15) |
 

@@ -17,9 +17,10 @@ REMOVED = {"distutils", "imp", "asynchat", "asyncore", "smtpd", "cgi", "cgitb", 
            "pipes", "audioop", "aifc", "chunk", "imghdr", "mailcap", "msilib", "nis", "ossaudiodev", "sndhdr",
            "spwd", "sunau", "uu", "xdrlib", "lib2to3"}
 # 이 도구가 쓰는 표준 모듈(더하면 여기에도 더한다 — 외부 패키지가 끼어드는 것을 막는다)
+# warnings: getpass 가 키를 가리지 못하는 창(IDLE 등)에서 내는 GetPassWarning 을 오류로 받아 키를 받지 않는다(독립 점검)
 ALLOWED = {"__future__", "argparse", "datetime", "getpass", "hmac", "http", "json",
            "os", "platform", "re", "secrets", "socket", "ssl", "sys", "threading", "time", "urllib",
-           "webbrowser", "winreg", "pathlib"}
+           "warnings", "webbrowser", "winreg", "pathlib"}
 
 
 def imported_roots():

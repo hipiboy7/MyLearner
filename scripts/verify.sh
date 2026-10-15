@@ -3,10 +3,11 @@
 # 실패해도 끝까지 돌린다. 커밋은 이 명령이 종료 코드 0 일 때만 한다: bash scripts/verify.sh > 로그 && git commit ...
 #
 # 사용: bash scripts/verify.sh            # 전체
-#       bash scripts/verify.sh --quick    # Docker 단계(Python 3.12 시험·브라우저 스모크)를 뺀다
+#       bash scripts/verify.sh --quick    # Docker 단계(Python 3.12·3.14 시험·브라우저 스모크)를 뺀다
 #       bash scripts/verify.sh --release  # 설계 문서까지 문서 검사(배포 전)
-# 단계: 0 환경 · 1 시험 3.9 · 2 시험 3.11 · 3 시험 3.12(Docker) · 4 3.9 문법 · 5 커버리지 · 6 문서 · 7 공개 전 점검
-#       · 8 브라우저 점검 정적 검사 · 9 브라우저 스모크(Chromium) · 10 반입 묶음 재현성·외부 URL 0
+# 단계: 0 환경 · 1 시험 3.9 · 2 시험 3.11 · 3 시험 3.12(Docker) · 4 시험 3.14(Docker, DeprecationWarning 은 실패)
+#       · 5 3.9 문법 · 6 커버리지 · 7 문서 · 8 공개 전 점검 · 9 브라우저 점검 정적 검사 · 10 브라우저 스모크(Chromium)
+#       · 11 반입 묶음 재현성·외부 URL 0
 # 문서: docs/P1_요구사항정의서_Probe.md FR-102, docs/P1_테스트결과서_Probe.md 1절
 set -u
 cd "$(dirname "$0")/.." || exit 1
@@ -52,14 +53,21 @@ if [ $QUICK = 0 ]; then
 else
   skip "3 시험 Python 3.12(Docker)" "quick"
 fi
+if [ $QUICK = 0 ]; then
+  # 폐쇄망 PC 의 기본 판. 다음 판에서 없어질 API 를 일찍 잡으려고 DeprecationWarning 을 오류로 본다(시험이 띄우는 하위 프로세스도)
+  run "4 시험 Python 3.14(Docker)" docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 \
+      -e PYTHONWARNINGS=error::DeprecationWarning -v "$PWD:/w:ro" -w /w "$PY314_IMAGE" bash -c "$PYTESTS"
+else
+  skip "4 시험 Python 3.14(Docker)" "quick"
+fi
 PY_NEW=python3; [ -x /usr/bin/python3.11 ] && PY_NEW=/usr/bin/python3.11
-run "4 3.9 문법(ai_probe)" "$PY_NEW" -c "import ast; ast.parse(open('tools/ai_probe.py', encoding='utf-8').read(), feature_version=(3, 9))"
-run "5 커버리지(A>=90 B>=70)" python3 scripts/coverage_lite.py --enforce
-if [ $RELEASE = 1 ]; then run "6 문서 검사(release)" python3 scripts/verify_docs.py --release; else run "6 문서 검사" python3 scripts/verify_docs.py; fi
-run "7 공개 전 점검" python3 scripts/check_publish_safety.py
-run "8 브라우저 점검 정적 검사" python3 scripts/check_probe_html.py
-if [ $QUICK = 0 ]; then run "9 브라우저 스모크(Chromium)" python3 scripts/browser_smoke.py; else skip "9 브라우저 스모크(Chromium)" "quick"; fi
-run "10 반입 묶음 재현·외부 URL 0" python3 scripts/pack_probe.py --check
+run "5 3.9 문법(ai_probe)" "$PY_NEW" -c "import ast; ast.parse(open('tools/ai_probe.py', encoding='utf-8').read(), feature_version=(3, 9))"
+run "6 커버리지(A>=90 B>=70)" python3 scripts/coverage_lite.py --enforce
+if [ $RELEASE = 1 ]; then run "7 문서 검사(release)" python3 scripts/verify_docs.py --release; else run "7 문서 검사" python3 scripts/verify_docs.py; fi
+run "8 공개 전 점검" python3 scripts/check_publish_safety.py
+run "9 브라우저 점검 정적 검사" python3 scripts/check_probe_html.py
+if [ $QUICK = 0 ]; then run "10 브라우저 스모크(Chromium)" python3 scripts/browser_smoke.py; else skip "10 브라우저 스모크(Chromium)" "quick"; fi
+run "11 반입 묶음 재현·외부 URL 0" python3 scripts/pack_probe.py --check
 
 echo
 printf '%-30s %-8s %s\n' "단계" "결과" "초"

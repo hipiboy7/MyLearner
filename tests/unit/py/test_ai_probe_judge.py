@@ -91,7 +91,7 @@ class ProxyTest(unittest.TestCase):
         self.assertTrue(P.proxy_applies("http://gw.example:8000/v1", proxies, lambda host: False))
         self.assertFalse(P.proxy_applies("http://gw.example:8000/v1", proxies, lambda host: host.startswith("gw.")))
         self.assertFalse(P.proxy_applies("https://gw.example/v1", proxies, lambda host: False))
-        self.assertTrue(P.proxy_applies("https://gw.example/v1", {"all": "http://p.example:1"}, lambda h: False))
+        # ALL_PROXY 는 urllib 가 쓰지 않는다(독립 점검 F-02) - test_ai_probe_keyleak.ProxyAllIgnoredTest
 
 
 class ContextLengthTest(unittest.TestCase):
@@ -141,7 +141,7 @@ class ServerKindTest(unittest.TestCase):
 
     def test_other(self):
         self.assertEqual(P.server_kind({"data": []}, {"version": "2.4 rc"}, None, "nginx/1.24.0 (Ubuntu)"),
-                         ("v/2.4_rc", "nginx/1.24.0"))
+                         ("v/2.4", "nginx/1.24.0"))   # 판은 숫자 모양만(독립 점검 F-03)
         self.assertEqual(P.server_kind(None, None, None, ""), ("-", "-"))
 
 

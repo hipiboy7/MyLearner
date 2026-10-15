@@ -1,9 +1,10 @@
-"""시험용 가짜 AI 서버 — vLLM 꼴·Ollama 꼴·게이트웨이 꼴(HTML 200·401·느림·리다이렉트·길이 초과).
+"""시험용 가짜 AI 서버 — vLLM 꼴·Ollama 꼴·게이트웨이 꼴(HTML 200·401·느림·리다이렉트·길이 초과)과 정방향 프록시 꼴.
 
 실제 AI 를 부르지 않는다. 받은 요청(방법·경로·헤더·본문)을 requests 에 남긴다.
 응답 모양은 MWL tests/integration/fake_ai.py(기준 커밋 e053470)와 vLLM·Ollama 의 공개 API 모양을 본떴다 — 사내 서버의
 실제 모양은 폐쇄망 점검 결과로만 안다(docs/P1_설계서_Probe.md 3.1절).
-대응: docs/P1_요구사항정의서_Probe.md FR-113~136
+대응: docs/P1_요구사항정의서_Probe.md FR-113~136, docs/P1_테스트결과서_Probe.md 5.2절(독립 점검 — 글·빈 본문 차단 화면,
+      깨진 Location, 깊은 JSON, 큰 수, 프록시가 키를 보는가)
 """
 import json
 import threading
@@ -14,7 +15,8 @@ LONG_MARK = "시작 표지"
 
 
 class FakeAI:
-    """mode: vllm | ollama | html | auth401 | html403 | redirect | length400.  cors: none | star | full."""
+    """mode: vllm | ollama | html | auth401 | html403 | redirect | length400 | text403 | empty401 | bompage403
+    | badredirect | deepjson | hugeusage.  cors: none | star | full."""
 
     def __init__(self, mode="vllm", key=None, cors="none", models=("openai/gpt-oss-120b",), ctx=131072,
                  num_ctx=4096, delay=0.0, redirect_to=None, server_header="uvicorn", version="0.9.2",
@@ -35,7 +37,8 @@ class FakeAI:
             def _send(self, code, body, ctype="application/json", extra=None):
                 try:
                     self.send_response(code)
-                    self.send_header("Content-Type", ctype)
+                    if ctype:
+                        self.send_header("Content-Type", ctype)
                     self.send_header("Content-Length", str(len(body)))
                     for k, v in outer._cors_headers(self.headers.get("Origin"), preflight=False).items():
                         self.send_header(k, v)
@@ -87,7 +90,7 @@ class FakeAI:
         self.srv.daemon_threads = True
         self.port = self.srv.server_address[1]
         self.base = "http://127.0.0.1:%d" % self.port
-        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+        threading.Thread(target=self.srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()
 
     def close(self):
         self.srv.shutdown()
@@ -120,6 +123,16 @@ class FakeAI:
             return h._send(403, "<html><body>접근이 차단되었습니다</body></html>".encode("utf-8"), "text/html; charset=utf-8")
         if self.mode == "redirect":
             return h._send(307, b"", extra={"Location": (self.redirect_to or "") + h.path})
+        if self.mode == "text403":       # 글로 된 차단 화면(Envoy 꼴)
+            return h._send(403, b"RBAC: access denied", "text/plain")
+        if self.mode == "empty401":      # 본문 없는 401(Negotiate 요구)
+            return h._send(401, b"", None, extra={"WWW-Authenticate": "Negotiate"})
+        if self.mode == "bompage403":    # BOM 이 붙은 HTML 을 글이라고 함
+            return h._send(403, "\ufeff<html><body>차단</body></html>".encode("utf-8"), "text/plain")
+        if self.mode == "badredirect":   # 읽을 수 없는 Location
+            return h._send(302, b"", extra={"Location": "http://[::1"})
+        if self.mode == "deepjson" and path == "/v1/models":
+            return h._send(200, b"[" * 100000, "application/json")
         if self.key and path.startswith("/v1") and h.headers.get("Authorization") != "Bearer " + self.key:
             return h._json(401, {"error": {"message": "invalid api key"}})
         if self.mode == "ollama":
@@ -199,5 +212,53 @@ class FakeAI:
                 msg["reasoning_content"] = "생각" * rt
             usage["completion_tokens"] = rt + 3
             usage["completion_tokens_details"] = {"reasoning_tokens": rt}
+        if self.mode == "hugeusage":     # 터무니없이 큰 수
+            usage = {"prompt_tokens": 10 ** 400, "completion_tokens": 10 ** 400,
+                     "completion_tokens_details": {"reasoning_tokens": 10 ** 400}}
         return h._json(200, {"id": "chatcmpl-1", "object": "chat.completion", "model": body.get("model"),
                              "choices": [{"index": 0, "finish_reason": "stop", "message": msg}], "usage": usage})
+
+
+class CaptureProxy:
+    """정방향 프록시 꼴 — 받은 요청(절대 주소, 헤더)을 requests 에 남기고 대상에 넘기지 않고 스스로 답한다.
+    answer: json401(대상의 401 을 넘겨준 것처럼) | text403(프록시의 글 차단 화면)."""
+
+    def __init__(self, answer="json401"):
+        self.answer, self.requests = answer, []
+        outer = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *a):
+                pass
+
+            def _any(self):
+                outer.requests.append({"method": self.command, "path": self.path, "headers": dict(self.headers)})
+                n = int(self.headers.get("Content-Length") or 0)
+                if n:
+                    self.rfile.read(n)
+                if outer.answer == "json401":
+                    code, ctype, body = 401, "application/json", b'{"error": "Unauthorized"}'
+                else:
+                    code, ctype, body = 403, "text/plain", b"Access Denied"
+                try:
+                    self.send_response(code)
+                    self.send_header("Content-Type", ctype)
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+
+            do_GET = do_POST = do_OPTIONS = _any
+
+        self.srv = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.srv.daemon_threads = True
+        self.url = "http://127.0.0.1:%d" % self.srv.server_address[1]
+        threading.Thread(target=self.srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()
+
+    def close(self):
+        self.srv.shutdown()
+        self.srv.server_close()
+
+    def saw_key(self):
+        return any("Authorization" in r["headers"] for r in self.requests)

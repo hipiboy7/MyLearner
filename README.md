@@ -2,14 +2,14 @@
 
 내가 넣은 자료로 강의·카드·퀴즈를 만들고 매일 복습해 몸에 익히는 **1인용 학습 플랫폼** — 폐쇄망 PC · 내 PC · 안드로이드 폰.
 
-**지금 상태(2026-10-15): Phase 1 진행 중**(브랜치 `impl-phase1`) — 폐쇄망 점검 도구 2종과 전체 검증 명령을 만들었고, 사용자가 폐쇄망에서 돌려 결과 코드를 전하는 단계다([`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다. GitHub `hipiboy7/MyLearner`(private)에는 첫 커밋(BRIEF·README, 2026-10-14)까지 올라가 있다.
+**지금 상태(2026-10-15): Phase 1 진행 중**(브랜치 `impl-phase1`) — 폐쇄망 점검 도구 2종과 전체 검증 명령을 만들었고(Python 3.9·3.11·3.12·3.14 시험, 키 유출 독립 점검까지), 사용자가 폐쇄망에서 돌려 결과 코드를 전하는 단계다([`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다. GitHub `hipiboy7/MyLearner`(private)에는 첫 커밋(BRIEF·README, 2026-10-14)까지 올라가 있다.
 
 ## 0. 빠른 시작 — 개발 VM (Phase 1)
 
 ```bash
 cd /data/projects/MyLearner
 bash scripts/check_env.sh        # 마지막 줄 READY
-bash scripts/verify.sh           # 전체 검증 11단계(약 1분 20초). Docker 단계를 빼려면 --quick
+bash scripts/verify.sh           # 전체 검증 12단계(약 1분 10초). Docker 단계를 빼려면 --quick
 python3 scripts/pack_probe.py    # 폐쇄망 점검 묶음 dist/mylearner-probe-v1.tgz
 ```
 
@@ -47,7 +47,7 @@ Claude Code 의 대화와 메모리는 **VM 계정 × 폴더** 마다 저장된�
 | 돌고 있는 세션 보기·끝내기 | `claude agents --cwd /data/projects/MyLearner` · `claude logs mylearner` · `claude stop mylearner` |
 
 - 같은 폴더에서 두 번째 창을 `claude -c` 로 열지 않는다(두 프로세스가 같은 대화 파일에 쓴다). 갈라서 이어 가려면 `claude --resume <세션ID> --fork-session`.
-- `--model opus` 를 붙이는 이유: 새로 열면 조직 기본 모델(Sonnet)이 적용될 수 있다(2026-10-15 `/model` 화면). effort 는 세션 안에서 `/effort high` 처럼 **그것만 한 줄로** 친다.
+- `--model opus` 를 붙이는 이유: 새로 열면 조직 기본 모델(Sonnet)이 적용될 수 있다(2026-10-15 `/model` 화면). effort 는 세션 안에서 `/effort high` 처럼 **그것만 한 줄로** 친다. 환경 변수 `CLAUDE_CODE_EFFORT_LEVEL` 이 있으면 그것이 이긴다(이 계정은 `~/.bashrc` 에 `max` — 2026-10-15).
 - 처음 열 때 "외부 파일 가져오기" 승인 창이 뜨면 승인한다 — `CLAUDE.md` 가 Learn 루트 규칙(`/data/projects/Learn/CLAUDE.md`)을 가져온다.
 - 이 VM 에는 tmux·screen 이 없다(2026-10-14). 백그라운드 세션이 SSH 를 끊었다 다시 붙어도 이어지는지는 처음 쓸 때 확인한다.
 - 다음 사람(또는 다른 계정)이 이어받을 사실은 메모리가 아니라 이 저장소의 `history/`·문서에 남는다 — 착수 뒤 CLAUDE.md 0-1절이 읽는 순서를 정한다.
