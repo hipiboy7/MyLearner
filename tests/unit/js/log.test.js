@@ -39,7 +39,7 @@ test('parseLine — 사건·읽을 수 없는 줄·새 판', () => {
   const shuffled = JSON.stringify({ v: 1, type: 'review', t: e.t, seq: 1, grade: 'good', dev: 'a1', day: '2026-10-15', card: 'A1-1-c01', course: 'mwl' }, null, 1);
   const p = L.parseLine(shuffled.replace(/\n/g, ' '));
   assert.equal(p.kind, 'event'); assert.equal(p.event.line, e.line);
-  assert.deepEqual(L.parseLine(' {"v":2, "seq":1, "dev":"a1"} '), { kind: 'raw', reason: 'newer', text: '{"dev":"a1","seq":1,"v":2}' });
+  assert.deepEqual(L.parseLine(' {"v":2, "seq":1, "dev":"a1"} '), { kind: 'raw', reason: 'newer', text: '{"v":2, "seq":1, "dev":"a1"}' }, '해석하지 못한 줄은 빈칸만 뗀 글 그대로');
   assert.deepEqual(L.parseLine('not json  '), { kind: 'raw', reason: 'bad', text: 'not json' });
   for (const bad of ['not json', '[1,2]', '"x"', 'null', '{"v":"1","dev":"a1","seq":1,"t":"' + T + '","day":"2026-10-15","type":"review"}',
     '{"v":1,"seq":1,"t":"' + T + '","day":"2026-10-15","type":"review"}', '{"v":1,"dev":"a1","seq":-3,"t":"' + T + '","day":"2026-10-15","type":"review"}',
@@ -102,9 +102,10 @@ test('순서 — 기기 안은 순번, 기기 사이는 (학습일, 순위, 시�
 
 test('newDeviceId — 주입한 난수로 16자리 16진수', () => {
   assert.equal(L.newDeviceId((n) => Array.from({ length: n }, (_, i) => i * 17)), '00112233445566770'.slice(0, 16));
-  const id = L.newDeviceId((n) => new Uint8Array(n).fill(255));
-  assert.equal(id, 'ffffffffffffffff');
+  const id = L.newDeviceId((n) => new Uint8Array(n).map((_, i) => 255 - i));
+  assert.equal(id, 'fffefdfcfbfaf9f8');
   assert.match(id, /^[0-9a-f]{16}$/);
+  assert.throws(() => L.newDeviceId((n) => new Uint8Array(n)), /같은 바이트/, '모두 0 — 난수원이 고장');
   assert.throws(() => L.newDeviceId(), /난수/);
   assert.throws(() => L.newDeviceId(() => [1, 2]), /난수/);
 });
@@ -116,4 +117,23 @@ test('nextSeq·splitByMonth', () => {
   const by = L.splitByMonth(m.events);
   assert.deepEqual(Object.keys(by).sort(), ['2026-09', '2026-10']);
   assert.equal(by['2026-10'].length, 2);
+});
+
+test('독립 점검 F1·F2·F3·F4 — 상속 이름 줄·기기, 깊은 줄, 큰 수', () => {
+  const good = ev('a1', 1, '2026-10-01');
+  const m = L.merge([[good.line, 'constructor', '__proto__', 'toString', 'hasOwnProperty']]);
+  assert.deepEqual(m.raw, ['__proto__', 'constructor', 'hasOwnProperty', 'toString'], '상속 이름과 같은 줄도 남는다');
+  assert.equal(m.counts.bad, 4);
+  const c = L.make({ dev: 'constructor', seq: 1, t: T, day: '2026-10-15', type: 'constructor' });
+  const d = L.make({ dev: 'b2', seq: 1, t: T, day: '2026-10-15', type: 'constructor', course: 'constructor', card: 'toString' });   // 기기·종류 ID 는 소문자라 상속 이름은 constructor 뿐
+  const orders = new Set();
+  for (const lines of [[c.line, d.line, good.line], [good.line, d.line, c.line], [d.line, good.line, c.line]]) orders.add(L.writeFile(L.merge([lines])));
+  assert.equal(orders.size, 1, '기기·종류 이름이 상속 이름이어도 순서가 하나');
+  const deep = '['.repeat(5000) + ']'.repeat(5000);
+  const dm = L.merge([[good.line, deep, '{"v":1,"dev":"a1","seq":2,"t":"' + T + '","day":"2026-10-15","type":"review","x":' + deep + '}']]);
+  assert.equal(dm.events.length, 1, '깊은 줄 때문에 합치기 전체가 멈추지 않는다');
+  assert.equal(dm.counts.bad, 2);
+  const big = '{"v":2,"id":9007199254740993,"big":12345678901234567890,"huge":1e400,"d":1,"d":2,"z":-0}';
+  assert.deepEqual(L.merge([[big]]).raw, [big], '새 판 줄은 글자 그대로 — 큰 수·중복 키가 바뀌지 않는다');
+  assert.equal(L.readFile(L.writeFile(L.merge([[big]]))).lines[0], big);
 });

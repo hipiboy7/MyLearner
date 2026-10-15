@@ -13,7 +13,7 @@
   var C = dep('constants'), D = dep('dates'), M = dep('mastery'), K = dep('course');
 
   function streak(dates, today, studyDays) {
-    var days = {}, set = {};
+    var days = Object.create(null), set = Object.create(null);
     (studyDays && studyDays.length ? studyDays : [1, 2, 3, 4, 5, 6, 7]).forEach(function (d) { days[d] = true; });
     dates.forEach(function (d) { set[d] = true; });
     var cur = today;
@@ -50,7 +50,7 @@
     var regular = courses.filter(function (c) { return c.kind !== 'notes'; }), notes = courses.filter(function (c) { return c.kind === 'notes'; });
     var per = {};
     regular.forEach(function (c) { per[c.id] = M.summary(c, st); });
-    var dates = {};
+    var dates = Object.create(null);
     sessions.forEach(function (s) { dates[s.date] = true; });
     return {
       date: today,

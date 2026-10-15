@@ -13,12 +13,15 @@
   var C = dep('constants'), D = dep('dates'), S = dep('srs'), K = dep('course');
 
   function cmp(a, b) { return a < b ? -1 : a > b ? 1 : 0; }
+  // 밖에서 온 ID 로 표를 읽을 때는 늘 자기 키만(상속 값 'constructor' 등을 읽지 않게 — 독립 점검 F5)
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
-  function sub(map, key) { return (map && map[key]) || {}; }
-  function isDone(st, cid, lid) { var l = sub(st.lessons, cid)[lid]; return !!l && l.done === true; }
+  function sub(map, key) { return own(map, key) ? map[key] : {}; }
+  function get(map, key) { return own(map, key) ? map[key] : undefined; }
+  function table() { return Object.create(null); }
+  function isDone(st, cid, lid) { var l = get(sub(st.lessons, cid), lid); return !!l && l.done === true; }
   function held(st, cid, card) { return own(sub(st.held, cid), card); }
   function seen(st, cid, card) { return own(sub(st.cards, cid), card); }
-  function variantOf(settings, c) { return (settings.plan_variants || {})[c.id]; }
+  function variantOf(settings, c) { return get(settings.plan_variants || {}, c.id); }
   function mainCourse(courses, settings) {
     var regular = courses.filter(function (c) { return c.kind !== 'notes'; });
     return regular.filter(function (c) { return c.id === settings.main_course; })[0] || regular[0] || null;
@@ -26,7 +29,7 @@
 
   function resolvePrereqs(c, ix, st, lid, visiting) {
     visiting[lid] = true;
-    var pres = (c.lessons[lid] && c.lessons[lid].prereqs) || [];
+    var l = get(c.lessons, lid), pres = (l && l.prereqs) || [];
     for (var i = 0; i < pres.length; i++) {
       var p = pres[i];
       if (!isDone(st, c.id, p) && !visiting[p] && ix.unitOf(p)) return resolvePrereqs(c, ix, st, p, visiting);
@@ -35,13 +38,13 @@
   }
   function nextLesson(c, st, variant) {
     var ix = K.index(c), seq = ix.sequence(variant);
-    for (var i = 0; i < seq.length; i++) { if (isDone(st, c.id, seq[i])) continue; return resolvePrereqs(c, ix, st, seq[i], {}); }
+    for (var i = 0; i < seq.length; i++) { if (isDone(st, c.id, seq[i])) continue; return resolvePrereqs(c, ix, st, seq[i], table()); }
     return null;
   }
   function pickLab(c, st, lesson, docker) {
     if (!lesson) return null;
     var labs = sub(st.labs, c.id);
-    var undone = K.index(c).labsOf(lesson).filter(function (id) { return !labs[id] || labs[id].done !== true; });
+    var undone = K.index(c).labsOf(lesson).filter(function (id) { var b = get(labs, id); return !b || b.done !== true; });
     if (!undone.length) return null;
     if (!docker) { var nd = undone.filter(function (id) { return c.labs[id].env !== 'docker'; }); if (nd.length) return nd[0]; }
     return undone[0];
@@ -49,7 +52,7 @@
   function pickDrill(c, st, variant, currentWeek) {
     var plan = K.index(c).planOf(variant);
     if (!plan) return null;
-    var done = {};
+    var done = table();
     st.drills.forEach(function (d) { if (d.course === c.id) done[d.id] = true; });
     for (var i = 0; i < plan.weeks.length; i++) {
       var w = plan.weeks[i];
@@ -59,7 +62,7 @@
     return null;
   }
   function pickQuiz(c, st) {
-    var ix = K.index(c), tried = {};
+    var ix = K.index(c), tried = table();
     st.quizzes.forEach(function (q) { if (q.course === c.id) tried[q.id] = true; });
     for (var i = 0; i < ix.unitIds.length; i++) {
       var uid = ix.unitIds[i], qs = ix.quizzesOfUnit(uid), lessons = ix.units[uid].lessons || [];
@@ -95,7 +98,7 @@
     var done = [];
     courses.forEach(function (c, ci) {
       if (c.kind === 'notes') return;
-      var order = {};
+      var order = table();
       K.index(c).sequence(variantOf(settings, c)).forEach(function (lid, i) { if (!own(order, lid)) order[lid] = i; });
       var ls = sub(st.lessons, c.id);
       Object.keys(ls).forEach(function (lid) {
@@ -132,7 +135,7 @@
       var variant = variantOf(settings, main), ix = K.index(main);
       var lesson = nextLesson(main, st, variant);
       var week = lesson ? ix.weekOf(variant, lesson) : null;
-      if (lesson) minutes.lesson = (main.lessons[lesson] && main.lessons[lesson].minutes) || 20;
+      if (lesson) minutes.lesson = (get(main.lessons, lesson) || {}).minutes || 20;
       var lab = pickLab(main, st, lesson, !!opts.docker);
       if (lab) minutes.lab = main.labs[lab].minutes;
       var drill = null;

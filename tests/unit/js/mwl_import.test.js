@@ -46,7 +46,10 @@ test('사건 — 종류·과정·학습일·가상 기기·순번', () => {
   const conv = I.convert(p);
   const ev = L.merge([conv.lines]).events;
   assert.ok(ev.every((e) => /^mwl-[0-9a-f]{12}$/.test(e.dev)));
-  assert.deepEqual(ev.map((e) => e.seq).sort((a, b) => a - b), ev.map((_, i) => i + 1));
+  const bySeq = conv.events.slice().sort((a, b) => a.seq - b.seq);
+  assert.deepEqual(bySeq.map((e) => e.day), bySeq.map((e) => e.day).slice().sort(), '기기 안 순번 순서 = 날짜 순서');
+  assert.equal(new Set(ev.map((e) => e.seq)).size, ev.length, '순번이 겹치지 않는다');
+  assert.equal(conv.report.invalid, 0, '바꾼 사건은 모두 다시 계산에서 받는다');
   const by = (t) => ev.filter((e) => e.type === t);
   assert.equal(by('card.state').length, 4);
   assert.deepEqual(by('card.state').map((e) => e.data.course + ':' + e.data.card).sort(), ['mwl-notes:K0001-c01', 'mwl-notes:K0009-c01', 'mwl:A1-1-c01', 'mwl:A1-1-c02']);
@@ -63,18 +66,30 @@ test('사건 — 종류·과정·학습일·가상 기기·순번', () => {
   assert.equal(conv.report.cards, 4);
 });
 
-test('같은 진도는 같은 줄 — 두 번 들여와도 늘지 않는다(멱등), 다른 진도는 다른 기기', () => {
+test('같은 진도는 같은 줄 — 두 번 들여와도 늘지 않는다(멱등), 같은 설치의 나중 스냅숏은 같은 기기 — 같은 기록은 하나(독립 점검 F6)', () => {
   const p = richProgress();
   const a = I.convert(p), b = I.convert(JSON.parse(JSON.stringify(p)));
   assert.deepEqual(a.lines, b.lines);
   assert.equal(L.writeFile(L.merge([a.lines, b.lines])), L.writeFile(L.merge([a.lines])));
   const later = richProgress();
   later.cards['A1-1-c02'] = S.review(later.cards['A1-1-c02'], 'good', '2026-09-13');
+  later.sessions[1].minutes = 25;                                          // 같은 날 더 공부한 합계
+  later.sessions.push({ date: '2026-09-13', minutes: 10, reviewed: 1, lesson: null, lab: null });
+  later.quizzes.push({ id: 'QZ-A1', score: 90, at: '2026-09-13', answers: {} });
   const c = I.convert(later);
-  assert.notEqual(c.events[0].dev, a.events[0].dev);
-  // 둘 다 들여오면 나중 진도의 상태가 뒤에 와서 이긴다
-  const st = R.run(L.merge([a.lines, c.lines]).events, { today: '2026-09-20' });
-  assert.deepEqual(st.cards.mwl['A1-1-c02'], later.cards['A1-1-c02']);
+  assert.equal(c.events[0].dev, a.events[0].dev, '같은 설치(created) = 같은 가상 기기');
+  // 둘 다 들여와도 나중 스냅숏만 들여온 것과 같다 — 세션·퀴즈·드릴이 두 배가 되지 않고, 바뀐 카드는 나중 상태가 이긴다
+  const both = R.run(L.merge([a.lines, c.lines]).events, { today: '2026-09-20' });
+  const only = R.run(L.merge([c.lines]).events, { today: '2026-09-20' });
+  assert.deepEqual(both.sessions, only.sessions);
+  assert.deepEqual(both.sessions.map((x) => x.minutes), [50, 25, 10]);
+  assert.equal(both.quizzes.length, 2); assert.equal(both.drills.length, 1); assert.equal(both.checks.length, 2); assert.equal(both.journal.length, 1);
+  assert.deepEqual(both.cards, only.cards);
+  assert.deepEqual(both.cards.mwl['A1-1-c02'], later.cards['A1-1-c02']);
+  assert.equal(L.merge([a.lines, c.lines]).counts.conflicts, 1, '같은 날 합계가 바뀐 세션 하나만 같은 순번·다른 줄');
+  // 다른 설치(created 가 다름)는 다른 가상 기기
+  const other = richProgress(); other.created = '2026-08-01';
+  assert.notEqual(I.convert(other).events[0].dev, a.events[0].dev);
 });
 
 test('글로 받아도 되고, 스키마 1 은 올리고, 모르는 스키마·JSON 이 아닌 것은 거부한다', () => {
@@ -116,4 +131,14 @@ test('verify — 다르면 카드와 칸을 알려 준다', () => {
   const v = I.verify(p, st);
   assert.equal(v.total, 4); assert.equal(v.match, 2);
   assert.deepEqual(v.mismatches.map((m) => m.card + ':' + m.fields.join(',')).sort(), ['A1-1-c01:interval', 'K0009-c01:missing']);
+});
+
+test('독립 점검 F8 — 카드가 100장 넘는 내 지식도 메모 과정으로', () => {
+  const p = richProgress();
+  p.knowledge[1].cards = Array.from({ length: 101 }, (_, i) => ({ q: 'q' + i, a: 'a' + i }));
+  p.cards['K0001-c100'] = { ef: 2.5, interval: 1, reps: 1, lapses: 0, due: '2026-09-13', last: '2026-09-12', grades: [2] };
+  const conv = I.convert(p);
+  assert.ok(conv.notes.cards['K0001-c100']);
+  const ev = conv.events.filter((e) => e.type === 'card.state' && e.data.card === 'K0001-c100');
+  assert.equal(ev[0].data.course, 'mwl-notes');
 });

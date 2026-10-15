@@ -15,6 +15,9 @@
   var S = C.SHARED;
   var DEVICE = new RegExp(C.DEVICE_RE), TYPE = new RegExp(C.TYPE_RE);
   var ENVELOPE = ['v', 'dev', 'seq', 't', 'day', 'type'];
+  // 밖에서 온 ID(기기·종류·줄)를 열쇠로 쓰는 표는 프로토타입 없는 객체로 둔다 — 'constructor'·'toString' 같은 ID 가 상속 값을 읽지 않게(독립 점검 F1·F2)
+  function table() { return Object.create(null); }
+  function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
 
   function canonical(value) {
     if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
@@ -42,23 +45,25 @@
   }
   function stamp(date, dayStartHour) { return { t: date.toISOString(), day: D.learningDay(date, dayStartHour) }; }
 
+  // 해석하지 못한 줄(읽을 수 없는 줄·새 판)은 앞뒤 빈칸만 뗀 글 그대로 남긴다 — 정규형으로 바꾸면 큰 수·중복 키가 바뀐다(독립 점검 F4).
+  // 너무 깊이 겹친 줄은 정규형을 만들다 스택이 넘친다 — 그 줄만 읽을 수 없는 줄로 남긴다(F3)
   function parseLine(text) {
     var s = String(text).trim();
-    var o;
+    var o, line;
     try { o = JSON.parse(s); } catch (e) { return { kind: 'raw', reason: 'bad', text: s }; }
-    // JSON 인 줄은 해석하지 못해도 정규형으로 남긴다 — 키 순서만 다른 같은 줄이 둘로 늘지 않는다
-    if (!o || typeof o !== 'object' || Array.isArray(o)) return { kind: 'raw', reason: 'bad', text: canonical(o) };
-    if (Number.isInteger(o.v) && o.v > S.EVENT_VERSION) return { kind: 'raw', reason: 'newer', text: canonical(o) };
-    if (!envelopeOk(o)) return { kind: 'raw', reason: 'bad', text: canonical(o) };
-    return { kind: 'event', event: toEvent(o, canonical(o)) };
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return { kind: 'raw', reason: 'bad', text: s };
+    if (Number.isInteger(o.v) && o.v > S.EVENT_VERSION) return { kind: 'raw', reason: 'newer', text: s };
+    if (!envelopeOk(o)) return { kind: 'raw', reason: 'bad', text: s };
+    try { line = canonical(o); } catch (e) { return { kind: 'raw', reason: 'bad', text: s }; }
+    return { kind: 'event', event: toEvent(o, line) };
   }
 
   // ---- 순서: 기기마다 (seq, 정규형), 기기 사이는 맨 앞 사건의 열쇠 (day, 순위, t, dev) 가 작은 것부터(힙)
-  function rank(e) { return C.EVENT_RANK[e.type] || 0; }
+  function rank(e) { return own(C.EVENT_RANK, e.type) ? C.EVENT_RANK[e.type] : 0; }
   function cmpStr(a, b) { return a < b ? -1 : a > b ? 1 : 0; }
   function cmpKey(a, b) { return cmpStr(a.day, b.day) || (rank(a) - rank(b)) || cmpStr(a.t, b.t) || cmpStr(a.dev, b.dev); }
   function order(events) {
-    var by = {};
+    var by = table();
     events.forEach(function (e) { (by[e.dev] = by[e.dev] || []).push(e); });
     var heap = [];
     function less(i, j) { return cmpKey(heap[i].list[heap[i].at], heap[j].list[heap[j].at]) < 0; }
@@ -90,8 +95,8 @@
 
   // 합치기 = 합집합. lineLists: 줄 배열들(파일마다 하나). 결과는 줄 모음만의 함수다
   function merge(lineLists) {
-    var events = {}, raw = {}, bad = 0, newer = 0, nEvents = 0;
-    var rawReason = {};
+    var events = table(), raw = table(), bad = 0, newer = 0, nEvents = 0;
+    var rawReason = table();
     (lineLists || []).forEach(function (lines) {
       lines.forEach(function (line) {
         if (!String(line).trim()) return;
@@ -101,7 +106,7 @@
       });
     });
     var list = Object.keys(events).map(function (k) { return events[k]; });
-    var perKey = {};
+    var perKey = table();
     list.forEach(function (e) { var k = e.dev + '\u0000' + e.seq; perKey[k] = (perKey[k] || 0) + 1; });
     var conflicts = Object.keys(perKey).reduce(function (a, k) { return a + perKey[k] - 1; }, 0);
     var rawList = Object.keys(raw).sort();
@@ -126,17 +131,19 @@
     return { ok: true, error: null, header: head, lines: lines.slice(i + 1).filter(function (l) { return l.trim(); }) };
   }
 
+  // randomBytes(n) → 바이트 n 개(배열·Uint8Array). 브라우저: function (n) { return crypto.getRandomValues(new Uint8Array(n)); }
   function newDeviceId(randomBytes) {
-    if (typeof randomBytes !== 'function') throw new Error('난수원이 필요하다(crypto.getRandomValues)');
+    if (typeof randomBytes !== 'function') throw new Error('난수원이 필요하다(n → 바이트 n 개)');
     var b = randomBytes(8);
     if (!b || b.length !== 8) throw new Error('난수원이 8바이트를 주지 않았다');
+    if (Array.prototype.every.call(b, function (x) { return x === b[0]; })) throw new Error('난수원이 같은 바이트만 준다');
     return Array.prototype.map.call(b, function (x) { return (x & 255).toString(16).padStart(2, '0'); }).join('');
   }
   function nextSeq(events, dev) {
     return events.reduce(function (m, e) { return e.dev === dev && e.seq > m ? e.seq : m; }, 0) + 1;
   }
   function splitByMonth(events) {
-    var out = {};
+    var out = table();
     events.forEach(function (e) { var k = D.monthOf(e.day); (out[k] = out[k] || []).push(e); });
     return out;
   }

@@ -7,7 +7,7 @@ const L = core('log'), R = core('replay'), S = core('srs');
 
 let seqs = {};
 function at(dev, day, hh, type, extra) {
-  seqs[dev] = (seqs[dev] || 0) + 1;
+  seqs[dev] = (Object.prototype.hasOwnProperty.call(seqs, dev) ? seqs[dev] : 0) + 1;   // 기기 이름이 'constructor' 여도
   return L.make(Object.assign({ dev: dev, seq: seqs[dev], t: day + 'T' + String(hh).padStart(2, '0') + ':00:00.000Z', day: day, type: type }, extra));
 }
 function rv(dev, day, grade, hh, card) { return at(dev, day, hh === undefined ? 1 : hh, 'review', { course: 'c', card: card || 'k1', grade: grade }); }
@@ -167,4 +167,31 @@ test('today 를 주지 않으면 미래 사건을 가르지 않는다 · 빈 목
   const one = R.run(L.merge([[rv('a', '2099-01-01', 'good').line]]).events);
   assert.equal(one.future.length, 0);
   assert.equal(card(one).reps, 1);
+});
+
+test('독립 점검 F5 — 상속 이름 ID(toString·constructor)도 보통 카드처럼, 전역을 건드리지 않는다, __proto__ 설정은 받지 않는다', () => {
+  seqs = {};
+  const st = run([rv('a', '2026-01-01', 'good', 1, 'toString'), at('a', '2026-01-01', 2, 'review', { course: 'constructor', card: 'hasOwnProperty', grade: 'good' }),
+    at('a', '2026-01-01', 3, 'lesson', { course: 'constructor', lesson: 'valueOf', done: true }),
+    at('a', '2026-01-01', 4, 'setting', { key: '__proto__', value: { ghost: 1 } }), at('a', '2026-01-01', 5, 'setting', { key: 'constructor', value: 3 })]);
+  assert.deepEqual(st.cards.c.toString, S.review(S.newCardState(), 'good', '2026-01-01'));
+  assert.deepEqual(st.cards.constructor.hasOwnProperty, S.review(S.newCardState(), 'good', '2026-01-01'));
+  assert.equal(st.lessons.constructor.valueOf.done, true);
+  assert.equal(Object.prototype.hasOwnProperty.call(Object, 'hasOwnProperty'), false, 'Object 에 쓰지 않았다');
+  assert.equal(st.settings.ghost, undefined);
+  assert.equal(st.settings.constructor, 3);
+  assert.equal(st.counts.invalid, 1);
+  seqs = {};
+  const u = run([at('a', '2026-01-01', 1, 'constructor', {}), at('constructor', '2026-01-01', 1, 'constructor', {})]);
+  assert.equal(u.counts.unknown, 2, '상속 이름 종류는 모르는 종류로 센다(기기 이름이 constructor 여도)');
+});
+
+test('그날 합계 세션(total) — 같은 기기·같은 날 합계가 또 오면 늘어난 만큼만', () => {
+  seqs = {};
+  const st = run([at('m', '2026-02-01', 0, 'session', { minutes: 50, reviewed: 10, total: true }), at('m', '2026-02-01', 0, 'session', { minutes: 70, reviewed: 12, total: true }),
+    at('m', '2026-02-01', 0, 'session', { minutes: 60, reviewed: 15, total: true }), at('a', '2026-02-01', 9, 'session', { minutes: 5, reviewed: 1 }),
+    at('n', '2026-02-01', 0, 'session', { minutes: 10, reviewed: 1, total: true })]);
+  assert.deepEqual(st.sessions[0], { date: '2026-02-01', minutes: 85, reviewed: 17, lesson: null, lab: null });
+  seqs = {};
+  assert.equal(run([at('m', '2026-02-01', 0, 'session', { minutes: 1, reviewed: 1, total: 'yes' })]).counts.invalid, 1);
 });

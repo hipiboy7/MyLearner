@@ -51,7 +51,7 @@
   var TIME_RE = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
   var DAY_RE = '^\\d{4}-\\d{2}-\\d{2}$';
   var TYPE_RE = '^[a-z][a-z0-9.]{0,31}$';
-  var SETTING_KEY_RE = '^[a-z_][a-z0-9_.]{0,63}$';
+  var SETTING_KEY_RE = '^[a-z][a-z0-9_.]{0,63}$';   // 글자로 시작 — '__proto__' 같은 키를 받지 않는다(독립 점검 F5)
   var FUTURE_DAYS = 1;          // 계산하는 날 + 1 까지는 받는다(시계 어긋남)
   var MAX_SEQ = 9007199254740991;
 

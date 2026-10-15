@@ -13,20 +13,22 @@
   var C = dep('constants'), S = dep('srs'), K = dep('course');
   var TH = C.MASTERY_THRESHOLDS;
 
-  function sub(map, key) { return (map && map[key]) || {}; }
-  function isDone(st, cid, lid) { var l = sub(st.lessons, cid)[lid]; return !!l && l.done === true; }
+  function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }   // 자기 키만 읽는다(독립 점검 F5)
+  function sub(map, key) { return own(map, key) ? map[key] : {}; }
+  function get(map, key) { return own(map, key) ? map[key] : undefined; }
+  function isDone(st, cid, lid) { var l = get(sub(st.lessons, cid), lid); return !!l && l.done === true; }
   function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
   function retention(c, st, uid) {
-    var ix = K.index(c), u = ix.units[uid], cards = sub(st.cards, c.id), vals = [];
+    var ix = K.index(c), u = get(ix.units, uid), cards = sub(st.cards, c.id), vals = [];
     if (!u) return null;
     (u.lessons || []).forEach(function (lid) {
-      ix.cardsOf(lid).forEach(function (cid) { var s = cards[cid]; if (!s) return; var r = S.retention(s); if (r !== null) vals.push(r); });
+      ix.cardsOf(lid).forEach(function (cid) { var s = get(cards, cid); if (!s) return; var r = S.retention(s); if (r !== null) vals.push(r); });
     });
     return vals.length ? vals.reduce(function (a, b) { return a + b; }, 0) / vals.length : null;
   }
   function unit(c, st, uid) {
-    var ix = K.index(c), u = ix.units[uid];
+    var ix = K.index(c), u = get(ix.units, uid);
     if (!u || !(u.lessons || []).length) return 0;
     var lessons = u.lessons;
     var ratio = lessons.filter(function (l) { return isDone(st, c.id, l); }).length / lessons.length;
@@ -34,14 +36,14 @@
     var ret = retention(c, st, uid);
     if (ratio < 1.0 || ret === null || ret < TH.retention_l2) return 1;
     var labs = sub(st.labs, c.id), labIds = ix.labsOfUnit(uid);
-    var labDone = !labIds.length || labIds.some(function (id) { return labs[id] && labs[id].done === true; });
+    var labDone = !labIds.length || labIds.some(function (id) { var b = get(labs, id); return !!b && b.done === true; });
     var quizOk = ix.quizzesOfUnit(uid).every(function (qid) {
       return st.quizzes.some(function (q) { return q.course === c.id && q.id === qid && q.score >= C.PASS_SCORES.quiz; });
     });
     if (!(labDone && quizOk)) return 2;
-    var lids = {};
+    var lids = Object.create(null);
     lessons.forEach(function (l) { lids[l] = true; });
-    var drillIds = {};
+    var drillIds = Object.create(null);
     var drills = Object.keys(c.drills || {}).filter(function (id) { return (c.drills[id].lessons || []).some(function (l) { return lids[l]; }); });
     drills.forEach(function (id) { drillIds[id] = true; });
     var drillOk = !drills.length || st.drills.some(function (d) {

@@ -109,3 +109,29 @@ test('통계 — 메모 과정 수, 여러 과정 합계', () => {
   assert.deepEqual(Object.keys(s.courses), ['a']);
   assert.equal(T.streak([], TUE, []), 0);
 });
+
+test('숙련도 갈래 — 실습 안 함 L2, 퀴즈 70 미만 L2, 드릴 80% 미만 L3, 정착률 0.85 미만 L3, 절반 미만 L0·절반 L1', () => {
+  const extra = { labs: { 'LAB-A1': { title: 'l', unit: 'A1', lessons: ['A1-1'], minutes: 5, env: 'browser', checks: [] } },
+    quizzes: { 'QZ-A1': { unit: 'A1', items: [] } },
+    drills: { 'DR-01': { title: 'd', lessons: ['A1-2'], situation: 's', start: 's1', steps: { s1: { prompt: 'p', options: [] } }, max_score: 10 } } };
+  const a = course('a', 2, extra);
+  const done = [e('2026-10-01', 'lesson', { course: 'a', lesson: 'A1-1', done: true }), e('2026-10-01', 'lesson', { course: 'a', lesson: 'A1-2', done: true })];
+  const good = [];
+  for (const l of ['A1-1', 'A1-2']) for (let k = 1; k <= 3; k++) good.push(e('2026-10-02', 'review', { course: 'a', card: l + '-c0' + k, grade: 'good' }));
+  const lab = e('2026-10-03', 'lab', { course: 'a', lab: 'LAB-A1', done: true });
+  const quiz = (s) => e('2026-10-03', 'quiz', { course: 'a', quiz: 'QZ-A1', score: s, answers: {} });
+  const drill = (s) => e('2026-10-03', 'drill', { course: 'a', drill: 'DR-01', score: s, max: 10, path: [] });
+  assert.equal(M.unit(a, state(done.concat(good), TUE), 'A1'), 2, '실습 안 함');
+  assert.equal(M.unit(a, state(done.concat(good, [lab, quiz(60)]), TUE), 'A1'), 2, '퀴즈 60');
+  assert.equal(M.unit(a, state(done.concat(good, [lab, quiz(70), drill(7)]), TUE), 'A1'), 3, '드릴 70%');
+  assert.equal(M.unit(a, state(done.concat(good, [lab, quiz(70), drill(8)]), TUE), 'A1'), 4, '드릴 80%');
+  const hard = good.slice(0, 5).concat([e('2026-10-02', 'review', { course: 'a', card: 'A1-2-c03', grade: 'hard' })]);
+  assert.equal(M.unit(a, state(done.concat(hard, [lab, quiz(90), drill(10)]), TUE), 'A1'), 3, '정착률 5/6 < 0.85');
+  assert.equal(M.unit(a, state([], TUE), 'A1'), 0);
+  assert.equal(M.unit(a, state(done.slice(0, 1).concat(good), TUE), 'A1'), 1, '절반 마침');
+  const bad = good.map((l) => l.replace('"grade":"good"', '"grade":"again"'));
+  assert.equal(M.unit(a, state(done.concat(bad), TUE), 'A1'), 1, '정착률 0');
+  const sum = M.summary(a, state(done.concat(good), TUE));
+  assert.deepEqual(sum.A.units.A1, { title: 'u', level: 2, lessons_done: 2, lessons_total: 2, retention: 1 });
+  assert.equal(sum.A.avg_level, 2);
+});

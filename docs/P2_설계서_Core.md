@@ -1,7 +1,8 @@
 # P2 설계서 — Core (과정·기록 파일 형식 · 사건 기록·합치기 · SM-2 · 렌더러 · MWL 변환)
 
 - 작성 2026-10-15 / 대응 요구사항: [`P2_요구사항정의서_Core.md`](P2_요구사항정의서_Core.md) FR-201~263, NFR-201~205 / 상위 문서: [`설계서_Architecture.md`](설계서_Architecture.md)
-- 코드: `web/core/`, `mylearner/`, `scripts/` / 시험: `tests/unit/js/`, `tests/integration/js/`, `tests/unit/py/`, `tests/integration/py/`
+- 코드: `web/core/`, `mylearner/`, `scripts/` / 시험: `tests/unit/js/`, `tests/integration/js/`, `tests/unit/py/`, `tests/integration/py/`, `tests/realdata/`, `tests/ui/render_check.html`
+- 정정 이력: 2026-10-15 — 독립 점검(기록 합치기, 테스트결과서 5.2절)을 받아 3.3절(해석하지 못한 줄은 글자 그대로·상속 이름 ID·깊은 줄·`session.total`·`setting` 키), 3.4절(규칙 문장·사례 6·한계), 3.8절(가상 기기·순번), 7절을 고쳤다
 - 옮겨 온 코드의 출처: MWL `e55b9c0` 의 `web/engine.js`(SM-2·계획·숙련도·통계·채점), `mwl/content/markdown.py`(렌더러), `mwl/content/frontmatter.py`·`loader.py`(변환기의 읽기), hub `8dee3b8` 의 `src/learnhub/engine/events.py`(사건·합치기의 뼈대)
 
 ## 1. 데이터 흐름
@@ -45,7 +46,7 @@
 | `scripts/check_log_roundtrip.js` | 기록 왕복(S3) 명령 단위 증명 | C | — |
 | `scripts/render_smoke.py` + `tests/ui/render_check.html` | 렌더러를 실제 Chromium 에서(XSS 사례·classic script·`file://`) | C | P1 `browser_smoke.py`·`cdp.js` |
 
-브라우저에서 싣는 순서: `constants` → `dates` → `hash` → `srs` → `course` → `log` → `replay` → `plan` → `mastery` → `stats` → `grade` → `markdown` → `mwl_import`. 앞 파일이 없으면 `MyLearner.<이름> 을 먼저 싣는다` 오류를 낸다.
+브라우저에서 싣는 순서: `constants` → `dates` → `hash` → `srs` → `grade` → `course` → `log` → `replay` → `plan` → `mastery` → `stats` → `markdown` → `mwl_import`(`course` 가 `grade.unsafeRegex` 를 쓴다 — `tests/unit/js/umd.test.js`·`tests/ui/render_check.html` 이 이 순서로 싣는다). 앞 파일이 없으면 `MyLearner.<이름> 을 먼저 싣는다` 오류를 낸다.
 
 ## 3. 인터페이스
 
@@ -120,16 +121,17 @@
 | `drill` | `course`, `drill`, `score`, `max`, `path[]` | 드릴 기록 |
 | `quiz` | `course`, `quiz`, `score`(0~100), `answers{}` | 퀴즈 기록 |
 | `check` | `course`, `mode`, `scores{}`, `total`, `items[]` | 점검 기록 |
-| `session` | `minutes`, `reviewed`, `course`?, `lesson`?, `lab`? | 학습 시간(그날에 더한다) |
+| `session` | `minutes`, `reviewed`, `course`?, `lesson`?, `lab`?, `total`? | 학습 시간(그날에 더한다). `total: true` 는 그 기기의 그날 합계(MWL 가져오기) — 같은 기기·같은 날 합계가 또 오면 늘어난 만큼만 더한다 |
 | `journal` | `course`?, `summary`, `apply`, `unclear`, `teach` | 일지 |
-| `setting` | `key`(`^[a-z_][a-z0-9_.]{0,63}$`), `value` | 기기 사이에 따라가는 설정(나중 것이 이긴다) |
+| `setting` | `key`(`^[a-z][a-z0-9_.]{0,63}$` — 글자로 시작, `__proto__` 를 받지 않는다), `value` | 기기 사이에 따라가는 설정(나중 것이 이긴다) |
 
 - **정규형**: 키를 정렬한 한 줄 JSON(공백 없음). 사건의 같음 = 정규형 글이 같음
 - **기록 파일**: 첫 줄 머리 `{"format":"mylearner-log","min_reader":1,"version":1}`, 다음 줄부터 사건(다시 계산 순서), 끝에 해석하지 않은 줄(글자 순), 마지막 줄바꿈. 머리에 시각이 없다 → 같은 모음 = 같은 바이트
 - `log.readFile(text)` → `{ok, header, lines, error}`. 첫 줄이 기록 파일 머리가 아니면 읽지 않는다(`E-LOG-FORMAT`), `min_reader` 가 크면 `E-LOG-READER`
 - `log.merge(lineLists)` → `{events, raw, counts: {events, conflicts, bad, newer}}`
   - 같은 정규형은 하나 · 같은 (dev, seq)에 다른 정규형이 n 개면 모두 남기고 충돌 n−1
-  - JSON 이 아니거나 봉투가 틀린 줄(`bad`), `v` ≠ 1 인 줄(`newer`)은 그대로(앞뒤 빈칸만 뗀 글) 남긴다
+  - JSON 이 아니거나 봉투가 틀린 줄(`bad`), `v` ≠ 1 인 줄(`newer`)은 그대로(앞뒤 빈칸만 뗀 글) 남기고, 같음도 그 글로 본다 — 정규형으로 바꾸면 큰 수·중복 키·`1e400` 이 바뀐다. 너무 깊이 겹쳐 정규형을 만들 수 없는 줄도 이 꼴로 남는다(그 줄 때문에 합치기 전체가 멈추지 않는다)
+  - 기기·종류·과정·카드 ID 를 열쇠로 쓰는 표는 프로토타입 없는 객체이거나 자기 키만 읽는다 — `constructor`·`toString` 같은 ID 가 상속 값을 읽거나 `Object` 에 쓰지 않는다. 모든 ID 규칙은 영문·숫자로 시작해 `__proto__` 를 받지 않는다
 - **순서**(FR-223): 기기마다 (seq, 정규형) 순으로 줄 세우고, 기기들의 맨 앞 사건 가운데 열쇠 (day, 순위, t, dev)가 가장 작은 것을 하나씩 꺼낸다(힙). 순위는 `card.state` 1, 나머지 0 — 가져온 상태는 그날의 다른 사건 뒤에 온다. 결과는 사건 모음만의 함수다 → 읽는 순서와 무관
 - `log.splitByMonth(events)` → `{"2026-10": [...], …}`(학습일 기준)
 
@@ -147,8 +149,9 @@
 `review` 하나(카드 상태 st, 사건의 학습일 d):
 
 ```
-st.due 가 있고 d < st.due 이고 grade ≠ again  →  계산에 쓰지 않는다(counts.early, reviews[].applied = false)
-그 밖                                          →  st = srs.review(st, grade, d)
+st.due 가 없거나 d ≥ st.due                                   →  st = srs.review(st, grade, d)
+grade = again 이고, 그 카드에 마지막으로 반영된 복습이 같은 날의 again 이 아니다  →  st = srs.review(st, grade, d)   (이른 again 도 실제로 틀린 것이다)
+그 밖                                                         →  계산에 쓰지 않는다(counts.early, reviews[].applied = false)
 ```
 
 | # | 사례 | 결과 |
@@ -158,13 +161,15 @@ st.due 가 있고 d < st.due 이고 grade ≠ again  →  계산에 쓰지 않�
 | 3 | 새 카드를 두 기기가 같은 날 처음 good·good | 앞의 것만(due = 다음 날) |
 | 4 | A 가 due 날 good, B 가 이틀 늦게 good(A 의 새 due 전) | B 는 이른 복습 |
 | 5 | A 가 due 날 good, B 가 A 의 새 due 전에 again | again 은 반영 — 다음 날 다시 |
-| 6 | 같은 날 A again·B good(순서 무관) | 어느 순서든 again 상태(reps 0, 간격 1, ef −0.2)로 끝난다 |
+| 6 | 같은 날 A again·B good(순서 무관) | 어느 순서든 again 상태(reps 0, 간격 1, ef −0.2)로 끝난다. good 이 아니라 hard 면 순서에 따라 ef 가 다르다 — hard→again 은 −0.35(둘 다 반영), again→hard 는 −0.2(hard 는 이른 복습). 어느 쪽이든 정해진 순서로 같은 결과다 |
+| 6b | 같은 날 두 기기가 again·again | 한 번만 반영(ef 를 두 번 깎지 않는다). 다른 날의 이른 again 은 반영 |
 | 7 | 학습일이 계산하는 날 +1 보다 뒤 | 계산에서 빼고 `future` 로(그날이 오면 들어간다) |
 | 8 | 한 기기의 학습일이 순번을 따라 뒤로 감 | 계산은 하고 `counts.clock_back` 을 센다 |
 | 9 | `card.state` 뒤의 복습 | 그 상태에서 이어진다(S5) |
 | 10 | `card.state` 의 학습일(=MWL 마지막 복습일) 이전·당일의 다른 복습 | 그 상태가 덮는다 — 들여온 진도가 그날까지의 사실이다 |
 | 11 | 모르는 종류·꼴이 틀린 알려진 종류 | 계산하지 않고 센다(`unknown`·`invalid`). 줄은 기록 파일에 남는다 |
 | 12 | 폐쇄망 안에서만 한 복습 | 밖의 기록에 없다 → 밖의 기기는 그 카드를 다시 낸다(BRIEF 5.2 의 대가) |
+| 13 | 시계가 줄곧 과거인 기기(예: 폰이 1월로) | 한계 — 기기 안에서 학습일이 줄지 않으므로 시계 이상으로 잡히지 않고, 그 사건이 앞의 날짜로 계산된다(독립 점검 F11). 합치기 화면(Phase 4)이 기기마다 마지막 학습일을 보여 사용자가 알아보게 한다 |
 
 ### 3.5 하루 계획·숙련도·통계 (FR-240~243)
 
@@ -191,15 +196,16 @@ st.due 가 있고 d < st.due 이고 grade ≠ again  →  계산에 쓰지 않�
 - 문법·줄 나눔은 MWL `markdown.py` 와 같다. Python 과 같게 하려고 JS 에 둔 것: 줄 나눔(`str.splitlines` 의 줄 끝 글자 11가지), 공백(`str.isspace` 집합 — `\x1c`~`\x1f`·`\x85` 포함, `﻿` 제외), `\d` = `\p{Nd}`, `\w` = `[\p{L}\p{N}_]`
 - 인라인 처리: 코드 조각을 먼저 떼고 → 글을 이스케이프(`& < >`) → 그림 → 링크 → 굵게 → 기울임(MWL 과 같은 순서). 그림·링크의 **태그 자체는 자리표(`n`)로 바꿔 두어** 굵게·기울임 정규식이 속성값을 건드리지 않는다. 원문에 있던 자리표 글자는 U+FFFD 로 바꾼다
 - 속성값: `& < > " '` 를 모두 바꾼다(`&amp; &lt; &gt; &quot; &#x27;` — Python `html.escape` 와 같다)
-- 링크: 이스케이프를 푼 주소가 `http://`·`https://`(대소문자 무관)·`#` 로 시작하고 제어 글자가 없을 때만 `<a href="…">`. `http(s)` 에는 `rel="noopener noreferrer"`. 아니면 링크 글만 남긴다
+- 링크: 이스케이프를 푼 주소가 `http://`·`https://`(대소문자 무관)·`#` 로 시작하고 제어 글자가 없을 때만 `<a href="…">`. 아니면 링크 글만 남긴다. `rel` 은 달지 않는다(MWL 출력과 같게 — 새 창을 열지 않으므로 `noopener` 가 할 일이 없다). 참조 정보(Referer)는 화면이 `<meta name="referrer" content="no-referrer">` 로 막는다(Phase 3)
 - 그림: `image(src)` 가 `^data:image/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/]+={0,2}$` 를 돌려줄 때만 `<img src alt>`. 아니면 `<span class="img-missing">[그림: 대체 글]</span>`
 - 강의 참조: 인라인 코드의 내용이 항목 ID 꼴이고 `lessonRef(id)` 가 주소를 주면 `<a class="ref" href="…"><code>id</code></a>`(MWL `linkify_lesson_refs` 와 같은 결과)
+- 펜스 언어: MWL 처럼 `class="language-<언어>"` 에 넣되 속성 이스케이프(따옴표까지)를 한다
 - 깊이: 인용 16단·목록 16단을 넘으면 더 파고들지 않고 글로 보인다(스택 넘침 방지)
 - 135과 대조: MWL `bundle.js` 의 `lessons[id].html` 에서 `href="#/learn/<id>"` 를 `href="#/learn/mwl/<id>"` 로 바꾼 것과 같아야 한다
 
 ### 3.7 채점 (FR-244)
 
-`grade.checkAnswer`·`gradeItems`·`checkLab`·`runDrill` 는 MWL 과 같다. 실습 `regex` 만 다르다: 패턴 200자·답 500자 상한, 겹친 반복(`(…+)+`·`(…*)*`·`(…+)*`·`{n,}` 이 든 묶음에 다시 반복)과 역참조는 위험으로 보고 `false`(과정 검사는 `E-REGEX`).
+`grade.checkAnswer`·`gradeItems`·`checkLab`·`runDrill` 는 MWL 과 같다. 실습 `regex` 만 다르다: ① MWL Python(`mwl/cli/commands/lab.py` 의 `re.fullmatch`)처럼 앞의 `(?i)` 를 대소문자 무시로 받는다 — MWL 의 JS 는 `new RegExp('^(?:(?i)…)$')` 가 `SyntaxError` 라 이런 문항(MWL 54개 중 5개)을 늘 오답으로 냈다 ② 패턴 200자·답 500자 상한 ③ 반복되는 묶음 안에 반복·대안(`|`)이 있으면(`(a+)+`·`(a|aa)+`·`(.*a){3,}`) 또는 역참조면 위험으로 보고 `false`(과정 검사는 `E-REGEX`). MWL 54개 패턴은 모두 통과한다.
 
 ### 3.8 MWL 진도 변환 (FR-261·262)
 
@@ -215,7 +221,10 @@ st.due 가 있고 d < st.due 이고 grade ≠ again  →  계산에 쓰지 않�
 | `journal[]` | `journal` | `date` |
 | `knowledge[]` | 메모 과정 `mwl-notes` 의 강의(본문·만든 날)와 카드(`K0001-c01` …) — 이제 ID 가 목록 위치에 기대지 않는다 | — |
 
-- 가상 기기 `dev = "mwl-" + sha256(정규형(올린 진도))[:12]`, 시각 `t = <day>T00:00:00.000Z`, 순번은 (학습일, 순위, 종류, 원래 순서) 순으로 1부터 → 같은 진도를 몇 번 들여와도 같은 줄(합치면 하나). 다른(더 나중) 진도는 다른 기기가 되고, 나중 상태가 다시 계산에서 뒤에 온다
+- 가상 기기 `dev = "mwl-" + sha256("mwl-install|" + created)[:12]` — MWL 설치(진도의 `created`)마다 하나. 시각 `t = <day>T00:00:00.000Z`
+- 순번 = 학습일(2000-01-01 부터의 날 수) × 2^36 + 종류 × 2^32 + 자리. 자리는 목록(드릴·퀴즈·점검·세션·일지)이면 목록 위치(MWL 은 덧붙이기만 한다), 표(카드·강의·실습)면 ID 의 sha256 앞 32비트. 그래서 기기 안 순서가 날짜 순이고, **같은 설치의 나중 스냅숏을 다시 들여와도 같은 기록은 같은 줄**이라 하나로 합쳐진다(독립 점검 F6 — 처음에는 진도 전체의 해시를 기기로 써서 스냅숏마다 세션·퀴즈가 두 배가 됐다)
+- 바뀐 기록: 카드 상태는 마지막 복습일이 바뀌므로 다른 순번이 되어 나중 상태가 뒤에 온다. MWL 은 한 카드를 하루 한 번만 복습하므로 같은 날 다른 상태는 생기지 않는다(생기면 같은 순번·다른 줄 — 둘 다 남고 글자 순, F7). 같은 날 세션 합계가 늘었으면 `total` 이라 늘어난 만큼만 더한다
+- `report.invalid` — 바꾼 사건을 바로 다시 계산해 받지 못한 수(0 이어야 한다)
 - `mwl_import.verify(progress, state)` → `{total, match, mismatches}` — 카드마다 ef·interval·reps·lapses·due·last·grades 가 같은지(화면의 "N/N 일치")
 - 강의 상태 `in_progress`·모르는 스키마는 바꾸지 않고 `report` 에 센다. 스키마 1 은 MWL `migrate` 와 같게 올린다
 
@@ -277,3 +286,6 @@ st.due 가 있고 d < st.due 이고 grade ≠ again  →  계산에 쓰지 않�
 | 점검·오답노트를 여러 과정에서 | Phase 3 |
 | 과정 항목 수정 합치기 | Phase 5 |
 | 해시 라우터가 과정 안 `#…` 링크를 어떻게 받을지 | Phase 3(렌더러는 `#` 링크를 그대로 둔다) |
+| 참조 정보(Referer) 막기·CSP | Phase 3 화면·로컬 서버(렌더러는 `rel` 을 달지 않는다) |
+| 월별 저장에서 해석하지 못한 줄(`raw`)이 갈 곳, 순번 계수기 | Phase 3 저장 어댑터 — `splitByMonth` 는 사건만 나눈다. `nextSeq` 는 그 기기의 모든 달을 보거나 따로 둔 계수기를 써야 한다(독립 점검 F12) |
+| MWL 진도를 몇 번 들여오게 할지 | 보류 결정 2(Phase 3) — 같은 설치의 스냅숏은 다시 들여와도 겹치지 않지만, MWL 을 동결한 뒤 한 번 들여오는 것을 안내한다 |

@@ -22,7 +22,9 @@
   function optItem(v) { return v === undefined || v === null || isItem(v); }
   function isObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
   function copy(v) { return v === undefined ? v : JSON.parse(JSON.stringify(v)); }
-  function slot(map, key) { return (map[key] = map[key] || {}); }
+  // 상태 표는 밖에서 온 ID 를 열쇠로 쓴다 — 늘 자기 키만 읽는다('toString'·'constructor' 같은 ID 가 상속 값을 읽거나 Object 에 쓰지 않게, 독립 점검 F5)
+  function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function slot(map, key) { if (!own(map, key)) map[key] = {}; return map[key]; }
 
   // 늦은 복습 규칙: due 보다 이른 날의 복습은 again 일 때만 계산에 쓴다. 같은 날 이미 again 이 들어간 카드에는 다시 넣지 않는다
   function applies(cur, grade, day) {
@@ -36,7 +38,7 @@
     'review': function (st, d, e) {
       if (!isCourse(d.course) || !isItem(d.card) || !Object.prototype.hasOwnProperty.call(C.GRADE_VALUES, d.grade)) return false;
       var m = slot(st.cards, d.course);
-      var cur = m[d.card] || S.newCardState();
+      var cur = own(m, d.card) ? m[d.card] : S.newCardState();
       var ok = applies(cur, d.grade, e.day);
       if (ok) { m[d.card] = S.review(cur, d.grade, e.day); st.counts.applied += 1; } else st.counts.early += 1;
       st.reviews.push({ course: d.course, card: d.card, day: e.day, grade: d.grade, applied: ok });
@@ -52,7 +54,7 @@
     'card.hold': function (st, d) {
       if (!isCourse(d.course) || !isItem(d.card) || typeof d.on !== 'boolean' || !optText(d.why)) return false;
       if (d.on) slot(st.held, d.course)[d.card] = true;
-      else if (st.held[d.course]) delete st.held[d.course][d.card];
+      else if (own(st.held, d.course)) delete st.held[d.course][d.card];
       return true;
     },
     'lesson': function (st, d, e) {
@@ -90,10 +92,16 @@
     },
     'session': function (st, d, e) {
       if (!isCount(d.minutes) || !isCount(d.reviewed) || !(d.course === undefined || d.course === null || isCourse(d.course)) ||
-          !optItem(d.lesson) || !optItem(d.lab)) return false;
+          !optItem(d.lesson) || !optItem(d.lab) || !(d.total === undefined || typeof d.total === 'boolean')) return false;
       var s = st._sessions[e.day];
       if (!s) s = st._sessions[e.day] = { date: e.day, minutes: 0, reviewed: 0, lesson: null, lab: null };
-      s.minutes += d.minutes; s.reviewed += d.reviewed;
+      var add = { minutes: d.minutes, reviewed: d.reviewed };
+      if (d.total) {   // 그 기기의 그날 합계(MWL 가져오기) — 같은 날 합계가 또 오면 늘어난 만큼만 더한다(스냅숏 두 번 → 두 배가 되지 않게, 독립 점검 F6)
+        var k = e.dev + '\u0000' + e.day, prev = st._totals[k] || { minutes: 0, reviewed: 0 };
+        add = { minutes: Math.max(0, d.minutes - prev.minutes), reviewed: Math.max(0, d.reviewed - prev.reviewed) };
+        st._totals[k] = { minutes: Math.max(prev.minutes, d.minutes), reviewed: Math.max(prev.reviewed, d.reviewed) };
+      }
+      s.minutes += add.minutes; s.reviewed += add.reviewed;
       if (d.lesson) s.lesson = d.lesson;
       if (d.lab) s.lab = d.lab;
       return true;
@@ -117,20 +125,20 @@
     opts = opts || {};
     var limit = opts.today ? D.addDays(opts.today, C.FUTURE_DAYS) : null;
     var st = { cards: {}, held: {}, lessons: {}, labs: {}, drills: [], quizzes: [], checks: [], journal: [], sessions: [], settings: {},
-      reviews: [], future: [], _sessions: {},
+      reviews: [], future: [], _sessions: Object.create(null), _totals: Object.create(null),
       counts: { events: 0, applied: 0, early: 0, imported: 0, future: 0, unknown: 0, invalid: 0, clock_back: 0 } };
-    var maxDay = {};
+    var maxDay = Object.create(null);
     (events || []).forEach(function (e) {
       st.counts.events += 1;
       if (maxDay[e.dev] && e.day < maxDay[e.dev]) st.counts.clock_back += 1;
       else maxDay[e.dev] = e.day;
       if (limit && e.day > limit) { st.future.push(e); st.counts.future += 1; return; }
+      if (!own(H, e.type)) { st.counts.unknown += 1; return; }
       var h = H[e.type];
-      if (!h) { st.counts.unknown += 1; return; }
       if (!h(st, e.data, e)) st.counts.invalid += 1;
     });
     st.sessions = Object.keys(st._sessions).sort().map(function (k) { return st._sessions[k]; });
-    delete st._sessions;
+    delete st._sessions; delete st._totals;
     return st;
   }
 

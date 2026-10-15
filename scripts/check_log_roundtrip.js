@@ -63,6 +63,13 @@ function study(d, day) {
   if (plan.lesson && rnd() < 0.5) add({ type: 'lesson', course: 'mwl', lesson: plan.lesson.id, done: true });
   for (const c of plan.reviews.concat(plan.new_cards)) add({ type: 'review', course: 'mwl', card: c.id, grade: GRADES[Math.floor(rnd() * GRADES.length)] });
   if (rnd() < 0.3) add({ type: 'session', minutes: 5 + Math.floor(rnd() * 30), reviewed: plan.reviews.length });
+  // 더 새 판의 앱이 쓴 줄·읽을 수 없는 줄·같은 (기기, 순번)의 다른 줄도 지우지 않고 따라가야 한다(독립 점검 — F1~F4 를 명령으로도)
+  if (rnd() < 0.05) { const raw = '{"v":2,"dev":"' + d + '","seq":' + (seq[d] + 1000000) + ',"big":12345678901234567890,"day":"' + day + '"}'; fresh.push(raw); created[d].add(raw); }
+  if (rnd() < 0.03) { const junk = 'constructor ' + d + ' ' + day; fresh.push(junk); created[d].add(junk); }
+  if (rnd() < 0.03 && fresh.length) {
+    const o = JSON.parse(fresh[0]);
+    if (o.type === 'review') { o.grade = o.grade === 'easy' ? 'hard' : 'easy'; const twin = L.make(o).line; fresh.push(twin); created[d].add(twin); }
+  }
   if (inject && d !== 'x' && fresh.length) { fresh.pop(); inject = false; }
   save(d, L.merge([known.events.map((e) => e.line).concat(known.raw), fresh]));
 }
@@ -111,6 +118,8 @@ if (ms > 2000) problems.push('NFR-203 사건 5만 줄 합치기+다시 계산 ' 
 
 const st = R.run(L.merge([lines('h')]).events, { today: day });
 console.log('기록 왕복: ' + ROUNDS + '일, 시드 ' + SEED + ', 만든 사건 집 PC ' + created.h.size + ' · 폰 ' + created.p.size + ' · 폐쇄망 ' + created.x.size);
+const final = L.merge([lines('x')]);
+console.log('  폐쇄망 파일의 새 판 줄 ' + final.counts.newer + ' · 읽을 수 없는 줄 ' + final.counts.bad + ' · 같은 순번 다른 줄 ' + final.counts.conflicts);
 console.log('  마지막 파일: 집 PC ' + H.size + ' · 폰 ' + Pp.size + ' · 폐쇄망 ' + X.size + '줄, 집 PC·폰 같은 바이트 ' +
   (fs.readFileSync(file('h'), 'utf8') === fs.readFileSync(file('p'), 'utf8') ? '예' : '아니오') + ', 이른 복습 ' + st.counts.early + ' · 계산된 복습 ' + st.counts.applied);
 console.log('  속도: 사건 ' + mergedBig.events.length + '줄 합치기+다시 계산 ' + ms.toFixed(0) + 'ms (카드 ' + Object.keys(stBig.cards.mwl).length + '장)');

@@ -45,7 +45,8 @@ function partition(r, lines) {
     const copies = 1 + Math.floor(r() * 3);
     for (let c = 0; c < copies; c++) {
       let text = l;
-      if (r() < 0.2 && l.startsWith('{"')) { try { text = JSON.stringify(reverseKeys(JSON.parse(l))); } catch (e) { /* 깨진 줄 그대로 */ } }
+      // 키 순서만 바꾼 같은 사건(앱이 쓰는 v1 사건만 — 해석하지 못한 줄은 글자 그대로가 같음이다)
+      if (r() < 0.2 && L.parseLine(l).kind === 'event') text = JSON.stringify(reverseKeys(JSON.parse(l)));
       if (r() < 0.1) text = '  ' + text + '\t';
       pick(r, files).push(text);
     }

@@ -284,7 +284,9 @@
   var cache = typeof WeakMap === 'function' ? new WeakMap() : null;
   function index(c) {
     if (cache && cache.has(c)) return cache.get(c);
-    var tocLessons = [], unitOfLesson = {}, partOfUnit = {}, unitIds = [], units = {};
+    // 과정 파일의 ID 를 열쇠로 쓰는 표는 프로토타입 없는 객체로(상속 값 'constructor' 등을 읽지 않게 — 독립 점검 F5)
+    function table() { return Object.create(null); }
+    var tocLessons = [], unitOfLesson = table(), partOfUnit = table(), unitIds = [], units = table();
     (c.parts || []).forEach(function (p) {
       (p.units || []).forEach(function (u) {
         unitIds.push(u.id); units[u.id] = u; partOfUnit[u.id] = p.id;
@@ -292,15 +294,15 @@
       });
     });
     function byId(a, b) { return a < b ? -1 : a > b ? 1 : 0; }
-    var cardsByLesson = {};
+    var cardsByLesson = table();
     Object.keys(c.cards || {}).sort(byId).forEach(function (cid) { var l = c.cards[cid].lesson; (cardsByLesson[l] = cardsByLesson[l] || []).push(cid); });
-    var labsByLesson = {}, labsByUnit = {};
+    var labsByLesson = table(), labsByUnit = table();
     Object.keys(c.labs || {}).sort(byId).forEach(function (id) {
       var b = c.labs[id];
       (labsByUnit[b.unit] = labsByUnit[b.unit] || []).push(id);
       (b.lessons || []).forEach(function (l) { (labsByLesson[l] = labsByLesson[l] || []).push(id); });
     });
-    var quizzesByUnit = {};
+    var quizzesByUnit = table();
     Object.keys(c.quizzes || {}).sort(byId).forEach(function (id) { var u = c.quizzes[id].unit; (quizzesByUnit[u] = quizzesByUnit[u] || []).push(id); });
     var plans = c.plans || {};
     function planOf(variant) {
@@ -309,7 +311,7 @@
       var names = Object.keys(plans).sort(byId);
       return names.length ? plans[names[0]] : null;
     }
-    var seqCache = {};
+    var seqCache = table();
     function sequence(variant) {
       var plan = planOf(variant);
       var key = plan ? JSON.stringify([variant]) : '';
