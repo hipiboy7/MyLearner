@@ -2,7 +2,7 @@
 
 내가 넣은 자료로 강의·카드·퀴즈를 만들고 매일 복습해 몸에 익히는 **1인용 학습 플랫폼** — 폐쇄망 PC · 내 PC · 안드로이드 폰.
 
-**지금 상태(2026-10-15): Phase 1 진행 중**(브랜치 `impl-phase1`) — 폐쇄망 점검 도구 2종과 전체 검증 명령을 만들었고(Python 3.9·3.11·3.12·3.14 시험, 키 유출 독립 점검까지), 사용자가 폐쇄망에서 돌려 결과 코드를 전하는 단계다([`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다. GitHub `hipiboy7/MyLearner`(private)의 `main` 에는 첫 커밋(BRIEF·README, 2026-10-14)만 있고, Phase 1 작업은 브랜치 `impl-phase1` 로 올라가 있다(2026-10-15 — 체크리스트를 GitHub 에서 보려고. `main` 병합은 Phase 1 끝).
+**지금 상태(2026-10-15): Phase 1 끝, Phase 2 시작 전** — 폐쇄망 점검 도구 2종과 전체 검증 명령을 만들었다(Python 3.9·3.11·3.12·3.14 시험, 키 유출 독립 점검까지). 폐쇄망에서 돌리는 것은 사용자가 나중에 한다([`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md), CLAUDE.md 보류 결정 8). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다. GitHub `hipiboy7/MyLearner`(private)의 `main` 에 Phase 1 을 병합했다(2026-10-15, 브랜치 `impl-phase1` 은 남겨 둔다).
 
 ## 0. 빠른 시작 — 개발 VM (Phase 1)
 

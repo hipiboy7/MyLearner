@@ -14,6 +14,7 @@
 - 사용자 지시: 작업 전·후 보고에 누적 비용($)을 적고 refresh 요청 전까지 누적한다 → `scripts/usage_cost.py`(Claude Code 가 세션마다 남기는 cost-state = `/cost` 값 + 진행 중 세션 나머지 추정)·`scripts/usage_prices.json`(가격 페이지 2026-10-15 확인: Opus 5.5 입력 $4·1시간 캐시 쓰기 $8·캐시 읽기 $0.20·출력 $20, Sonnet 5.5 $2·$4·$0.10·$10)·`history/usage_ledger.json`, 시험 11건(`tests/integration/py/test_usage_cost.py`, 먼저 써서 실패 확인), CLAUDE.md 11절 '비용 보고'. 응답 기록의 usage 는 서브에이전트 출력 토큰이 스트리밍 중간 값으로 남아(1,576 대 cost-state 249,587) 그대로 더하면 모자란다 — cost-state 를 기준으로 삼았다
 - 17시: 사용자가 GitHub 에서 받는 곳을 물음 → 체크리스트 0절에 '나. GitHub `tools/` 에서 세 파일'(`ai_probe.py`·`browser_probe.html` 은 묶음 안 것과 바이트가 같고 `README_KO.txt` 는 BOM 만 다름, `certutil` 해시 앞자리 — 문서와 도구가 어긋나면 `test_verify_tools.py` 가 잡는다). 사용자 승인으로 브랜치 다시 push
 - 처음 받은 결과 코드(`b`, `g=h`): 검사합 맞음, Chrome 155. 사용자 답으로 인터넷 PC 시험이었고 `r`·`s` 는 뜻 없는 값 — 폐쇄망 결과는 아직(P1 테스트결과서 10절)
+- 18시: 사용자 결정 — "폐쇄망에서 돌려보는건 나중에하자. 체크리스트도 나중에 몰아서 할게." 확인 요청 세 가지를 추천안대로 승인: ① Phase 1 은 검증 통과로 병합, 폐쇄망 실행은 보류 결정 8(늦어도 Phase 3 시작) ② 보류 결정 7 트리거 Phase 2 → Phase 3 시작(저장 어댑터가 Phase 3) ③ 앞으로도 체크리스트는 위치만 알리고 피드백을 기다리지 않는다. CLAUDE.md 1절(Phase 표·8단계·보류 결정 7·8), scope 5·8·11·13절, P1 인터뷰결과서 5절, P1 요구사항 6절 기준 7, P1 설계서 7절, P1 테스트결과서 8·10절, README 상태 줄을 고침. 종료 루틴으로 `main` 에 병합·push
 - effort: 16:05(KST) `/model` 뒤 응답부터 기록이 `max` → `xhigh` 로 바뀌었다(이 세션 133개 중 마지막 24개). 그전에는 `~/.bashrc` 의 환경 변수 때문에 `/effort xhigh` 가 안 먹었다. `/model` 화면이 effort 도 바꾼 것으로 보이나 원인은 확인하지 않았다
 
 ## 2. 최종 검증
@@ -34,8 +35,8 @@
 
 ## 4. 다음 단계
 
-0. ~~`impl-phase1` 브랜치 push~~ → 2026-10-15 사용자 승인으로 올림(커밋 7개, `main` 은 그대로). 이 뒤 커밋도 Phase 1 끝까지 같은 브랜치에 올릴지는 그때 묻는다(CLAUDE.md 1절 8단계)
-1. ~~사용자에게 물은 것(17시 보고) — 받은 `b` 줄의 PC, `r=nn`, `s=n`~~ → 2026-10-15 사용자 답: 인터넷 PC 시험, 크롬을 다시 열지 않고 누름, 도구는 고치지 않고 `g=h` 줄의 `s` 는 무시(P1 테스트결과서 10절)
-1-1. 사용자: [`docs/P1_체크리스트_Probe.md`](../docs/P1_체크리스트_Probe.md)(GitHub 브랜치 `impl-phase1` 에서도 보인다) 대로 `dist/mylearner-probe-v1.tgz`(sha256 앞 8글자 `9193c63e`)를 반입해 폐쇄망에서 두 도구를 돌리고, 결과 코드 줄(`e`, `s…`, `s…m…`, `b` 두 줄 — `b`(http) 한 줄은 받음)과 피드백 칸을 전한다. 오전 판 묶음(`8c046ecb…`)은 쓰지 않는다
-2. 결과 코드를 받으면: `python3 tools/ai_probe.py --decode "<줄>" …` → 테스트결과서 10절(`g=h` 줄의 `s` 는 무시, `r` 은 크롬을 다시 연 뒤 누른 것만 — 10절), CLAUDE.md 1절 보류 결정 7 을 닫고, scope 13절 '확인할 사실'을 고친다. 체크리스트 피드백(MWL 을 여는 방식 등)은 테스트결과서나 P2 인터뷰결과서로 옮긴다. `e=!p` 가 있으면 3절 둘째 줄대로 사용자와 정한다
-3. Phase 1 끝: 사용자가 병합을 요청하면 종료 루틴(CLAUDE.md 1절 9단계 — 전체 검증 → history → 커밋 → `merge --no-ff` → push). `impl-phase1` 은 이미 origin 에 있으니 push 는 `main` 과 브랜치 둘 다 한다
+0. ~~`impl-phase1` push · 받은 `b` 줄 풀이 · Phase 1 병합~~ → 2026-10-15 끝. `main` 에 `--no-ff` 병합하고 `main`·`impl-phase1` 을 push 했다(브랜치는 남긴다)
+1. **Phase 2 시작**(코어, 화면 없음 — CLAUDE.md 1절): 0단계 `bash scripts/check_env.sh` → 0-1단계 보류 결정 표(Phase 2 가 트리거인 것은 없다 — 7·8 은 Phase 3 시작) → `main` 에서 브랜치 `impl-phase2` → 1단계 요구사항 도출: BRIEF 5.3(특히 5.3-2 사건 기록·늦은 복습 규칙·5.3-4 렌더러·5.3-5 저장)·5.9, scope, `설계서_Architecture.md`(6절 파일 형식·상수 위치·JS 시험), P1 산출물을 읽고 모자란 것만 **묶어서 한 번에** 묻는다 → `docs/P2_인터뷰결과서_<Topic>.md`
+2. Phase 2 에서 받을 것: Docker `node:22-alpine`(JS 시험, 사용자 승인 2026-10-15 — 받기 전 `/data` 여유를 잰다, 태그를 `scripts/dev_tools.env` 에 고정). MWL 기준 커밋을 다시 본다(2026-10-15 `e053470`, 골든 벡터 `tests/fixtures/srs_vectors.json`·`scheduler_cases.json`)
+3. Phase 2 독립 점검(CLAUDE.md 12절): 기록 합치기·늦은 복습 규칙(유실), 렌더러(XSS) — 쓰기 전에 수와 예상 토큰을 계산해 사용자에게 묻는다. effort 는 핵심 설계라 xhigh(11절)
+4. 보류 결정 8(폐쇄망 실행)은 사용자가 결과 코드를 가져올 때: `python3 tools/ai_probe.py --decode "<줄>" …` → P1 테스트결과서 10절(`g=h` 줄의 `s` 는 무시, `r` 은 크롬을 다시 연 뒤 누른 것만), 보류 결정 7·8 을 닫고 scope 13절을 고친다. 묶음은 `dist/mylearner-probe-v1.tgz`(sha256 앞 8글자 `9193c63e`) 또는 GitHub `tools/` 세 파일(체크리스트 0절 '나'). `e=!p` 가 있으면 3절 둘째 줄대로 사용자와 정한다. 체크리스트 피드백은 그때의 테스트결과서나 다음 인터뷰결과서로
