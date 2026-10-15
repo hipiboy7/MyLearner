@@ -10,6 +10,7 @@
 - 고친 것(`tools/ai_probe.py`): 키는 JSON 객체 401·403 뒤에만(`auth_challenge`), 키 없이 200 이면 그 서버에 키 없음(`Client.key_on`), 평문 http 에 프록시가 걸리면 직접 연결로만 키(`q=k`) — 안 닿으면 안 보냄(`e=!p`), 서버가 준 글은 정해진 모양만(`_server_token`·`_ver`·`leaks`·`model_label`), 화면·결과 파일 `redact`, 주소의 `@`·한글 호스트·63자 칸 거절(정해진 글), 키 정리(`clean_key`·`read_key`), `GetPassWarning` 이면 키를 받지 않음, 인자 줄임·인자 오류 글의 값 되풀이 막음, 3xx 처리기 자체를 끔(T-003), 서버·모델마다 `!e` 안전망, 큰 수·깊은 JSON, 시험 서버 바이트 비교·결과 줄 ASCII, `--decode` 길이 상한, `HTTPError` 닫기
 - 시험 38건 추가(단위 `test_ai_probe_keyleak.py` 20 — 먼저 써서 `FAILED (failures=10, errors=7)` 확인, 통합 같은 이름 18 — 고치기 전 코드에 돌리면 17 실패·1 오류), `fakes.py` 에 차단 화면 3종·깨진 Location·깊은 JSON·큰 수·`CaptureProxy`. 가짜 서버 닫힘 대기 0.5 → 0.05초(통합 27 → 11초)
 - 문서: 요구사항정의서(FR-112·113·115·120·140·150, NFR-102), 설계서(3.1·3.2·3.3 '키 정책'·3.4·5·6절, 3.6절 `--dump-dom` 누락 바로잡음), Architecture 6절 '비밀'(Phase 6 도 따를 키 조건), 트러블슈팅 T-003·T-004, 테스트결과서(1~5·7·8절), 체크리스트 2절(새로 보일 수 있는 줄), `tools/README_KO.txt`, README, CLAUDE.md 11절(effort 환경 변수)
+- 사용자가 GitHub `main` 에서 체크리스트를 찾지 못했다 — push 하지 않았기 때문(지난 보고에 "push 안 함"만 쓰고 GitHub 에서 못 본다는 것을 알리지 않음). 사용자 결정: ① `impl-phase1` 브랜치만 push(`main` 병합은 Phase 1 끝) ② 체크리스트는 묶음에 넣지 않는다 — 인터넷 PC·폰에서 GitHub 로 보며 따라 한다(묶음 `9193c63e` 그대로). push 전에 공개 전 점검 규칙으로 올라갈 커밋 4개의 파일 판 68개·커밋 메시지까지 훑어 0건. CLAUDE.md 1절 8단계에 '체크리스트를 알릴 때 브랜치 push 여부를 함께 묻는다', README 상태 줄, 체크리스트 0절에 GitHub 주소
 
 ## 2. 최종 검증
 
@@ -29,6 +30,6 @@
 
 ## 4. 다음 단계
 
-1. 사용자: [`docs/P1_체크리스트_Probe.md`](../docs/P1_체크리스트_Probe.md) 대로 `dist/mylearner-probe-v1.tgz`(sha256 앞 8글자 `9193c63e`)를 반입해 폐쇄망에서 두 도구를 돌리고, 결과 코드 줄(`e`, `s…`, `s…m…`, `b` 두 줄)과 피드백 칸을 전한다. 오전 판 묶음(`8c046ecb…`)은 쓰지 않는다
+1. 사용자: [`docs/P1_체크리스트_Probe.md`](../docs/P1_체크리스트_Probe.md)(GitHub 브랜치 `impl-phase1` 에서도 보인다) 대로 `dist/mylearner-probe-v1.tgz`(sha256 앞 8글자 `9193c63e`)를 반입해 폐쇄망에서 두 도구를 돌리고, 결과 코드 줄(`e`, `s…`, `s…m…`, `b` 두 줄)과 피드백 칸을 전한다. 오전 판 묶음(`8c046ecb…`)은 쓰지 않는다
 2. 결과 코드를 받으면: `python3 tools/ai_probe.py --decode "<줄>" …` → 테스트결과서 10절, CLAUDE.md 1절 보류 결정 7 을 닫고, scope 13절 '확인할 사실'을 고친다. 체크리스트 피드백(MWL 을 여는 방식 등)은 테스트결과서나 P2 인터뷰결과서로 옮긴다. `e=!p` 가 있으면 3절 둘째 줄대로 사용자와 정한다
-3. Phase 1 끝: 사용자가 병합을 요청하면 종료 루틴(CLAUDE.md 1절 9단계 — 전체 검증 → history → 커밋 → `merge --no-ff` → push)
+3. Phase 1 끝: 사용자가 병합을 요청하면 종료 루틴(CLAUDE.md 1절 9단계 — 전체 검증 → history → 커밋 → `merge --no-ff` → push). `impl-phase1` 은 이미 origin 에 있으니 push 는 `main` 과 브랜치 둘 다 한다

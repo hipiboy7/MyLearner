@@ -6,6 +6,8 @@
 
 ## 0. 준비 — 개발 VM 과 내 PC
 
+이 체크리스트는 반입 묶음에 들어 있지 않다. 폐쇄망 PC 옆의 인터넷 PC·폰에서 GitHub 로 보며 따라 한다: <https://github.com/hipiboy7/MyLearner/blob/impl-phase1/docs/P1_체크리스트_Probe.md>(브랜치 `impl-phase1`)
+
 - [ ] 개발 VM 에서 묶음을 만든다
   ```bash
   cd /data/projects/MyLearner && python3 scripts/pack_probe.py
