@@ -1,0 +1,10 @@
+{
+  "_comment": "scripts/usage_cost.py 가 cost-state 뒤 대화를 추정할 때 쓰는 단가($/백만 토큰). 출처 https://platform.claude.com/docs/en/about-claude/pricing (2026-10-15 확인). 1M 문맥까지 같은 값(Haiku 5.5 만 프롬프트 10만 토큰 넘으면 over). 값이 바뀌면 이 파일만 고친다",
+  "models": {
+    "claude-opus-5-5": {"input": 4, "write_5m": 5, "write_1h": 8, "read": 0.20, "output": 20},
+    "claude-sonnet-5-5": {"input": 2, "write_5m": 2.5, "write_1h": 4, "read": 0.10, "output": 10},
+    "claude-haiku-5-5": {"input": 0.10, "write_5m": 0.125, "write_1h": 0.20, "read": 0.01, "output": 0.50,
+                         "over": {"tokens": 100000, "input": 0.50, "write_5m": 0.625, "write_1h": 1, "read": 0.05, "output": 2.50}},
+    "claude-fable-5-1": {"input": 10, "write_5m": 12.5, "write_1h": 20, "read": 0.25, "output": 50}
+  }
+}

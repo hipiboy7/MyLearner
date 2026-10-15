@@ -3,6 +3,7 @@
 - 작성 2026-10-15 / 대응 요구사항: [`P1_요구사항정의서_Probe.md`](P1_요구사항정의서_Probe.md) FR-101~169, NFR-101~107 / 상위 문서: [`설계서_Architecture.md`](설계서_Architecture.md)
 - 코드: `tools/ai_probe.py`, `tools/browser_probe.html`, `scripts/` / 시험: `tests/unit/py/`, `tests/integration/py/`
 - 정정 이력: 2026-10-15 — Python 3.14 시험 이미지(4절), 스모크 방식을 `--dump-dom` 에서 CDP 로 바로잡음(2·3.6절, 트러블슈팅 T-001), `verify.sh` 단계 표 위치
+- 정정 이력: 2026-10-15 — 2절 표에 `scripts/usage_cost.py`(비용 보고, 사용자 지시)
 - 정정 이력: 2026-10-15 — 독립 점검(P1 테스트결과서 5.2절)을 받아 키를 보내는 조건(3.3절 '키 정책'), 자유 글 거르기(3.1·3.2절), 새 값 `q=k`·`e=!p`·`!e`·이름 `?`, 줄·칸 길이 상한, 예상 밖 오류 처리(5절), 시험 서버 비교·결과 줄(3.4절)
 
 ## 1. 데이터 흐름
@@ -33,6 +34,7 @@
 | `scripts/check_probe_html.py` | `browser_probe.html` 정적 검사(외부 자원 0·접근성 기초·필수 요소) | C |
 | `scripts/browser_smoke.py` + `tests/ui/cdp.js` | 헤드리스 Chromium(Playwright 이미지)으로 `file://`·`http://127.0.0.1` 실행. `cdp.js` 는 그 이미지의 Node 내장 WebSocket 으로 CDP 를 몬다(외부 패키지 없음) | C |
 | `scripts/pack_probe.py` | 반입 묶음(재현 가능한 tar.gz) + 외부 URL 검사 | C |
+| `scripts/usage_cost.py` + `usage_prices.json` | Claude Code 사용 비용 누적(API 정가 $) — 세션마다 남는 cost-state + 진행 중 세션 추정, 기록 `history/usage_ledger.json`(CLAUDE.md 11절 '비용 보고'). 제품 코드가 아니라 개발 보고용 | C(시험 `test_usage_cost.py`) |
 | `scripts/dev_tools.env` | 개발 전용 도구 판 고정(이미지 이름) — 셸·파이썬이 함께 읽는다 | — |
 | `tests/integration/py/fakes.py` | 가짜 AI 서버(vLLM 꼴·Ollama 꼴·게이트웨이 꼴 — 글·빈 본문·BOM 차단 화면, 깨진 Location, 깊은 JSON, 큰 수)와 정방향 프록시 꼴(`CaptureProxy` — 받은 요청을 남기고 스스로 답한다) | 시험 지원 |
 

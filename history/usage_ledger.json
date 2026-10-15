@@ -1,0 +1,14 @@
+{
+ "_comment": "scripts/usage_cost.py 가 쓴다. baseline = refresh 한 때 세션별·모델별 누적 $, records = 보고 때 기준점 뒤 누적",
+ "baseline": {
+  "time": null,
+  "sessions": {}
+ },
+ "records": [
+  {
+   "time": "2026-10-15T16:15+09:00",
+   "since_baseline_usd": 55.94,
+   "estimated_usd": 2.42
+  }
+ ]
+}

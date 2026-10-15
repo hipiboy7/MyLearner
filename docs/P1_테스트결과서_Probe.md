@@ -3,7 +3,8 @@
 - 실행 일자 2026-10-15 / 브랜치 `impl-phase1` / 실행한 곳: 개발 VM(RHEL 9.6, Python 3.9.21·3.11.9, Docker 29.6.1 — 이미지의 Python 3.12.3·3.14.8)
 - 대응 요구사항: [`P1_요구사항정의서_Probe.md`](P1_요구사항정의서_Probe.md) FR-101~169, NFR-101~107 / 대응 설계서: [`P1_설계서_Probe.md`](P1_설계서_Probe.md)
 - 정정 이력: 2026-10-15 오후 — Python 3.14 시험(전체 검증 4단계)과 독립 점검(5.2절)을 반영해 1~4·5·7·8절을 다시 쟀다. 오전 판의 수치(11단계, 141건, A 95.5%·B 97.0%, 묶음 `8c046ecb…`)는 이 판으로 바뀌었다
-- **확인한 것**: 전체 검증 12단계 통과, 시험 179건(Python 3.9·3.11·3.12·3.14 각각, 건너뜀 0), 커버리지 A 96.2%·B 97.6%, 헤드리스 Chromium 153 에서 `file://`·`http://127.0.0.1` 스모크, 묶음 재현(세 판), 독립 점검(키 유출) — 지적 7건·관찰 5건 가운데 11건 고침·1건 둠
+- 정정 이력: 2026-10-15 16시 — 비용 보고 도구 시험 11건 추가(179 → 190건). 커버리지·묶음 값은 그대로(`scripts/` 는 측정 폴더 밖, 묶음 sha256 `9193c63e…` 같음)
+- **확인한 것**: 전체 검증 12단계 통과, 시험 190건(Python 3.9·3.11·3.12·3.14 각각, 건너뜀 0), 커버리지 A 96.2%·B 97.6%, 헤드리스 Chromium 153 에서 `file://`·`http://127.0.0.1` 스모크, 묶음 재현(세 판), 독립 점검(키 유출) — 지적 7건·관찰 5건 가운데 11건 고침·1건 둠
 - **확인하지 못한 것**: 사내 AI 실호출, Windows·Chrome 150(폐쇄망 PC — 사용자가 체크리스트로) — 8절
 
 ## 1. 실행 증거
@@ -84,9 +85,10 @@ vLLM requests 10 (keyed 8), Ollama requests 11 (keyed 0)
 | `tests/integration/py/test_ai_probe_serve.py` | 15 | B | 구현 뒤 |
 | `tests/integration/py/test_ai_probe_keyleak.py` | 18 | B | 고친 뒤 — 고치기 전 코드(`db954a9` 의 `tools/ai_probe.py`)에 돌리면 `Ran 18 tests … FAILED (failures=17, errors=1)` |
 | `tests/integration/py/test_verify_tools.py` | 13 | C 도구의 음성 시험 | 구현 뒤 |
+| `tests/integration/py/test_usage_cost.py` | 11 | C 개발 보고 도구(비용 누적, CLAUDE.md 11절) | 예 — 스크립트 없이 먼저 돌려 `FileNotFoundError` 확인 |
 | 브라우저 스모크(`scripts/browser_smoke.py` + `tests/ui/cdp.js`) | 3단계 | C | — |
 
-합계 179건(단위 102 + 통합 77). 네 판 모두 같은 수가 돌았다(3.12 는 Playwright 이미지의 Python 3.12.3, 3.14 는 `python:3.14.8-slim`, 건너뜀 0 — TLS 시험 포함). 독립 점검 지적을 고치며 기존 시험 두 곳의 기대값을 바꿨다: `proxy_applies` 가 `all` 을 쓴다는 것(urllib 는 쓰지 않는다), 판 `2.4 rc` → `v/2.4_rc`(이제 숫자 모양만 → `v/2.4`).
+합계 190건(단위 102 + 통합 88 — 2026-10-15 16시 비용 보고 도구 시험 11건을 더해 다시 돌림, 전체 검증 12단계 통과). 네 판 모두 같은 수가 돌았다(3.12 는 Playwright 이미지의 Python 3.12.3, 3.14 는 `python:3.14.8-slim`, 건너뜀 0 — TLS 시험 포함). 독립 점검 지적을 고치며 기존 시험 두 곳의 기대값을 바꿨다: `proxy_applies` 가 `all` 을 쓴다는 것(urllib 는 쓰지 않는다), 판 `2.4 rc` → `v/2.4_rc`(이제 숫자 모양만 → `v/2.4`).
 
 ## 3. 커버리지 — `python3 scripts/coverage_lite.py --enforce`
 

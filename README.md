@@ -15,6 +15,7 @@ python3 scripts/pack_probe.py    # 폐쇄망 점검 묶음 dist/mylearner-probe-
 
 - 폐쇄망에서 하는 일(압축 풀기 → AI 점검 → 브라우저 점검 → 결과 코드 옮겨 적기)은 [`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)
 - 받은 결과 코드 풀이: `python3 tools/ai_probe.py --decode "<줄>" "<줄>"` — 줄마다 검사합을 확인한다
+- 이 저장소에서 쓴 Claude Code 비용 누적(API 정가 $): `python3 scripts/usage_cost.py` — 에이전트가 보고마다 `--record` 로 남긴다(CLAUDE.md 11절)
 - 커밋 전에는 `bash scripts/verify.sh > 로그 && git commit …` 처럼 종료 코드 0 일 때만 커밋한다(CLAUDE.md 1절 9단계)
 
 ## 1. 첫 세션 — 착수 (2026-10-15 마침)
