@@ -1,0 +1,654 @@
+<!doctype html>
+<!--
+  MyLearner 브라우저 점검 (결과 코드 판 1)
+  입력:   없음(자동 점검) + 손으로 하는 점검 단추. 선택: AI 서버 주소(결과 코드에 넣지 않는다)
+  출력:   화면의 결과 코드 한 줄(검사합 포함). --serve-test 로 열면 같은 줄을 시험 서버에도 보낸다
+  트리거: 폐쇄망 PC 의 크롬에서 더블클릭(file://) 또는 `py -3 ai_probe.py --serve-test`(http://127.0.0.1)
+  문서:   docs/P1_요구사항정의서_Probe.md FR-160~169, docs/P1_설계서_Probe.md 3.1·3.5·8절
+  지키는 것: 파일 하나, 외부 자원 0, 밖으로 보내지 않음(사용자가 적은 AI 주소 시험만 예외), MWL 기록은 읽기만(크기만)
+  #selftest[&idb=MB][&ai=주소] — 사람 없이 돌 수 있는 단계를 모두 돌린다(scripts/browser_smoke.py)
+-->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MyLearner 브라우저 점검</title>
+<style>
+  :root { --fg: #1a1f24; --muted: #4a5561; --line: #d5dbe1; --bg: #ffffff; --soft: #f3f5f7; --accent: #1f5fbf;
+          --ok: #1d6b3a; --bad: #a3261b; --warn: #7a5000; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--fg); background: var(--bg);
+         font: 16px/1.6 "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+  main { max-width: 45rem; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.125rem; margin: 1.75rem 0 .5rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+  h3 { font-size: 1rem; margin: 0 0 .25rem; }
+  p { margin: .25rem 0 .5rem; }
+  .lead, .small, .task p { color: var(--muted); }
+  .small { font-size: .875rem; }
+  .code-box { background: var(--soft); border: 2px solid var(--accent); border-radius: 6px; padding: .75rem 1rem; }
+  #code { font: 600 1.05rem/1.6 Consolas, "D2Coding", monospace; overflow-wrap: anywhere; margin: 0; color: var(--fg); }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { text-align: left; vertical-align: top; padding: .4rem .5rem; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  .st { font-weight: 700; white-space: nowrap; }
+  .st-ok { color: var(--ok); } .st-bad { color: var(--bad); } .st-unk { color: var(--warn); } .st-none { color: var(--muted); }
+  .task { border: 1px solid var(--line); border-radius: 6px; padding: .75rem 1rem; margin: .75rem 0; }
+  button { font: inherit; padding: .45rem .9rem; border-radius: 6px; border: 1px solid #6b7785; background: #fff;
+           color: var(--fg); cursor: pointer; min-height: 2.5rem; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #f0b400; outline-offset: 2px; }
+  input[type=url], select { font: inherit; padding: .4rem .5rem; border: 1px solid #6b7785; border-radius: 6px; width: 100%; max-width: 26rem; }
+  label { display: block; font-weight: 600; margin: .25rem 0; }
+  .row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+  .notice { background: #fff6e0; border: 1px solid #c99a2e; border-radius: 6px; padding: .75rem 1rem; margin: 1rem 0; }
+  .errors { background: #fdecea; border: 1px solid #c9776c; border-radius: 6px; padding: .75rem 1rem; margin-top: 1.5rem; }
+  .errors h2 { border: 0; margin-top: 0; padding-top: 0; }
+  pre { white-space: pre-wrap; word-break: break-all; margin: 0; }
+  [hidden] { display: none !important; }
+  @media (max-width: 34rem) {
+    thead { display: none; }
+    tbody, tr, th, td { display: block; }
+    tr { display: grid; grid-template-columns: 1fr auto; column-gap: .75rem; padding: .4rem 0;
+         border-bottom: 1px solid var(--line); }
+    th, td { border: 0; padding: 0; }
+    td.st { text-align: right; }
+    td:last-child { grid-column: 1 / -1; color: var(--muted); font-size: .875rem; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>MyLearner 브라우저 점검</h1>
+  <p class="lead">이 크롬이 MyLearner 에 필요한 저장소와 기능을 어디까지 허락하는지 잽니다. 결과는 아래 결과 코드 한 줄로 옮겨 적어 전해 주세요.
+    이 페이지는 밖으로 아무것도 보내지 않습니다(5번에 직접 적은 AI 서버 시험만 예외).</p>
+  <div id="progress" class="notice" role="status" aria-live="polite">점검 중...</div>
+  <div id="mwl-gate" class="notice" hidden>
+    <p><strong>MWL(MiddlewareLearner) 기록이 이 저장소에 있습니다.</strong> 용량 시험은 저장소를 잠깐 가득 채웠다가 비웁니다.
+      MWL 화면을 모두 닫은 뒤 누르세요. MWL 기록은 읽지도 고치지도 않습니다.</p>
+    <button type="button" id="btn-gate">MWL 을 닫았다 - 용량 시험 시작</button>
+  </div>
+
+  <section aria-labelledby="h-code">
+    <h2 id="h-code">결과 코드</h2>
+    <div class="code-box">
+      <p>이 한 줄을 그대로 옮겨 적어 주세요. 끝의 /두 글자는 옮겨 적다 틀린 곳을 찾는 검사합입니다. 손으로 하는 점검을 하면 코드가 바뀝니다 - 마지막 코드를 적어 주세요.</p>
+      <p id="code" aria-live="polite">-</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-auto">
+    <h2 id="h-auto">자동 점검</h2>
+    <table>
+      <thead><tr><th scope="col">항목</th><th scope="col">결과</th><th scope="col">뜻</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </section>
+
+  <section aria-labelledby="h-manual">
+    <h2 id="h-manual">손으로 하는 점검</h2>
+    <div class="task">
+      <h3>1. 크롬을 다시 연 뒤에도 남는가</h3>
+      <p id="restart-text">처음 열었을 때 표지를 남겼습니다. 크롬 창을 모두 닫고(작업 표시줄의 크롬까지) 다시 연 뒤 이 파일을 다시 열고 아래 단추를 누르세요.</p>
+      <button type="button" id="btn-restart">다시 열었다 - 남았는지 확인</button>
+    </div>
+    <div class="task">
+      <h3>2. 다른 폴더의 사본</h3>
+      <p>이 파일을 다른 폴더(예: 바탕 화면)에 복사해 그 사본을 먼저 열어 본 뒤, 이 페이지에서 누르세요.</p>
+      <button type="button" id="btn-copy">다른 폴더의 사본을 먼저 열었다</button>
+    </div>
+    <div class="task">
+      <h3>3. 클립보드</h3>
+      <p>누르면 짧은 글을 클립보드에 씁니다(프롬프트 복사 기능에 씁니다).</p>
+      <button type="button" id="btn-clip">클립보드에 써 보기</button>
+    </div>
+    <div class="task">
+      <h3>4. 파일 내려받기</h3>
+      <p>누르면 작은 글 파일(mylearner_probe.txt)을 내려받습니다. 받아졌는지 답해 주세요.</p>
+      <div class="row">
+        <button type="button" id="btn-dl">내려받아 보기</button>
+        <span id="dl-answer" class="row" hidden><button type="button" id="btn-dl-yes">받아졌다</button><button type="button" id="btn-dl-no">안 받아졌다</button></span>
+      </div>
+    </div>
+    <div class="task">
+      <h3>5. (선택) AI 서버에 브라우저가 직접 닿는가</h3>
+      <p>키는 넣지 않습니다. 주소는 결과 코드에 들어가지 않습니다.</p>
+      <label for="ai-url">AI 서버 주소</label>
+      <div class="row"><input type="url" id="ai-url" placeholder="http://192.0.2.10:8000" autocomplete="off"><button type="button" id="btn-ai">시험</button></div>
+      <p id="ai-msg" class="small" role="status"></p>
+    </div>
+    <div class="task">
+      <h3>6. 용량 시험 크기</h3>
+      <label for="idb-mb">IndexedDB 에 써 볼 양</label>
+      <div class="row">
+        <select id="idb-mb"><option value="16">16 MB</option><option value="64" selected>64 MB</option><option value="256">256 MB</option></select>
+        <button type="button" id="btn-cap">용량 시험 다시</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="err-box" class="errors" hidden aria-labelledby="h-err">
+    <h2 id="h-err">스크립트 오류</h2>
+    <pre id="errors"></pre>
+  </section>
+
+  <section aria-labelledby="h-clean">
+    <h2 id="h-clean">점검 흔적 지우기</h2>
+    <p class="small">점검이 모두 끝나면 눌러 이 페이지가 남긴 표지와 시험 DB 를 지웁니다(MWL 기록은 건드리지 않습니다).</p>
+    <div class="row"><button type="button" id="btn-clean">흔적 지우기</button><span id="clean-msg" class="small" role="status"></span></div>
+  </section>
+  <p class="small">결과 코드 판 1 - MyLearner 저장소 tools/browser_probe.html</p>
+  <pre id="selftest" hidden></pre>
+</main>
+<script>
+(function () {
+  'use strict';
+  var VERSION = 1;
+  var ALPHA = '0123456789abcdefghjkmnpqrstvwxyz';
+  var P = 'mlprobe.', KEEP = P + 'keep', PATHS = P + 'paths', CAP = P + 'cap.', SESSION = P + 'session';
+  var IDB_CAP = 'mlprobe-cap', IDB_KEEP = 'mlprobe-keep';
+  var ORDER = ['v', 'c', 'g', 'l', 'o', 'i', 'e', 'u', 'p', 's', 'm', 'f', 'w', 'k', 'd', 'r', 't', 'a', 'z'];
+  var R = {v: VERSION, c: 'x', g: 'o', l: '-', o: '-', i: '-', e: '-', u: '-', p: '-', s: '-', m: '-', f: '-', w: '-',
+           k: '-', d: '-', r: '-', t: '-', a: '-', z: 0};
+  var errors = [];
+  var keepAtLoad = {ls: false, idb: false};
+  var sameSession = false;
+  var hash = parseHash();
+  var SELF = hash.selftest;
+
+  window.addEventListener('error', function (e) { errors.push('error: ' + (e.message || e.type)); render(); });
+  window.addEventListener('unhandledrejection', function (e) {
+    errors.push('promise: ' + ((e.reason && e.reason.message) || e.reason)); render();
+  });
+
+  function $(id) { return document.getElementById(id); }
+
+  function parseHash() {
+    var out = {selftest: false};
+    location.hash.replace(/^#/, '').split('&').forEach(function (part) {
+      var kv = part.split('=');
+      if (kv[0] === 'selftest') { out.selftest = true; }
+      else if (kv[0] && kv.length > 1) { out[kv[0]] = decodeURIComponent(kv.slice(1).join('=')); }
+    });
+    return out;
+  }
+
+  // ---------------------------------------------------------------- 결과 코드(tools/ai_probe.py 와 같은 규칙)
+  function crc16(bytes) {
+    var c = 0xFFFF;
+    for (var i = 0; i < bytes.length; i++) {
+      c ^= bytes[i] << 8;
+      for (var j = 0; j < 8; j++) { c = (c & 0x8000) ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF; }
+    }
+    return c;
+  }
+  function canonical(s) { return String(s).toLowerCase().split(/\s+/).filter(Boolean).join(' '); }
+  function checksum(s) {
+    var v = crc16(new TextEncoder().encode(canonical(s))) & 0x3FF;
+    return ALPHA.charAt(v >> 5) + ALPHA.charAt(v & 31);
+  }
+  function value(v) {
+    if (v === null || v === undefined) { return '-'; }
+    if (v === true) { return 'y'; }
+    if (v === false) { return 'n'; }
+    var s = String(v).trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._\/!:+?-]/g, '_').slice(0, 40);
+    return s || '-';
+  }
+  function makeLine() {
+    var content = 'b ' + ORDER.map(function (k) { return k + '=' + value(R[k]); }).join(' ');
+    return content + ' /' + checksum(content);
+  }
+  function yn(b) { return b ? 'y' : 'n'; }
+
+  // ---------------------------------------------------------------- 환경
+  function browserTag() {
+    var ua = navigator.userAgent, m;
+    if ((m = ua.match(/Edg\/(\d+)/))) { return 'e' + m[1]; }
+    if ((m = ua.match(/HeadlessChrome\/(\d+)/))) { return 'h' + m[1]; }
+    if ((m = ua.match(/Chrome\/(\d+)/))) { return 'c' + m[1]; }
+    return 'x';
+  }
+  function originTag() {
+    if (location.protocol === 'file:') { return 'f'; }
+    if (location.protocol === 'http:' && /^(127\.0\.0\.1|localhost)$/.test(location.hostname)) { return 'h'; }
+    return 'o';
+  }
+  function lsOk() {
+    try { localStorage.setItem(P + 't', '1'); localStorage.removeItem(P + 't'); return true; } catch (e) { return false; }
+  }
+  function lsKeys() {
+    var out = [];
+    for (var i = 0; i < localStorage.length; i++) { out.push(localStorage.key(i)); }
+    return out;
+  }
+  function cleanupCap() {
+    try { lsKeys().forEach(function (k) { if (k && k.indexOf(CAP) === 0) { localStorage.removeItem(k); } }); } catch (e) { /* 저장소를 못 쓰면 지울 것도 없다 */ }
+  }
+  function lsUsedK() {
+    var n = 0;
+    lsKeys().forEach(function (k) { n += k.length + (localStorage.getItem(k) || '').length; });
+    return Math.floor(n / 1024);
+  }
+  function isQuota(e) {
+    return !!e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014);
+  }
+  function lsFill(ch) {
+    var sizes = [262144, 16384, 1024], total = 0, n = 0, LIMIT = 16 * 1024 * 1024;
+    try {
+      sizes.forEach(function (size) {
+        var chunk = ch.repeat(size);
+        while (total < LIMIT) {
+          var key = CAP + n;
+          try { localStorage.setItem(key, chunk); } catch (e) { if (isQuota(e)) { return; } throw e; }
+          total += key.length + size;
+          n++;
+        }
+      });
+    } finally {
+      for (var i = 0; i < n; i++) { localStorage.removeItem(CAP + i); }
+    }
+    return Math.floor(total / 1024);
+  }
+  function mwlCheck() {
+    try {
+      var v = localStorage.getItem('mwl.progress');
+      return v === null ? 'n' : 'y' + Math.ceil(v.length / 1024);
+    } catch (e) { return '-'; }
+  }
+  function pathHash(p) { return crc16(new TextEncoder().encode(p)).toString(16); }
+  function pathCount(add) {
+    try {
+      var list = JSON.parse(localStorage.getItem(PATHS) || '[]');
+      if (!Array.isArray(list)) { list = []; }
+      if (add) {
+        var h = pathHash(location.pathname);
+        if (list.indexOf(h) < 0) { list.push(h); }
+        localStorage.setItem(PATHS, JSON.stringify(list.slice(-10)));
+      }
+      return list.length;
+    } catch (e) { return 0; }
+  }
+
+  // ---------------------------------------------------------------- IndexedDB
+  function idbOpen(name) {
+    return new Promise(function (res, rej) {
+      var r = indexedDB.open(name, 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore('s'); };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+      r.onblocked = function () { rej(new Error('blocked')); };
+    });
+  }
+  function idbPut(db, key, val) {
+    return new Promise(function (res, rej) {
+      var tx = db.transaction('s', 'readwrite');
+      tx.objectStore('s').put(val, key);
+      tx.oncomplete = function () { res(); };
+      tx.onerror = function () { rej(tx.error); };
+      tx.onabort = function () { rej(tx.error || new Error('abort')); };
+    });
+  }
+  function idbGet(db, key) {
+    return new Promise(function (res, rej) {
+      var r = db.transaction('s', 'readonly').objectStore('s').get(key);
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+    });
+  }
+  function idbDelete(name) {
+    return new Promise(function (res) {
+      var r = indexedDB.deleteDatabase(name);
+      r.onsuccess = r.onerror = r.onblocked = function () { res(); };
+    });
+  }
+  function randomChunk(size) {
+    var a = new Uint8Array(size);
+    for (var off = 0; off < size; off += 65536) { crypto.getRandomValues(a.subarray(off, Math.min(off + 65536, size))); }
+    return a;
+  }
+  async function idbFill(mb) {
+    var db = await idbOpen(IDB_CAP), written = 0, chunk = randomChunk(1048576);
+    try {
+      for (var i = 0; i < mb; i++) { await idbPut(db, 'c' + i, chunk); written++; }
+    } catch (e) { /* 할당량이나 정책 - 써진 데까지 센다 */ }
+    finally { db.close(); await idbDelete(IDB_CAP); }
+    return written;
+  }
+  async function quotaMB() {
+    try {
+      var est = await navigator.storage.estimate();
+      return Math.round(est.quota / 1048576);
+    } catch (e) { return '?'; }
+  }
+
+  // ---------------------------------------------------------------- 표지(다시 연 뒤 남는가)
+  async function keepCheckAtLoad() {
+    var ls = null, idb = null;
+    try { ls = localStorage.getItem(KEEP); } catch (e) { ls = null; }
+    try { var db = await idbOpen(IDB_KEEP); idb = await idbGet(db, 'keep'); db.close(); } catch (e) { idb = null; }
+    keepAtLoad = {ls: !!ls, idb: !!idb};
+    try { sameSession = sessionStorage.getItem(SESSION) === '1'; } catch (e) { sameSession = false; }
+  }
+  async function keepWrite() {
+    var mark = {id: Math.random().toString(36).slice(2), t: Date.now()};
+    try { if (!localStorage.getItem(KEEP)) { localStorage.setItem(KEEP, JSON.stringify(mark)); } } catch (e) { /* 못 쓰면 다시 연 뒤에도 없다고 나온다 */ }
+    try {
+      var db = await idbOpen(IDB_KEEP);
+      if (!(await idbGet(db, 'keep'))) { await idbPut(db, 'keep', mark); }
+      db.close();
+    } catch (e) { /* 같음 */ }
+    try { sessionStorage.setItem(SESSION, '1'); } catch (e) { /* 같음 */ }
+  }
+
+  // ---------------------------------------------------------------- 네트워크 시험
+  function tfetch(url, opts, ms) {
+    var ac = new AbortController();
+    var timer = setTimeout(function () { ac.abort(); }, ms || 10000);
+    return fetch(url, Object.assign({signal: ac.signal}, opts)).finally(function () { clearTimeout(timer); });
+  }
+  async function fetchSelf() {
+    try { var r = await tfetch(location.href.split('#')[0], {cache: 'no-store'}); return yn(r.ok); } catch (e) { return 'n'; }
+  }
+  async function serverChecks() {
+    var c = 'n', p = 'n';
+    try { c = yn((await tfetch('/probe/ping', {cache: 'no-store'})).ok); } catch (e) { c = 'n'; }
+    try {
+      var ok = true, sizes = [1048576, 4194304];
+      for (var i = 0; i < sizes.length; i++) {
+        var r = await tfetch('/probe/echo', {method: 'POST', body: new Uint8Array(sizes[i]),
+                                             headers: {'Content-Type': 'application/octet-stream'}}, 30000);
+        var j = await r.json();
+        if (!r.ok || j.bytes !== sizes[i]) { ok = false; }
+      }
+      p = yn(ok);
+    } catch (e) { p = 'n'; }
+    return c + p;
+  }
+  async function postResult(line) {
+    if (originTag() !== 'h') { return; }
+    try { await tfetch('/probe/result', {method: 'POST', body: line, headers: {'Content-Type': 'text/plain'}}); } catch (e) { /* 화면의 코드를 옮겨 적으면 된다 */ }
+  }
+  function v1Url(text) {
+    var s = String(text || '').trim();
+    if (!s) { return null; }
+    if (s.indexOf('://') < 0) { s = 'http://' + s; }
+    var u;
+    try { u = new URL(s); } catch (e) { return null; }
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') { return null; }
+    var path = u.pathname.replace(/\/+$/, '');
+    ['/chat/completions', '/completions', '/responses', '/models'].some(function (suf) {
+      if (path.toLowerCase().slice(-suf.length) === suf) { path = path.slice(0, -suf.length); return true; }
+      return false;
+    });
+    path = path.replace(/\/+$/, '');
+    if (path.toLowerCase().slice(-3) === '/v1') { path = path.slice(0, -3); }
+    return u.origin + path + '/v1';
+  }
+  async function aiReach(base) {
+    var v1 = v1Url(base);
+    if (!v1) { return null; }
+    var url = v1 + '/models', base_opts = {cache: 'no-store', credentials: 'omit'};
+    try { await tfetch(url, Object.assign({mode: 'no-cors'}, base_opts)); } catch (e) { return 'n'; }
+    try { await tfetch(url, Object.assign({mode: 'cors'}, base_opts)); } catch (e) { return 'b'; }
+    try { await tfetch(url, Object.assign({mode: 'cors', headers: {'Authorization': 'Bearer mlprobe-dummy'}}, base_opts)); } catch (e) { return 'p'; }
+    return 'c';
+  }
+  async function clip() {
+    var text = 'MyLearner 점검 ' + new Date().toISOString();
+    try { await navigator.clipboard.writeText(text); return 'y'; } catch (e) { /* 아래 옛 방식으로 */ }
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand('copy');
+      ta.remove();
+      return ok ? 'e' : 'n';
+    } catch (e) { return 'n'; }
+  }
+
+  // ---------------------------------------------------------------- 용량
+  async function capacity() {
+    $('progress').textContent = '용량 시험 중... (몇 초 걸립니다)';
+    if (!lsOk()) {
+      R.l = '!u';
+    } else {
+      cleanupCap();
+      R.o = lsUsedK();
+      R.l = lsFill('x') + '/' + lsFill('가');
+    }
+    if (!window.indexedDB) {
+      R.i = '!u';
+    } else {
+      try {
+        var mb = parseInt(hash.idb || $('idb-mb').value, 10) || 64;
+        var written = await idbFill(mb);
+        R.i = written + '/' + (await quotaMB());
+      } catch (e) { R.i = '!u'; }
+    }
+  }
+
+  // ---------------------------------------------------------------- 화면
+  var STATE = {y: ['됨', 'st-ok'], n: ['안 됨', 'st-bad'], '-': ['안 함', 'st-none'], '?': ['모름', 'st-unk']};
+  function word(v, table) {
+    var t = (table && table[v]) || STATE[v];
+    return t || [String(v), 'st-none'];
+  }
+  var SPECS = [
+    ['c', '브라우저', function (v) {
+      var names = {c: 'Chrome', e: 'Edge', h: 'HeadlessChrome'};
+      return [names[v.charAt(0)] ? names[v.charAt(0)] + ' ' + v.slice(1) : '그 밖', 'st-none', 'MyLearner 는 Chrome 기준이다'];
+    }],
+    ['g', '연 방식', function (v) {
+      return [{f: 'file://', h: 'http://127.0.0.1', o: '그 밖'}[v] || v, 'st-none', 'file:// = 더블클릭, http = --serve-test'];
+    }],
+    ['l', 'localStorage 용량', function (v) {
+      if (v === '!u') { return ['못 씀', 'st-bad', '저장소 접근이 막혔다(정책)']; }
+      var p = String(v).split('/');
+      return p.length === 2 ? [p[0] + 'K 글자', 'st-ok', '영문 ' + p[0] + 'K 글자, 한글 ' + p[1] + 'K 글자까지 들어간다'] : word(v);
+    }],
+    ['o', '시험 전 사용량', function (v) { return [v === '-' ? '안 함' : v + 'K 글자', 'st-none', '이 저장소에 이미 쓰인 양']; }],
+    ['i', 'IndexedDB', function (v) {
+      if (v === '!u') { return ['못 씀', 'st-bad', 'IndexedDB 가 막혔다']; }
+      var p = String(v).split('/');
+      return p.length === 2 ? [p[0] + ' MB 써짐', 'st-ok', '할당량 ' + p[1] + ' MB(storage.estimate)'] : word(v);
+    }],
+    ['e', 'isSecureContext', function (v) { var w = word(v); return [w[0], w[1], 'crypto.randomUUID 등이 되는 보안 문맥인가']; }],
+    ['u', 'crypto.randomUUID', function (v) { var w = word(v); return [w[0], w[1], '기기 ID 만들기']; }],
+    ['p', 'storage.persisted', function (v) {
+      var w = word(v, {y: ['보호됨', 'st-ok'], n: ['보호 안 됨', 'st-none']});
+      return [w[0], w[1], '저장소가 지워지지 않게 보호되는가(보통은 안 됨)'];
+    }],
+    ['s', 'file:// 사본끼리 공유', function (v) {
+      var w = word(v, {y: ['함께 씀', 'st-ok'], n: ['따로 씀', 'st-bad'], '?': ['아직 모름', 'st-unk']});
+      return [w[0], w[1], '손으로 하는 점검 2번으로 정해진다'];
+    }],
+    ['m', 'mwl.progress', function (v) {
+      if (v === 'n') { return ['없음', 'st-none', 'MWL 기록이 이 저장소에 없다']; }
+      if (/^y/.test(v)) { return ['있음', 'st-ok', '약 ' + v.slice(1) + ' KB - 내용은 읽지 않았다']; }
+      return word(v);
+    }],
+    ['f', '자기 파일 fetch', function (v) { var w = word(v); return [w[0], w[1], '과정 파일을 fetch 로 읽을 수 있는가']; }],
+    ['w', '파일 저장 창', function (v) {
+      var w = word(v, {y: ['있음', 'st-ok'], n: ['없음', 'st-bad']});
+      return [w[0], w[1], 'showSaveFilePicker'];
+    }],
+    ['k', '클립보드 쓰기', function (v) {
+      var w = word(v, {e: ['옛 방식만', 'st-unk']});
+      return [w[0], w[1], '손으로 하는 점검 3번'];
+    }],
+    ['d', '파일 내려받기', function (v) {
+      var w = word(v, {y: ['받아짐', 'st-ok'], n: ['안 받아짐', 'st-bad']});
+      return [w[0], w[1], '손으로 하는 점검 4번'];
+    }],
+    ['r', '다시 연 뒤 남음', function (v) {
+      if (v.length === 2) {
+        return [v === 'yy' ? '남음' : '사라짐 있음', v === 'yy' ? 'st-ok' : 'st-bad',
+                'localStorage ' + (v.charAt(0) === 'y' ? '남음' : '사라짐') + ', IndexedDB ' + (v.charAt(1) === 'y' ? '남음' : '사라짐')];
+      }
+      return [word(v)[0], 'st-none', '손으로 하는 점검 1번'];
+    }],
+    ['t', '서버 모드', function (v) {
+      if (v.length === 2) {
+        return [v === 'yy' ? '됨' : '안 되는 것 있음', v === 'yy' ? 'st-ok' : 'st-bad',
+                '쿠키 ' + (v.charAt(0) === 'y' ? '됨' : '안 됨') + ', 큰 POST ' + (v.charAt(1) === 'y' ? '됨' : '안 됨')];
+      }
+      return [word(v)[0], 'st-none', '--serve-test 로 열었을 때만'];
+    }],
+    ['a', 'AI 서버에 직접', function (v) {
+      var w = word(v, {c: ['됨', 'st-ok'], p: ['일부', 'st-unk'], b: ['CORS 막힘', 'st-bad'], n: ['닿지 않음', 'st-bad']});
+      return [w[0], w[1], '손으로 하는 점검 5번(선택)'];
+    }],
+    ['z', '스크립트 오류', function (v) { return [v + '건', v === '0' ? 'st-ok' : 'st-bad', '0 이어야 한다']; }]
+  ];
+  function render() {
+    R.z = errors.length;
+    var line = makeLine();
+    $('code').textContent = line;
+    var body = $('rows');
+    while (body.firstChild) { body.removeChild(body.firstChild); }
+    SPECS.forEach(function (spec) {
+      var out = spec[2](String(R[spec[0]]));
+      var tr = document.createElement('tr');
+      var th = document.createElement('th');
+      th.scope = 'row';
+      th.textContent = spec[1];
+      var st = document.createElement('td');
+      st.className = 'st ' + out[1];
+      st.textContent = out[0];
+      var mean = document.createElement('td');
+      mean.textContent = out[2] || '';
+      tr.appendChild(th);
+      tr.appendChild(st);
+      tr.appendChild(mean);
+      body.appendChild(tr);
+    });
+    $('err-box').hidden = errors.length === 0;
+    $('errors').textContent = errors.join('\n');
+    return line;
+  }
+  function setPrimary(id) {
+    Array.prototype.forEach.call(document.querySelectorAll('button'), function (b) { b.classList.toggle('primary', b.id === id); });
+  }
+  async function update() { await postResult(render()); }
+
+  // ---------------------------------------------------------------- 흐름
+  async function auto() {
+    R.c = browserTag();
+    R.g = originTag();
+    R.e = yn(window.isSecureContext === true);
+    R.u = yn(!!(window.crypto && typeof window.crypto.randomUUID === 'function'));
+    R.w = yn(typeof window.showSaveFilePicker === 'function');
+    await keepCheckAtLoad();
+    if (lsOk()) {
+      cleanupCap();
+      var n = pathCount(true);
+      R.s = R.g === 'f' ? (n >= 2 ? 'y' : '?') : '-';
+      R.m = mwlCheck();
+    } else {
+      R.s = R.g === 'f' ? '?' : '-';
+    }
+    R.f = await fetchSelf();
+    try { R.p = navigator.storage && navigator.storage.persisted ? yn(await navigator.storage.persisted()) : '?'; } catch (e) { R.p = '?'; }
+    if (R.g === 'h') { R.t = await serverChecks(); }
+    if (/^y/.test(R.m) && !SELF) {
+      $('mwl-gate').hidden = false;
+      setPrimary('btn-gate');
+    } else {
+      await capacity();
+    }
+    await keepWrite();
+    if ((keepAtLoad.ls || keepAtLoad.idb) && !sameSession) {
+      $('restart-text').textContent = '이전에 남긴 표지가 보입니다. 크롬을 모두 닫았다 다시 열고 이 파일을 연 것이면 아래 단추를 누르세요.';
+      if ($('mwl-gate').hidden) { setPrimary('btn-restart'); }
+    } else if (!keepAtLoad.ls && !keepAtLoad.idb && !sameSession) {
+      $('restart-text').textContent = '표지가 보이지 않습니다. 처음 연 것이면 크롬을 모두 닫았다 다시 열어 이 파일을 다시 여세요. 다시 연 것인데도 이 글이 보이면 아래 단추를 누르세요(종료 때 지우는 정책일 수 있습니다).';
+    }
+  }
+  async function selftestExtras() {
+    R.k = await clip();
+    R.r = yn(keepAtLoad.ls) + yn(keepAtLoad.idb);
+    if (hash.ai) { R.a = (await aiReach(hash.ai)) || '-'; }
+    if (R.g === 'f') { R.s = pathCount(false) >= 2 ? 'y' : 'n'; }
+  }
+  function selftestReport(line) {
+    var vectors = {};
+    ['123456789', 'b v=1', '가나다 ABC', 'e v=1 p=3.14.0 o=w10.0.26100 q=r a=n s=2'].forEach(function (s) { vectors[s] = checksum(s); });
+    $('selftest').textContent = JSON.stringify({vectors: vectors, code: line, errors: errors, fields: R});
+    document.body.setAttribute('data-done', '1');
+  }
+
+  $('btn-gate').addEventListener('click', async function () {
+    $('mwl-gate').hidden = true;
+    setPrimary(null);
+    await capacity();
+    $('progress').textContent = '용량 시험을 마쳤습니다.';
+    await update();
+  });
+  $('btn-cap').addEventListener('click', async function () {
+    await capacity();
+    $('progress').textContent = '용량 시험을 마쳤습니다.';
+    await update();
+  });
+  $('btn-restart').addEventListener('click', async function () {
+    if (sameSession && !window.confirm('이 탭은 크롬을 다시 열기 전과 같은 탭으로 보입니다. 정말 크롬 창을 모두 닫았다가 다시 열었습니까?')) { return; }
+    R.r = yn(keepAtLoad.ls) + yn(keepAtLoad.idb);
+    setPrimary(null);
+    await update();
+  });
+  $('btn-copy').addEventListener('click', async function () {
+    R.s = pathCount(false) >= 2 ? 'y' : 'n';
+    await update();
+  });
+  $('btn-clip').addEventListener('click', async function () { R.k = await clip(); await update(); });
+  $('btn-dl').addEventListener('click', function () {
+    var url = URL.createObjectURL(new Blob(['MyLearner 점검 파일\r\n'], {type: 'text/plain'}));
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'mylearner_probe.txt';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+    $('dl-answer').hidden = false;
+  });
+  $('btn-dl-yes').addEventListener('click', async function () { R.d = 'y'; $('dl-answer').hidden = true; await update(); });
+  $('btn-dl-no').addEventListener('click', async function () { R.d = 'n'; $('dl-answer').hidden = true; await update(); });
+  $('btn-ai').addEventListener('click', async function () {
+    $('ai-msg').textContent = '시험 중...';
+    var v = await aiReach($('ai-url').value);
+    if (v === null) { $('ai-msg').textContent = '주소를 읽지 못했습니다(http:// 또는 https:// 로 시작).'; return; }
+    R.a = v;
+    $('ai-msg').textContent = '끝났습니다.';
+    await update();
+  });
+  $('btn-clean').addEventListener('click', async function () {
+    cleanupCap();
+    try { [KEEP, PATHS].forEach(function (k) { localStorage.removeItem(k); }); sessionStorage.removeItem(SESSION); } catch (e) { /* 못 쓰는 저장소 */ }
+    await idbDelete(IDB_KEEP);
+    await idbDelete(IDB_CAP);
+    $('clean-msg').textContent = '지웠습니다.';
+  });
+
+  (async function main() {
+    render();
+    try {
+      await auto();
+      if (SELF) { await selftestExtras(); }
+      $('progress').textContent = $('mwl-gate').hidden ? '자동 점검을 마쳤습니다. 손으로 하는 점검도 해 주세요.'
+                                                       : 'MWL 화면을 닫은 뒤 용량 시험 단추를 누르세요.';
+    } catch (e) {
+      errors.push('auto: ' + (e && e.message ? e.message : e));
+      $('progress').textContent = '점검 도중 오류가 났습니다. 아래 오류 상자를 보세요.';
+    }
+    var line = render();
+    await postResult(line);
+    if (SELF) { selftestReport(line); }
+  })();
+})();
+</script>
+</body>
+</html>

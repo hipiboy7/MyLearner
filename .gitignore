@@ -1,0 +1,24 @@
+# 비밀 — 커밋 금지(CLAUDE.md 11절). 예시 파일(*.example)만 커밋한다
+.env
+*.key
+*.pem
+*.jks
+*.keystore
+secrets/
+
+# 실행·생성물
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+.coverage
+htmlcov/
+coverage/
+logs/
+*.log
+dist/
+build/
+tmp/
+
+# 점검 도구가 만든 결과(폐쇄망 안에서 생긴다 — 커밋하지 않는다)
+ai_probe_result_*.txt
