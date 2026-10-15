@@ -4,7 +4,8 @@
 - 대응 요구사항: [`P1_요구사항정의서_Probe.md`](P1_요구사항정의서_Probe.md) FR-101~169, NFR-101~107 / 대응 설계서: [`P1_설계서_Probe.md`](P1_설계서_Probe.md)
 - 정정 이력: 2026-10-15 오후 — Python 3.14 시험(전체 검증 4단계)과 독립 점검(5.2절)을 반영해 1~4·5·7·8절을 다시 쟀다. 오전 판의 수치(11단계, 141건, A 95.5%·B 97.0%, 묶음 `8c046ecb…`)는 이 판으로 바뀌었다
 - 정정 이력: 2026-10-15 16시 — 비용 보고 도구 시험 11건 추가(179 → 190건). 커버리지·묶음 값은 그대로(`scripts/` 는 측정 폴더 밖, 묶음 sha256 `9193c63e…` 같음)
-- **확인한 것**: 전체 검증 12단계 통과, 시험 190건(Python 3.9·3.11·3.12·3.14 각각, 건너뜀 0), 커버리지 A 96.2%·B 97.6%, 헤드리스 Chromium 153 에서 `file://`·`http://127.0.0.1` 스모크, 묶음 재현(세 판), 독립 점검(키 유출) — 지적 7건·관찰 5건 가운데 11건 고침·1건 둠
+- 정정 이력: 2026-10-15 17시 — 체크리스트 0절 '나'(GitHub 에서 세 파일)의 해시 앞자리 시험 1건 추가(190 → 191건), 10절에 처음 받은 결과 코드
+- **확인한 것**: 전체 검증 12단계 통과, 시험 191건(Python 3.9·3.11·3.12·3.14 각각, 건너뜀 0), 커버리지 A 96.2%·B 97.6%, 헤드리스 Chromium 153 에서 `file://`·`http://127.0.0.1` 스모크, 묶음 재현(세 판), 독립 점검(키 유출) — 지적 7건·관찰 5건 가운데 11건 고침·1건 둠
 - **확인하지 못한 것**: 사내 AI 실호출, Windows·Chrome 150(폐쇄망 PC — 사용자가 체크리스트로) — 8절
 
 ## 1. 실행 증거
@@ -84,11 +85,11 @@ vLLM requests 10 (keyed 8), Ollama requests 11 (keyed 0)
 | `tests/integration/py/test_ai_probe_flow.py` | 31 | B | 구현 뒤 |
 | `tests/integration/py/test_ai_probe_serve.py` | 15 | B | 구현 뒤 |
 | `tests/integration/py/test_ai_probe_keyleak.py` | 18 | B | 고친 뒤 — 고치기 전 코드(`db954a9` 의 `tools/ai_probe.py`)에 돌리면 `Ran 18 tests … FAILED (failures=17, errors=1)` |
-| `tests/integration/py/test_verify_tools.py` | 13 | C 도구의 음성 시험 | 구현 뒤 |
+| `tests/integration/py/test_verify_tools.py` | 14 | C 도구의 음성 시험, 체크리스트 해시 앞자리 | 구현 뒤(해시 시험은 틀린 값으로 실패를 먼저 봄) |
 | `tests/integration/py/test_usage_cost.py` | 11 | C 개발 보고 도구(비용 누적, CLAUDE.md 11절) | 예 — 스크립트 없이 먼저 돌려 `FileNotFoundError` 확인 |
 | 브라우저 스모크(`scripts/browser_smoke.py` + `tests/ui/cdp.js`) | 3단계 | C | — |
 
-합계 190건(단위 102 + 통합 88 — 2026-10-15 16시 비용 보고 도구 시험 11건을 더해 다시 돌림, 전체 검증 12단계 통과). 네 판 모두 같은 수가 돌았다(3.12 는 Playwright 이미지의 Python 3.12.3, 3.14 는 `python:3.14.8-slim`, 건너뜀 0 — TLS 시험 포함). 독립 점검 지적을 고치며 기존 시험 두 곳의 기대값을 바꿨다: `proxy_applies` 가 `all` 을 쓴다는 것(urllib 는 쓰지 않는다), 판 `2.4 rc` → `v/2.4_rc`(이제 숫자 모양만 → `v/2.4`).
+합계 191건(단위 102 + 통합 89 — 2026-10-15 17시 체크리스트 해시 시험 1건을 더해 다시 돌림, 전체 검증 12단계 통과). 네 판 모두 같은 수가 돌았다(3.12 는 Playwright 이미지의 Python 3.12.3, 3.14 는 `python:3.14.8-slim`, 건너뜀 0 — TLS 시험 포함). 독립 점검 지적을 고치며 기존 시험 두 곳의 기대값을 바꿨다: `proxy_applies` 가 `all` 을 쓴다는 것(urllib 는 쓰지 않는다), 판 `2.4 rc` → `v/2.4_rc`(이제 숫자 모양만 → `v/2.4`).
 
 ## 3. 커버리지 — `python3 scripts/coverage_lite.py --enforce`
 
@@ -214,4 +215,11 @@ vLLM requests 10 (keyed 8), Ollama requests 11 (keyed 0)
 
 ## 10. 폐쇄망 점검 결과
 
-사용자가 체크리스트대로 돌려 전한 결과 코드를 여기에 옮기고 `--decode` 로 검사합을 확인한다. **대기 중.**
+사용자가 체크리스트대로 돌려 전한 결과 코드를 여기에 옮기고 `--decode` 로 검사합을 확인한다. **받는 중** — 아래 한 줄을 받았고 `e`·`s…`·`b`(file://)는 아직이다.
+
+| 받은 날 | 줄 | 풀이(`python3 tools/ai_probe.py --decode`) |
+|---|---|---|
+| 2026-10-15 | `b v=1 c=c155 g=h l=5119/5119 o=0 i=64/10240 e=y u=y p=n s=n m=n f=y w=y k=y d=y r=nn t=yy a=- z=0 /57` | 검사합 맞음. Chrome 155, `http://127.0.0.1`(`--serve-test`), localStorage 영문·한글 약 5119K 글자, IndexedDB 64 MB 써짐·할당량 10240 MB, 보안 문맥·`randomUUID` 됨, `persisted` 안 됨, 자기 파일 fetch·저장 창·클립보드·내려받기 됨, 다시 연 뒤 localStorage·IndexedDB 표지 없음, 서버 모드 쿠키·큰 POST 됨, 스크립트 오류 0 |
+
+- ⚠️ 어느 PC 인지 확인 중: Chrome 155 는 CLAUDE.md 0절의 폐쇄망 Chrome 150 과 다르다
+- ⚠️ `s=n`(사본끼리 따로 씀)은 http 페이지에서는 뜻이 없다 — `file://` 전용 단추를 누르면 http 페이지에서도 값이 생긴다(`tools/browser_probe.html` 의 `btn-copy`). `r=nn` 은 이 출처(포트 8770)에서 크롬을 다시 연 뒤 누른 것인지 사용자에게 묻는 중 — 그렇다면 '크롬을 닫으면 지움' 정책일 수 있다

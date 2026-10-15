@@ -5,6 +5,7 @@
 대응: docs/P1_요구사항정의서_Probe.md FR-103~106·160, docs/P1_설계서_Probe.md 3.6절
 """
 import ast
+import hashlib
 import importlib.util
 import shutil
 import tempfile
@@ -153,6 +154,13 @@ class PackProbeTest(unittest.TestCase):
     def test_external_url_detection(self):
         self.assertEqual(PK.external_urls("예: http://192.0.2.10:8000, http://127.0.0.1:8770/?t=x https://localhost/a"), [])
         self.assertEqual(PK.external_urls("load https://cdn.example.com/x.js"), ["https://cdn.example.com"])
+
+    def test_checklist_hash_prefixes_match_tools(self):
+        # 체크리스트 0절 '나'(GitHub 에서 세 파일)의 certutil 값 — 도구를 고치고 문서를 잊으면 여기서 걸린다
+        text = (ROOT / "docs" / "P1_체크리스트_Probe.md").read_text(encoding="utf-8")
+        for name in ("ai_probe.py", "browser_probe.html"):
+            want = hashlib.sha256((ROOT / "tools" / name).read_bytes()).hexdigest()[:8]
+            self.assertIn("`%s…`" % want, text, name)
 
     def test_main_writes_bundle(self):
         tmp = tempfile.mkdtemp(prefix="ml-pack-")

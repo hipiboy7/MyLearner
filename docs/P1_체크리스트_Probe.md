@@ -1,6 +1,7 @@
 # P1 체크리스트 — Probe (폐쇄망에서 점검 도구 2종 돌리기)
 
 - 작성 2026-10-15 / 대상: 사용자(폐쇄망 PC) / 대응: [`P1_요구사항정의서_Probe.md`](P1_요구사항정의서_Probe.md) 6절 완료 기준 7, [`P1_테스트결과서_Probe.md`](P1_테스트결과서_Probe.md)
+- 정정 이력: 2026-10-15 17시 — 0절에 '나. GitHub 에서 세 파일'을 더했다(사용자가 GitHub 에서 받을 곳을 물음)
 - 확인한 범위: 아래 명령은 이 VM(Linux)에서 `python3`·`tar` 로 같은 순서를 실행해 확인했다(2026-10-15). **Windows·Chrome 150 에서는 아직 실행하지 않았다** — 이 체크리스트가 그 첫 실행이다. 막히면 그 단계와 화면의 글을 피드백 칸에 적는다
 - 걸리는 시간: AI 점검은 모델마다 몇 분(모델 5개면 10~30분 안팎으로 본다 ⚠️ 실측 전), 브라우저 점검 10분
 
@@ -8,12 +9,28 @@
 
 이 체크리스트는 반입 묶음에 들어 있지 않다. 폐쇄망 PC 옆의 인터넷 PC·폰에서 GitHub 로 보며 따라 한다: <https://github.com/hipiboy7/MyLearner/blob/impl-phase1/docs/P1_체크리스트_Probe.md>(브랜치 `impl-phase1`)
 
+가져오는 방법은 가·나 둘 중 하나다. 안의 세 파일은 같다(`.tgz` 는 GitHub 에 없다).
+
+**가. 묶음 `.tgz` — VM 에서 파일을 받을 수 있을 때**
+
 - [ ] 개발 VM 에서 묶음을 만든다
   ```bash
   cd /data/projects/MyLearner && python3 scripts/pack_probe.py
   ```
   → `만듦: /data/projects/MyLearner/dist/mylearner-probe-v1.tgz (… 바이트, sha256 …)` 이 보인다. sha256 앞 8글자를 적어 둔다
 - [ ] 평소 VM 에서 파일을 받는 방법으로 `dist/mylearner-probe-v1.tgz` 를 내 PC 로 가져와, 반입 절차로 폐쇄망 PC 에 넣는다
+
+**나. GitHub 에서 세 파일 — VM 에서 받을 수 없을 때**
+
+- [ ] 저장소 주인 계정으로 로그인한 브라우저(private 저장소)에서 <https://github.com/hipiboy7/MyLearner/tree/impl-phase1/tools> 를 연다 → 파일 목록에 `ai_probe.py`·`browser_probe.html`·`README_KO.txt` 가 보인다(다른 파일은 받지 않는다)
+- [ ] 세 파일을 하나씩 열어 오른쪽 위 `Download raw file`(아래 화살표)을 누른다 → 다운로드 폴더에 세 파일
+- [ ] 세 파일을 폴더 `mylearner-probe-v1` 하나에 넣어 반입 절차로 폐쇄망 PC 에 넣는다. 1절에서는 `tar` 를 건너뛰고 그 폴더에서 명령 프롬프트를 연다
+- [ ] (선택) 폐쇄망 PC 의 그 폴더에서 받은 파일이 맞는지 본다 ⚠️ Windows 명령이라 VM 에서는 실행해 보지 못했다
+  ```bat
+  certutil -hashfile ai_probe.py SHA256
+  certutil -hashfile browser_probe.html SHA256
+  ```
+  → 값이 `be6c883a…`, `1abee928…` 로 시작한다(2026-10-15 브랜치 판. 도구를 고치면 바뀐다). `README_KO.txt` 는 묶음 것과 맨 앞 3바이트(BOM)만 달라 보지 않는다
 
 ## 1. 압축 풀기 — 폐쇄망 PC
 
