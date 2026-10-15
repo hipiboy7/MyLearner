@@ -2,7 +2,20 @@
 
 내가 넣은 자료로 강의·카드·퀴즈를 만들고 매일 복습해 몸에 익히는 **1인용 학습 플랫폼** — 폐쇄망 PC · 내 PC · 안드로이드 폰.
 
-**지금 상태(2026-10-15): 착수 완료 · Phase 1 진행 중**(브랜치 `impl-phase1`). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 착수 인터뷰는 [`docs/P1_인터뷰결과서_Scope.md`](docs/P1_인터뷰결과서_Scope.md), 진행 기록은 `history/` 에 있다. GitHub `hipiboy7/MyLearner`(private)에는 첫 커밋(BRIEF·README, 2026-10-14)까지 올라가 있다.
+**지금 상태(2026-10-15): Phase 1 진행 중**(브랜치 `impl-phase1`) — 폐쇄망 점검 도구 2종과 전체 검증 명령을 만들었고, 사용자가 폐쇄망에서 돌려 결과 코드를 전하는 단계다([`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다. GitHub `hipiboy7/MyLearner`(private)에는 첫 커밋(BRIEF·README, 2026-10-14)까지 올라가 있다.
+
+## 0. 빠른 시작 — 개발 VM (Phase 1)
+
+```bash
+cd /data/projects/MyLearner
+bash scripts/check_env.sh        # 마지막 줄 READY
+bash scripts/verify.sh           # 전체 검증 11단계(약 1분 20초). Docker 단계를 빼려면 --quick
+python3 scripts/pack_probe.py    # 폐쇄망 점검 묶음 dist/mylearner-probe-v1.tgz
+```
+
+- 폐쇄망에서 하는 일(압축 풀기 → AI 점검 → 브라우저 점검 → 결과 코드 옮겨 적기)은 [`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)
+- 받은 결과 코드 풀이: `python3 tools/ai_probe.py --decode "<줄>" "<줄>"` — 줄마다 검사합을 확인한다
+- 커밋 전에는 `bash scripts/verify.sh > 로그 && git commit …` 처럼 종료 코드 0 일 때만 커밋한다(CLAUDE.md 1절 9단계)
 
 ## 1. 첫 세션 — 착수 (2026-10-15 마침)
 
@@ -60,5 +73,10 @@ git push                         # push 는 사용자 확인 뒤
 | [`docs/BRIEF.md`](docs/BRIEF.md) | 기획 원문 — 고치지 않는다 |
 | [`docs/scope-definition.md`](docs/scope-definition.md) | 범위·완성의 정의(S1~S7)·Phase 로드맵·BRIEF 와 달라진 것 |
 | [`docs/P1_인터뷰결과서_Scope.md`](docs/P1_인터뷰결과서_Scope.md) | 착수 인터뷰 문답과 진행 방식 결정 |
+| [`docs/설계서_Architecture.md`](docs/설계서_Architecture.md) | 전체 골격·모듈·테스트 배치·화면 기준(계속 고친다) |
+| [`docs/P1_요구사항정의서_Probe.md`](docs/P1_요구사항정의서_Probe.md) | Phase 1 요구사항(FR-101~169) |
+| [`docs/P1_설계서_Probe.md`](docs/P1_설계서_Probe.md) | Phase 1 설계 — 결과 코드 v1, 점검 흐름, 검증 도구 |
+| [`docs/P1_테스트결과서_Probe.md`](docs/P1_테스트결과서_Probe.md) | Phase 1 실행 증거·커버리지·자체 점검 |
+| [`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md) | 폐쇄망에서 사용자가 따라 하는 순서와 피드백 칸 |
 | [`docs/트러블슈팅.md`](docs/트러블슈팅.md) | 겪은 문제와 조치 |
 | `history/` | 세션마다 종료 상태와 다음 단계 |

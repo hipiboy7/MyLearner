@@ -1,0 +1,157 @@
+# P1 요구사항정의서 — Probe (폐쇄망 점검 도구 2종 · 검증 체계)
+
+- 작성 2026-10-15 / 근거: [`BRIEF.md`](BRIEF.md) 5.2·5.3·5.8·7절, [`P1_인터뷰결과서_Scope.md`](P1_인터뷰결과서_Scope.md) 12·13번, [`scope-definition.md`](scope-definition.md) 9·11·13절
+- 상위 문서: scope-definition 8절 Phase 1 / 대응 설계서: [`P1_설계서_Probe.md`](P1_설계서_Probe.md), [`설계서_Architecture.md`](설계서_Architecture.md) / 결과: [`P1_테스트결과서_Probe.md`](P1_테스트결과서_Probe.md)
+
+## 1. 목적
+
+1. 폐쇄망 PC 에서만 잴 수 있는 사실 — 사내 AI 서버·모델의 동작과 Chrome 의 저장소·정책 — 을 사용자가 들고 가서 재는 **점검 도구 2종**을 만든다. 결과는 사용자가 말(손으로 옮겨 적기)로 전할 수 있는 짧은 **결과 코드**로 받는다(BRIEF 5.8, 반출 불가).
+2. 이후 모든 Phase 가 쓰는 **검증 체계** — 환경 확인, 전체 검증 명령, 문서 검사, 커버리지, 공개 전 점검, 반입 묶음 — 를 만든다(CLAUDE.md 1절 Phase 1 산출물).
+
+이 결과로 보류 결정 7(브라우저 저장 방식과 한도)과 Phase 6 AI 연결 설계가 추측이 아니라 실측 위에 선다.
+
+## 2. 범위
+
+### 2.1 In Scope
+
+- `tools/ai_probe.py` — 사내 AI 서버·모델 점검, `--serve-test`(127.0.0.1 시험 서버), `--decode`(결과 코드 풀이)
+- `tools/browser_probe.html` — Chrome 저장소·정책 점검(파일 하나)
+- 반입 묶음 `.tgz`(두 도구 + 안내문), 전체 검증 명령, 환경 확인, 문서 검사, 커버리지 도구, 공개 전 점검
+- `docs/설계서_Architecture.md`(디렉토리·패키지 이름·모듈·화면 기준·테스트 배치·커버리지 도구)
+
+### 2.2 Out of Scope
+
+| 빼는 것 | 이유·가는 곳 |
+|---|---|
+| AI 연결 기능(서버×모델 프로필·긴 자료 처리) | Phase 6. Phase 1 은 재기만 한다 |
+| 학습 화면·로컬 서버 본체·저장 어댑터 | Phase 3. `--serve-test` 는 리허설용 작은 서버다 |
+| 파일 형식·사건 기록·SM-2 | Phase 2 |
+| 사내 AI 실호출 | 개발 에이전트는 닿지 못한다 — 가짜 서버로 흐름을 검증하고 실측은 사용자가 폐쇄망에서 한다 |
+| 유료 외부 AI 호출 | 보류 결정 5(Phase 6) |
+| Edge 점검 | 폐쇄망 브라우저는 Chrome 150(인터뷰 12번) |
+
+## 3. 기능 요구사항
+
+### 3.1 검증 체계
+
+| ID | 요구 | 근거 |
+|---|---|---|
+| FR-101 | `bash scripts/check_env.sh` 가 필요한 도구(Python 3.9 이상·git·bash, 검증용 Docker 이미지)와 디스크 여유를 재고 마지막 줄에 `READY` 또는 `NOT READY` 를 찍는다. 종료 코드는 각각 0·1 | CLAUDE.md 1절 0단계 |
+| FR-102 | `bash scripts/verify.sh` 하나가 모든 관문(시험·문법 판·커버리지·문서·공개 전 점검·브라우저 스모크·묶음 재현성)을 돌리고, 하나라도 실패하면 종료 코드가 0 이 아니다. `--quick` 은 느린 단계를 뺀다 | CLAUDE.md 1절 9단계, scope 7절 |
+| FR-103 | `scripts/verify_docs.py` 가 문서의 상대 링크·백틱 안 저장소 경로·명령(`python3 scripts/…`·`bash scripts/…`·`python3 tools/…`·`python3 -m mylearner`)의 실재를 검사한다. 사람이 따라 치는 문서(README·체크리스트·테스트결과서·트러블슈팅·`docs/guide/`)는 늘, 설계 문서(CLAUDE.md·scope·요구사항정의서·설계서)는 `--release` 에서만 본다. 아직 없는 예정 경로는 허용 목록에 두고, 생기면 목록에서 빠져야 한다 | CLAUDE.md 4절 |
+| FR-104 | `scripts/coverage_lite.py` 가 표준 라이브러리만으로 Python 줄 커버리지를 재고 등급별(A ≥ 90%, B ≥ 70%) 미달이면 실패한다. 등급은 파일 단위와 **함수 단위**(한 파일 안에서 판정 함수 A, 호출 흐름 B)로 배정한다 | CLAUDE.md 3절 |
+| FR-105 | `scripts/check_publish_safety.py` 가 추적 파일에서 IPv4(루프백·문서용 대역 제외), 토큰·키 꼴, 메일 주소, 커밋 금지 파일을 찾으면 실패한다 | CLAUDE.md 8·11절, Learn 루트 2절 |
+| FR-106 | `python3 scripts/pack_probe.py` 가 반입 묶음 `dist/mylearner-probe-v<판>.tgz`(두 도구 + 안내문)를 만든다. 같은 입력이면 바이트까지 같고, 묶음 안에 외부 URL 이 없다(루프백·문서용 예시 제외) | CLAUDE.md 5·13절, BRIEF 5.2 |
+
+### 3.2 `ai_probe.py` — 실행 환경과 입력
+
+| ID | 요구 | 근거 |
+|---|---|---|
+| FR-110 | 파일 하나, Python 표준 라이브러리만 쓴다. Python 3.9 문법까지 호환한다(`ast.parse(..., feature_version=(3, 9))` 로 시험). Windows·Linux 에서 돈다 | BRIEF 5.8, scope 11절 |
+| FR-111 | 시작하면 도구 판·Python 판·OS·프록시 설정(환경 변수, Windows 레지스트리의 프록시·PAC)을 먼저 찍는다 | BRIEF 5.8 |
+| FR-112 | 서버 주소를 차례로 묻고(빈 줄이면 끝) 키는 화면에 보이지 않게 받는다(`getpass`, 비워도 된다). 주소는 `http(s)://호스트[:포트]`, `…/v1`, `…/v1/chat/completions` 꼴을 모두 받는다 | BRIEF 5.8 |
+| FR-113 | 호출은 하나씩 한다. 한 번 실행의 호출 수 상한(기본 80, `--max-calls`)과 호출마다 시간 제한(기본 300초, `--timeout`)을 둔다. Ctrl+C 로 멈춰도 그때까지의 결과를 요약하고 코드를 낸다 | BRIEF 5.6·5.8 |
+| FR-114 | 리다이렉트를 따르지 않는다. 리다이렉트가 오면 종류(같은 호스트·다른 호스트·https 로)만 알린다. 키(`Authorization`)는 입력한 호스트 밖으로 나가지 않는다 | BRIEF 5.8, CLAUDE.md 8절 |
+| FR-115 | 서버마다 프록시를 거치는지(환경 변수·레지스트리) 알린다. 프록시로 연결이 안 되면 프록시 없이 한 번 더 해 보고 결과를 알린다. PAC 는 Python 이 읽지 못한다고 알린다 | BRIEF 5.8 |
+| FR-116 | https 는 기본으로 인증서를 검증한다(Windows 는 시스템 저장소). `--cafile` 로 사내 인증서를, `--insecure` 로 검증 없이(경고와 함께, 결과 코드에 표시) 잴 수 있다 | Python 3.13 부터 검증이 엄격해졌다(⚠️ 폐쇄망에서 확인) |
+
+### 3.3 `ai_probe.py` — 서버 점검
+
+| ID | 요구 | 근거 |
+|---|---|---|
+| FR-120 | 키 없이 한 번, (401·403 이면) 키로 한 번 `/v1/models` 를 불러 인증이 필요한지와 모델 목록을 얻는다. 401·403 이 HTML 화면이면 프록시·게이트웨이로 보고 키를 보내지 않는다. 시험할 모델을 고르게 한다(기본: 전부) | BRIEF 5.8, 자체 점검(P1 테스트결과서 5절) |
+| FR-121 | 서버 종류와 판을 `/version`(vLLM)·`/api/version`(Ollama)·`Server` 헤더로 알아낸다 | BRIEF 5.8 |
+| FR-122 | 모델마다 문맥 길이를 `/v1/models` 의 `max_model_len` → `/tokenize` → 길이 초과 400 메시지 → Ollama `/api/show` 순으로 찾고, 어디서 찾았는지 남긴다. Ollama 의 실제 창(`num_ctx`)이 있으면 함께 남긴다 | BRIEF 5.8 |
+| FR-123 | CORS 를 추정한다: 사전 요청(OPTIONS, `Origin: null`, `Access-Control-Request-Headers: authorization, content-type`)과 실제 응답의 `Access-Control-Allow-Origin`. `Allow-Headers: *` 는 `authorization` 을 덮지 못한다고 판정한다. 결과는 '추정'으로 적는다 | BRIEF 5.8 |
+
+### 3.4 `ai_probe.py` — 모델 점검
+
+| ID | 요구 | 근거 |
+|---|---|---|
+| FR-130 | 한국어 약 6k 토큰(9,000자) 질문 1회 — 맨 앞·맨 끝 표지를 되묻는다. 글자/토큰, 처리 속도(입력 토큰/초), 조용한 잘림(앞 표지가 사라짐)을 판정한다 | BRIEF 5.8 |
+| FR-131 | `reasoning_effort` 를 low·high 로 보내 추론량 차이(추론 토큰 → 추론 글자 수 → 답 토큰 순으로 쓸 수 있는 것)로 실제 반영 여부를 판정한다. 200 응답만으로는 반영으로 보지 않는다 | BRIEF 5.8, MWL T-007 |
+| FR-132 | `chat_template_kwargs: {"enable_thinking": false}` 로 생각 모드가 꺼지는지 본다 | BRIEF 5.5 '모델별 추가 요청 필드' |
+| FR-133 | `json_schema` 응답 형식 1회 — 그대로 JSON·코드 울타리로 감쌈·스키마 불일치·JSON 아님·거부(4xx)를 가른다 | BRIEF 5.8, MWL T-020 |
+| FR-134 | 답 본문에 `<think>` 나 harmony 표지(`<\|channel\|>` 등)가 새는지, 추론이 따로 오는 칸(`reasoning_content`·`reasoning`)이 있는지 본다 | BRIEF 5.8 |
+| FR-135 | Responses API(`/v1/responses`)가 되는지 1회 본다 | MWL `aiserver.py` 의 `responses` 형식 |
+| FR-136 | 긴 답 호출(추론 high)로 생성 속도(답 토큰/초)를 잰다 | BRIEF 5.8 '처리 속도' |
+
+### 3.5 `ai_probe.py` — 결과
+
+| ID | 요구 | 근거 |
+|---|---|---|
+| FR-140 | 결과 코드를 낸다: 환경 한 줄, 서버마다 한 줄, 모델마다 한 줄. 줄마다 끝에 2글자 검사합을 둔다(옮겨 적다 틀리면 드러난다). ASCII 소문자·숫자·기호만, 대소문자를 바꿔 적어도 같은 코드다. **주소·IP·포트·키는 넣지 않는다**(모델 이름은 마지막 경로 조각만) | BRIEF 5.8, CLAUDE.md 8절 |
+| FR-141 | 화면에 결과를 한국어 표로 보이고, 같은 내용(주소·키 없음)을 실행한 폴더의 `ai_probe_result.txt` 에 남긴다 | BRIEF 5.8 |
+| FR-142 | `--decode` 가 코드 줄(브라우저 코드 포함)의 검사합을 확인하고 뜻을 풀어 보인다(개발 쪽에서 받은 코드를 확인하는 데 쓴다) | 결과 전달 |
+| FR-143 | 화면에 찍는 글자는 모두 cp949(한국어 Windows 콘솔)로 나타낼 수 있다. 출력이 깨질 글자는 바꿔 찍고 멈추지 않는다 | BRIEF 5.8 |
+| FR-144 | 대화형 실행이면 끝나거나 오류가 나도 엔터를 누를 때까지 창을 닫지 않는다(`--no-pause` 로 끈다) | BRIEF 5.8 |
+
+### 3.6 `ai_probe.py --serve-test`
+
+| ID | 요구 | 근거 |
+|---|---|---|
+| FR-150 | 127.0.0.1 에만 작은 서버를 띄워 같은 폴더의 `browser_probe.html` 을 보내고 브라우저를 연다. 서버 모드 리허설로 토큰 → HttpOnly 쿠키, `Host` 확인, 본문 상한, CSP 헤더를 갖추고, 페이지가 보낸 결과 코드를 콘솔에 찍는다. `--port`·`--no-browser`·`--serve-seconds` | BRIEF 5.8·5.3-4, MWL 로컬 서버(토큰 → 쿠키) |
+
+### 3.7 `browser_probe.html`
+
+| ID | 요구 | 근거 |
+|---|---|---|
+| FR-160 | 파일 하나, 외부 자원 0. `file://` 와 `http://127.0.0.1`(`--serve-test`) 양쪽에서 돈다 | BRIEF 5.8 |
+| FR-161 | localStorage 용량(글자 수)과 이미 쓰인 양을 잰다. 시험으로 쓴 키는 지우고, 다음에 열 때 남은 시험 키도 지운다 | BRIEF 4.1·5.3-5, 보류 결정 7 |
+| FR-162 | IndexedDB 에 정한 양(기본 64 MB)을 써 보고 `navigator.storage.estimate()` 의 할당량과 함께 알린다. 시험 DB 는 지운다 | 보류 결정 7 |
+| FR-163 | 브라우저를 완전히 닫았다 연 뒤에도 localStorage·IndexedDB 의 표지가 남는지 두 단계로 확인한다 | BRIEF 5.8 '종료 때 지우는 정책' |
+| FR-164 | `isSecureContext`·`crypto.randomUUID`·`navigator.storage.persisted()` 를 알린다 | BRIEF 5.3-2, scope 13절 |
+| FR-165 | 다른 폴더에 둔 사본끼리 `file://` 저장소를 함께 쓰는지 가른다. `mwl.progress` 가 보이는지와 크기만 알린다(내용은 읽지 않는다) | BRIEF 5.7, scope 13절 |
+| FR-166 | 자기 파일 `fetch`, 파일 저장 창(`showSaveFilePicker`) 유무, 클립보드 쓰기(단추), 파일 내려받기(단추 + 사용자 확인)를 본다 | Phase 3·5 설계 입력(파일 모드·프롬프트 복사) |
+| FR-167 | (선택) 브라우저가 AI 서버에 직접 닿는지 — 키 없이, 가짜 `Authorization` 으로 사전 요청까지 — 를 본다. 주소는 결과 코드에 넣지 않는다 | BRIEF 5.2 `file://` 모드, FR-123 의 실측 |
+| FR-168 | `--serve-test` 로 열렸으면 쿠키 인증과 큰 본문 POST(1·4 MiB)를 보고, 결과 코드를 서버로 보낸다 | FR-150 |
+| FR-169 | 결과 코드 한 줄(`ai_probe.py` 와 같은 검사합)을 화면에 크게 보인다. 스크립트 오류를 화면에 모아 보인다. `#selftest` 로 열면 사람 없이 돌 수 있는 단계를 모두 돌린다(자동 스모크용) | FR-140, CLAUDE.md 3절 등급 C |
+
+## 4. 비기능 요구사항
+
+| ID | 요구 | 측정 |
+|---|---|---|
+| NFR-101 | `ai_probe.py` 는 Python 3.9·3.11·3.12 에서 시험이 통과한다(3.14 는 이 VM 에 없다 — 8절) | 전체 검증 |
+| NFR-102 | 키·호스트·포트가 화면·결과 파일·결과 코드 어디에도 나오지 않는다 | 가짜 서버 시험(고유한 가짜 키·포트로 전체 출력 검사) |
+| NFR-103 | 공유 GPU 부담: 동시 호출 1, 상한 80, 모델 5개 기준 실행 시간을 화면에 진행으로 보인다 | 설계서 4절 |
+| NFR-104 | 커버리지 A ≥ 90%, B ≥ 70% | `coverage_lite.py --enforce` |
+| NFR-105 | 반입 묶음은 두 번 만들어 바이트가 같다 | 전체 검증 |
+| NFR-106 | 화면 출력은 cp949 로 인코딩된다 | 단위 시험(소스의 출력 글자 전수) |
+| NFR-107 | `browser_probe.html`: Chrome 150 에서 도는 JS, 외부 자원 0, `lang`·라벨·단추 글이 있고 상태를 색만으로 말하지 않는다 | 정적 검사 + 헤드리스 Chromium 스모크 |
+
+## 5. TDD 등급
+
+| 대상 | 등급 | 시험 위치 |
+|---|---|---|
+| `ai_probe.py` 판정·요약·결과 코드 함수(주소 정리, 문맥 길이 읽기, 잘림·추론·JSON·누출·CORS·리다이렉트 판정, 검사합·코드 만들기·풀기, 요약 그리기, 비밀값 가리기) | A — 시험 먼저 | `tests/unit/py/` |
+| `ai_probe.py` HTTP 호출·점검 흐름·대화형 입력·`--serve-test`·레지스트리 읽기 | B — 구현 뒤 가짜 서버 통합 시험 | `tests/integration/py/` |
+| `browser_probe.html` | C — 정적 검사 + 헤드리스 Chromium 스모크 | `scripts/check_probe_html.py`, `scripts/browser_smoke.py` |
+| 검증 스크립트(`verify_docs.py`·`check_publish_safety.py`·`coverage_lite.py`·`pack_probe.py`) | C — 저장소 실물로 돌리고, 잡아야 할 것을 잡는지 음성 시험 | `tests/integration/py/test_verify_tools.py` |
+
+## 6. 완료 기준 (기계 판정)
+
+| # | 기준 | 명령 |
+|---|---|---|
+| 1 | 환경 준비 | `bash scripts/check_env.sh` → 마지막 줄 `READY` |
+| 2 | 전체 검증 통과 | `bash scripts/verify.sh` 종료 코드 0 |
+| 3 | 커버리지 A ≥ 90%·B ≥ 70% | verify 의 커버리지 단계 |
+| 4 | 3.9 문법·3.9/3.11/3.12 시험 통과 | verify 의 문법·시험 단계 |
+| 5 | 브라우저 스모크: `file://`·`http://127.0.0.1` 양쪽에서 검사합이 맞는 코드 줄, 스크립트 오류 0 | verify 의 스모크 단계 |
+| 6 | 묶음 재현·외부 URL 0 | verify 의 묶음 단계 |
+| 7 | (Phase 끝, 사람) 사용자가 폐쇄망에서 두 도구를 돌려 결과 코드를 전하고, `--decode` 로 검사합이 맞는다 | `docs/P1_체크리스트_Probe.md` → 테스트결과서에 기록, 보류 결정 7 닫기 |
+
+## 7. 위험
+
+| 위험 | 대응 |
+|---|---|
+| 두 번째 서버의 서빙 방식을 모른다. 응답 모양이 가짜 서버와 다를 수 있다 | 모든 응답을 방어적으로 읽고 모르면 `?`·오류 코드로 남긴다. 결과 코드에 판정뿐 아니라 원 숫자(토큰 수·초)를 싣는다 |
+| 옮겨 적다 틀린다 | 줄마다 검사합, `--decode` 로 확인 |
+| Python 3.14 을 이 VM 에서 시험하지 못한다 | 3.9·3.11·3.12 시험 + 제거된 모듈을 쓰지 않는다. 3.14 이미지 받기는 사용자에게 묻는다 |
+| 헤드리스 Chromium 153 과 폐쇄망 Chrome 150(기업 정책)이 다르다 | 그래서 실측한다. 스모크는 '스크립트가 끝까지 돈다'만 보장한다 |
+| localStorage 를 가득 채우는 동안 MWL 이 저장하면 실패할 수 있다 | `mwl.progress` 가 보이면 용량 시험 전에 확인 단추를 누르게 한다. 시험 키는 `finally` 와 다음 열기 때 지운다. 체크리스트에 'MWL 을 닫고' |
+| 키 유출 | 리다이렉트 안 따름, 출력 전 가리기, 시험, 독립 점검(CLAUDE.md 12절 — 사용자 승인 뒤) |
+| 공유 GPU 에 부담 | 하나씩, 상한, 모델 고르기 |
+
+## 8. 아직 정하지 않은 것
+
+- Python 3.14 실행 시험 — `python:3.14-slim` 이미지를 받을지 사용자에게 묻는다(테스트결과서 8절)

@@ -19,3 +19,6 @@ logs/
 dist/
 build/
 tmp/
+
+# 점검 도구가 만든 결과(폐쇄망 안에서 생긴다 — 커밋하지 않는다)
+ai_probe_result_*.txt
