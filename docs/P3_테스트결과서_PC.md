@@ -1,34 +1,35 @@
 # P3 테스트결과서 — PC 에서 배우기
 
+- 정정 이력: 2026-11-09 — 독립 점검(5.2절)을 반영하고 1.1·2·3절 수를 다시 쟀다
 - 작성 2026-11-09 / 대응: [`P3_요구사항정의서_PC.md`](P3_요구사항정의서_PC.md) FR-301~364·NFR-301~306, [`P3_설계서_PC.md`](P3_설계서_PC.md) / 써 보기: [`P3_체크리스트_PC.md`](P3_체크리스트_PC.md)
 - 실행 환경: 개발 VM(RHEL 9.6), Python 3.9.21·3.11.9·3.12.3(Playwright 이미지)·3.14.8, Node 22.23.3, 헤드리스 Chromium 153(Playwright `v1.63.0-noble`). 과정 자료: MWL `e55b9c0`(135과), Learn `mwm-app`(45과)·`llm-chat-agent`(9과)
 
 ## 1. 실행 증거
 
-### 1.1 전체 검증 — `bash scripts/verify.sh` (2026-11-09, 커밋 직전)
+### 1.1 전체 검증 — `bash scripts/verify.sh` (2026-11-09, 독립 점검 반영 커밋 `72e800b` 직전)
 
 ```
 단계                         결과   초
 0 환경 확인                통과   1
-1 시험 Python 3.9            통과   17
-2 시험 Python 3.11           통과   17
-3 시험 Python 3.12(Docker)   통과   18
-4 시험 Python 3.14(Docker)   통과   21
+1 시험 Python 3.9            통과   18
+2 시험 Python 3.11           통과   19
+3 시험 Python 3.12(Docker)   통과   20
+4 시험 Python 3.14(Docker)   통과   23
 5 3.9 문법(ai_probe)         통과   0
-6 커버리지(A>=90 B>=70)    통과   18
+6 커버리지(A>=90 B>=70)    통과   20
 7 문서 검사                통과   0
-8 공개 전 점검            통과   1
+8 공개 전 점검            통과   0
 9 브라우저 점검 정적 검사 통과   0
-10 브라우저 스모크(Chromium) 통과   5
-11 반입 묶음 재현·외부 URL 0 통과   0
-12 시험 JS(Node 22)+커버리지 통과   17
+10 브라우저 스모크(Chromium) 통과   3
+11 반입 묶음 재현·외부 URL 0 통과   1
+12 시험 JS(Node 22)+커버리지 통과   15
 13 웹 JS 정적 검사        통과   0
-14 골든 벡터 복사본(MWL) 통과   1
+14 골든 벡터 복사본(MWL) 통과   0
 15 기록 왕복(S3)           통과   7
-16 MWL 실데이터 대조     통과   2
+16 MWL 실데이터 대조     통과   3
 17 렌더러 Chromium(XSS)     통과   3
 18 앱 묶음 재현·판별   통과   3
-19 화면 스모크(Chromium)  통과   18
+19 화면 스모크(Chromium)  통과   30
 전체 통과 (20단계)
 ```
 
@@ -82,7 +83,7 @@ mylearner-internet-v0.3.0: 파일 41개 · 과정 3개 · .tgz 2368491 바이트
 | Python 통합(B) | `tests/integration/py/test_server.py`(실제 서버 13)·`test_convert_learn.py`(5)·`test_pack_app.py`(7)·`test_verify_tools_p2.py`(Phase 3 묶음 규칙 1건 더함) | 26 |
 | 화면(C) | `scripts/app_smoke.py` + `tests/ui/app_check.js`·`a11y.js`(CDP `tests/ui/cdp.js` — `ready`·`inject`·`log` 더함) | 시나리오 6 + 스크린샷 9화면 × 2폭 |
 
-JS 시험 131건(단위 129·통합 2), Python 시험 248건 — 모두 통과(2026-11-09).
+JS 시험 133건(단위 131·통합 2), Python 시험 259건 — 모두 통과(2026-11-09, 독립 점검 반영 뒤. 반영 전은 131·248건).
 
 ## 3. 커버리지
 
@@ -93,10 +94,10 @@ JS 시험 131건(단위 129·통합 2), Python 시험 248건 — 모두 통과(2
 | `web/core/checkup.js` | A | 100.00 | 81.19 | 100.00 |
 | `web/core/stats.js` | A | 100.00 | 87.50 | 98.65 |
 | `web/core/markdown.js` | A | 100.00 | 95.43 | 100.00 |
-| `web/store/common.js` | A | 100.00 | 90.16 | 100.00 |
-| `web/store/browser.js` | B | 100.00 | 88.06 | 97.30 |
+| `web/store/common.js` | A | 100.00 | 90.54 | 100.00 |
+| `web/store/browser.js` | B | 100.00 | 88.57 | 97.44 |
 | `web/store/server.js` | B | 100.00 | 84.00 | 100.00 |
-| 전체 | — | 100.00 | 87.81 | 99.66 |
+| 전체 | — | 100.00 | 87.86 | 99.66 |
 
 ### 3.2 Python — `python3 scripts/coverage_lite.py --enforce`
 
@@ -107,7 +108,7 @@ JS 시험 131건(단위 129·통합 2), Python 시험 248건 — 모두 통과(2
 | `mylearner/server.py` | B | 98.0% |
 | `mylearner/__main__.py` | B | 91.7% |
 | `mylearner/convert/learn.py` | B | 97.3% |
-| 등급 전체 | A 96.6% · B 95.7% | — |
+| 등급 전체 | A 96.6% · B 95.3%(반영 뒤) | — |
 
 - `scripts/pack_app.py`(B)는 `scripts/` 가 측정 폴더 밖이라 줄 커버리지를 재지 않았다(P1 `pack_probe.py` 와 같다) — 시험 7건 + 전체 검증 18단계로 본다
 - 화면(`web/app/*.js`, C)은 측정하지 않고 화면 스모크로 본다
