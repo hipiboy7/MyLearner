@@ -1,0 +1,10 @@
+{
+  "_comment": "폐쇄망판 설정(FR-302, docs/P3_설계서_PC.md 3.1절). 묶을 때 web/config.js 와 묶음 맨 위 config.json 이 된다. 내보내기 없음·외부 링크 없음·외부 AI 없음(CLAUDE.md 13절)",
+  "edition": "closed",
+  "label": "폐쇄망판",
+  "export": false,
+  "link_hosts": [],
+  "server": {"port": 8770},
+  "stats_scope": "폐쇄망 안의 기록과 들여온 기록",
+  "ai_presets": []
+}

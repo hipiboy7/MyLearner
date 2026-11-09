@@ -5,8 +5,9 @@
  * 시간: 입력 길이에 선형이다. MWL 정규식 가운데 되짚기가 겹치는 것(strip 의 \s+$, 제목, 표 구분 줄, 그림·링크)은
  *   같은 결과를 내는 손 코드·겹치지 않는 정규식으로 바꿨다(독립 점검 ② — 남이 만든 과정 파일 하나로 화면이 멈추지 않게).
  * Python 과 같게: 줄 나눔(str.splitlines), 공백(str.isspace), \d = \p{Nd}, \w = [\p{L}\p{N}_].
- * 입력: 마크다운 글, {lessonRef(id) → 주소|null, image(src) → data URL|null} / 출력: MyLearner.markdown.render / 트리거: (Phase 3) 강의·실습·드릴 화면
- * 문서: docs/P2_요구사항정의서_Core.md FR-250~253, docs/P2_설계서_Core.md 3.6절 */
+ * 입력: 마크다운 글, {lessonRef(id) → 주소|null, image(src) → data URL|null, allowLink(주소) → bool(판 설정 — 막기만)} / 출력: MyLearner.markdown.render
+ * 트리거: 강의·실습·드릴 화면(web/app/views.js)
+ * 문서: docs/P2_요구사항정의서_Core.md FR-250~253, docs/P2_설계서_Core.md 3.6절, docs/P3_설계서_PC.md 2절(allowLink) */
 (function (root, factory) {
   var node = typeof module === 'object' && module.exports;
   var ns = node ? null : (root.MyLearner = root.MyLearner || {});
@@ -67,12 +68,14 @@
   function escAttr(s) { return quotes(escText(s)); }
   function unescText(s) { return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'); }
   function safeHref(u) { return typeof u === 'string' && /^(https?:\/\/|#)/i.test(u) && !/[\u0000-\u001f\u007f]/.test(u); }
+  // 판 설정의 링크 행선지(P3 FR-312) — 안전 검사를 통과한 주소만 allowLink 에 묻는다. allowLink 는 막기만 할 수 있다
+  function allowed(u, opts) { return safeHref(u) && (!opts.allowLink || opts.allowLink(u) === true); }
 
   function codeSpan(c, opts) {
     var code = '<code>' + escText(c) + '</code>';
     if (opts.lessonRef && ITEM.test(c)) {
       var href = opts.lessonRef(c);
-      if (safeHref(href)) return '<a class="ref" href="' + escAttr(href) + '">' + code + '</a>';
+      if (allowed(href, opts)) return '<a class="ref" href="' + escAttr(href) + '">' + code + '</a>';
     }
     return code;
   }
@@ -104,7 +107,7 @@
       return ph('<span class="img-missing">[그림: ' + alt + ']</span>');
     });
     s = replaceLinks(s, false, function (label, href) {
-      if (!safeHref(unescText(href))) return label;
+      if (!allowed(unescText(href), opts)) return label;
       return ph('<a href="' + quotes(href) + '">') + label + ph('</a>');
     });
     s = s.replace(BOLD, '<strong>$1</strong>').replace(ITALIC, '<em>$1</em>');

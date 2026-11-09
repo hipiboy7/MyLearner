@@ -2,4 +2,4 @@
 
 문서: docs/설계서_Architecture.md 3절(모듈 구조)
 """
-__version__ = "0.2.0"
+__version__ = "0.3.0"

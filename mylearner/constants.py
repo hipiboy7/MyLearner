@@ -23,6 +23,7 @@ SHARED = {
     "LAB_CHECK_TYPES": ["choice", "text", "regex"],
     "MWL_COURSE_ID": "mwl",
     "MWL_NOTES_ID": "mwl-notes",
+    "DEVICE_RE": "^[a-z0-9][a-z0-9-]{0,31}$",
 }
 
 COURSE_FORMAT = SHARED["COURSE_FORMAT"]

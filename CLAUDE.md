@@ -17,9 +17,9 @@
 - **완성의 정의**: scope-definition 2절 S1~S7. 한 줄로 — 사용자가 `.tgz` 를 풀거나 APK 를 설치만 하고(S4) '오늘 학습'을 열면 미들웨어 과정·Learn 자료·내 자료로 만든 과정을 배우고 복습하며, 세 기기의 기록이 사라지지 않고 합쳐지고(S3) 통계로 보인다(S7)
 - **핵심 도메인 사실**: 간격 반복은 MWL 의 SM-2(골든 벡터는 MWL `tests/fixtures/srs_vectors.json`·`scheduler_cases.json`). 기록 = 기기별 사건 목록(기기, 순번, 시각, 학습일). 폐쇄망은 들여오기만 — 안의 기록·과정은 반출 불가. 사내 AI 문맥은 128k~256k 로 작다. MWL 과정 = 강의 135·카드 1,350·실습 91·드릴 24·퀴즈 55·용어 350·진단 35, MWL `web/data/bundle.js` 5,470,752 B. MWL 코드를 복사할 때 기준 커밋을 적는다(2026-10-15 현재 `e55b9c0` — `mylearner/constants.py` 의 `MWL_COMMIT`, 골든 벡터 복사본 `tests/fixtures/mwl/`)
 - **개발 환경**: 이 VM — RHEL 9.6, 4코어, 메모리 11Gi(2026-11-09 `free -h` — 10-15 의 15Gi 에서 줄었다), 디스크 여유 `/` 11G·`/data` 56G(2026-11-09 `df -h`. 여러 계정이 같이 쓴다 — 쓰기 전에 잰다. 개발 이미지가 지워진 일이 있다 — 트러블슈팅 T-007). Python 3.9.21(`python3`)·3.11.9(`/usr/bin/python3.11`), Docker 29.6.1(Python 3.12·3.14 시험은 이미지로 — `scripts/dev_tools.env`), Node 없음 → JS 시험은 Docker `node:22.23.3-alpine`(2026-10-15 받음 — `bash scripts/run_js_tests.sh`)
-- **운영 환경**: 폐쇄망 PC — Windows, Python 3.14(3.12·3.9 도 있음), Chrome 150.0.7871.125, 사내 AI API, `.tgz` 반입(2026-10-15 사용자). 내 PC — ⚠️ 판 미확인(Phase 3 에서 묻는다). 폰 — 안드로이드 APK, 인터넷 권한 0. 그래서 코드는 **Python 3.9 이상 표준 라이브러리**, 브라우저는 **Chrome(Chromium·WebView)** 기준이다
+- **운영 환경**: 폐쇄망 PC — Windows, Python 3.14(3.12·3.9 도 있음), Chrome 150.0.7871.125, 사내 AI API, `.tgz` 반입(2026-10-15 사용자). 내 PC — 폐쇄망 PC 와 같은 범위(Windows · Python 3.9 이상 · Chrome, 2026-11-09 사용자 — 다르면 체크리스트 피드백으로). 폰 — 안드로이드 APK, 인터넷 권한 0. 그래서 코드는 **Python 3.9 이상 표준 라이브러리**, 브라우저는 **Chrome(Chromium·WebView)** 기준이다
 - **네트워크·인증**: 밖으로는 사내 프록시를 거친다(`HTTPS_PROXY`·`NO_PROXY` 설정됨). `origin` = `https://github.com/hipiboy7/MyLearner.git`(private). 시스템 git 설정이 `https://github.com/` 를 SSH 로 바꾸는데 이 계정의 SSH 는 `Permission denied (publickey)` 다 → 이 저장소에만 `url.https://github.com/hipiboy7/.insteadOf`(HTTPS 로 남김)와 `credential.helper '!gh auth git-credential'` 을 두었다. `gh` 는 저장소 주인 계정으로 로그인돼 있다(관리자 권한 — 다른 계정에 넘기지 않는다). 확인: `git ls-remote origin`(2026-10-15 성공)
-- **외부 서비스**: GitHub(push, 전체) · Docker 이미지 받기(P1 `python:3.14-slim`, P2 `node:22-alpine`, P3 Playwright) · 사내 AI(P6 — 개발 에이전트는 닿지 못한다. 사용자가 점검 결과 코드를 말로 전한다) · 외부 AI(P6, 유료 — 보류 결정 5)
+- **외부 서비스**: GitHub(push, 전체) · Docker 이미지 받기(P1 `python:3.14-slim`, P2 `node:22-alpine`, P3 Playwright, P4 `ghcr.io/cirruslabs/android-sdk:36`) · 사내 AI(P6 — 개발 에이전트는 닿지 못한다. 사용자가 점검 결과 코드를 말로 전한다) · 외부 AI(P6, 유료 — 보류 결정 5)
 - **핵심 상수**: 과정 파일 `mylearner-course` v1·기록 파일 `mylearner-log` v1·사건 판 1(머리 `{format, version, min_reader}`), 과정 ID `^[a-z0-9][a-z0-9-]{0,39}$`·항목 ID `^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$`, MWL 과정 `mwl`·내 메모 `mwl-notes`, 학습일 경계 0시. 한 곳: `web/core/constants.js` `SHARED` = `mylearner/constants.py` `SHARED`(시험이 같은지 본다). 규칙은 `docs/P2_설계서_Core.md` 3절
 
 ## 0-1. 세션을 시작하면 읽는 순서
@@ -58,14 +58,14 @@
 ### 보류 결정
 | # | 열린 결정 | 트리거 | 확인 방법 | 이정표 문서 |
 |---|---|---|---|---|
-| 1 | 통계 화면에 꼭 있어야 할 것과 우선순위(BRIEF 5.4 초안) | Phase 3 시작 | P3 인터뷰결과서에 우선순위 표가 있다 | `docs/P3_인터뷰결과서_*.md` |
-| 2 | MWL 이관 시점과 MWL 동결 여부(BRIEF 5.7) | Phase 3 시작 | P3 인터뷰결과서에 시점·방식이 있다 | 같음 |
+| 1 | ~~통계 화면에 꼭 있어야 할 것과 우선순위~~ → BRIEF 5.4 전부, ①학습량·연속·7일 예정 → ②복습량·정답률 추이 → ③카드 상태·정착률 → ④진도·숙련도 → ⑤틀림 많은 것 → ⑥점검 전·후, AI 확인 비율은 Phase 6 (2026-11-09) | — | — | `docs/P3_인터뷰결과서_PC.md` |
+| 2 | ~~MWL 이관 시점과 MWL 동결 여부~~ → 한동안 병행, 들여오기는 여러 번(매번 백업), 동결 시점은 정하지 않음 (2026-11-09) | — | — | `docs/P3_인터뷰결과서_PC.md` |
 | 3 | 안드로이드 패키지 이름과 서명 키 보관·백업(BRIEF 4.1) | Phase 4 시작 | P4 인터뷰결과서에 이름과 보관 위치가 있다(키 값은 적지 않는다) | `docs/P4_인터뷰결과서_*.md` |
 | 4 | 사내 자료 형식(PDF·HWP·DOCX·PPTX)과 텍스트 뽑기 범위(BRIEF 5.6) | Phase 6 시작 | P6 인터뷰결과서에 형식별 처리 표가 있다 | `docs/P6_인터뷰결과서_*.md` |
 | 5 | 인터넷판 외부 AI 제공자와 비용 상한(유료 — 사용자 결정) | Phase 6 시작 | P6 인터뷰결과서에 제공자·상한 금액이 있다 | 같음 |
 | 6 | 개발 중 AI 시험 경로(이 VM 에서 닿는 AI. 비용·자격 증명 주인의 허락) | Phase 6 시작 | P6 인터뷰결과서에 경로와 허락 기록이 있다 | 같음 |
-| 7 | 브라우저 저장 방식과 한도(localStorage 월별 키 / IndexedDB, BRIEF 5.3-5) | Phase 3 시작(저장 어댑터 — 2026-10-15 Phase 2 에서 옮김. Phase 2 기록 형식은 학습일로 월별로 쪼갤 수 있게 둔다) | Phase 1 폐쇄망 점검 결과 코드에 용량·유지 여부가 있다 | `docs/P1_테스트결과서_*.md` |
-| 8 | 폐쇄망 점검 실행 — P1 체크리스트대로 두 도구를 돌려 결과 코드(`e`·`s…`·`s…m…`·`b` 두 줄)와 피드백을 전한다 | 사용자가 정할 때, 늦어도 Phase 3 시작(보류 결정 7 의 근거) | P1 테스트결과서 10절에 폐쇄망 결과 코드가 있고 `--decode` 검사합이 맞다 | `docs/P1_테스트결과서_*.md` |
+| 7 | 브라우저 저장 방식과 한도 — **잠정**(2026-11-09 사용자): 서버 모드 = 파일, `file://` = localStorage 월별 키(기록) + IndexedDB(큰 것), 저장 어댑터 뒤 | 보류 결정 8 의 결과가 올 때 | 폐쇄망 결과 코드의 `l`·`i`·`r` 로 확정하거나 바꾸고 P3 인터뷰결과서에 덧붙인다 | `docs/P3_인터뷰결과서_PC.md`, `docs/P1_테스트결과서_*.md` |
+| 8 | 폐쇄망 점검 실행 — P1 체크리스트대로 두 도구를 돌려 결과 코드(`e`·`s…`·`s…m…`·`b` 두 줄)와 피드백을 전한다 | 사용자가 정할 때(2026-11-09 — Phase 3 은 기다리지 않고 진행, 사용자 지시). 결과가 오면 보류 결정 7 을 확정 | P1 테스트결과서 10절에 폐쇄망 결과 코드가 있고 `--decode` 검사합이 맞다 | `docs/P1_테스트결과서_*.md` |
 
 결정을 각주로만 남기지 않는다. 보류하는 순간 트리거·확인 방법·이정표 문서를 이 표에 함께 올린다. 끝난 항목은 `~~내용~~ → 결론 (날짜)` 한 줄로 남기고 상세는 이정표 문서에 둔다. 다른 프로젝트·세션이 전해 온 결정은 출처 원문을 확인한 뒤 잠정 적용으로 올리고 "사용자 재확인"을 트리거로 둔다.
 
@@ -120,7 +120,7 @@
 - 멱등성: 같은 기록을 여러 번 들여와도 결과가 같다(합치기 = 합집합). 원본 → 산출물 단방향이고 산출물을 손으로 고치지 않는다
 
 ## 7. 실행 환경과 배포
-- 1차 실행 경로: Chrome + Python 로컬 서버(127.0.0.1, `py -3 -m <패키지> serve` — 패키지 이름은 설계서_Architecture). Python 이 없으면 HTML 더블클릭(`file://`). 폰은 APK(WebView)
+- 1차 실행 경로: Chrome + Python 로컬 서버(127.0.0.1, `py -3 -m mylearner serve` — 묶음의 `MyLearner.cmd`, Phase 3). Python 이 없으면 HTML 더블클릭(`file://`). 폰은 APK(WebView)
 - 의존성: 런타임은 Python 3.9 이상 표준 라이브러리와 외부 라이브러리 0 인 JS 다. 개발 전용 도구(Docker 이미지·시험 도구)는 버전을 고정해 `scripts/dev_tools.env` 한 곳에 적는다
 - 개발·운영 환경 차이: 개발 VM(RHEL, Python 3.9·3.11, Docker 로 3.12·3.14) ↔ 폐쇄망 PC(Windows, Python 3.14·3.12·3.9, Chrome 150) ↔ 폰. OS 패키지에 의존하지 않는다. 한국어 Windows 콘솔에서 깨지지 않는 글자만 출력한다(BRIEF 5.8)
 - 배포·반입 묶음: 폐쇄망 `.tgz`, 인터넷판 ZIP·`.tgz`(Phase 3), APK(Phase 4). 스크립트는 그 Phase 에서 `scripts/` 에 만든다
@@ -153,7 +153,7 @@
 - PR 은 쓰지 않는다(사용자 결정 2026-10-15). 리뷰는 체크리스트와 피드백으로 한다(1절 8단계)
 - 세션마다 `history/<날짜>_<작업자>_<주제>.md` 에 종료 상태와 다음 단계를 남긴다. 작업자 칸에는 사람 이름·계정 대신 `claude-opus` 처럼 에이전트를 적는다
 - 커밋 금지: 비밀 파일·토큰·키, 실운영 로그·데이터(마스킹 여부와 무관), 사내 서버 주소·IP·계정, 폐쇄망 안에서 만든 과정·기록, 사람의 메일
-- 사람 확인이 필요한 일: push, 저장소 공개 범위, 이력 재작성·강제 push·삭제, 비용이 드는 외부 호출, 공용 서버 설정 변경(Learn 루트 2절). 허락받은 것: 개발용 Docker 이미지 `node:22-alpine`(Phase 2)·Playwright(Phase 3)·`python:3.14-slim`(Phase 1) 받기(2026-10-15)
+- 사람 확인이 필요한 일: push, 저장소 공개 범위, 이력 재작성·강제 push·삭제, 비용이 드는 외부 호출, 공용 서버 설정 변경(Learn 루트 2절). 허락받은 것: 개발용 Docker 이미지 `node:22-alpine`(Phase 2)·Playwright(Phase 3)·`python:3.14-slim`(Phase 1) 받기(2026-10-15)·안드로이드 빌드 이미지 `ghcr.io/cirruslabs/android-sdk:36`(Phase 4, 2026-11-09 — 압축 백업은 이 계정의 `/data` 개인 폴더)
 - **push**: Phase 끝에 사용자가 병합을 요청하면 전체 검증 통과 뒤 push 까지 허락한 것으로 본다(사용자 결정 2026-10-15). 그 밖의 push 는 따로 묻는다. push 전에 `git log --oneline origin/main..HEAD` 로 올라갈 커밋을 확인한다. 공개 범위는 private 그대로 둔다
 
 ### 사용자와 말하는 방식

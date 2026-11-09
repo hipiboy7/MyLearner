@@ -33,27 +33,45 @@ class CoreJsCheckTest(unittest.TestCase):
         (self.root / where / name).write_text(text, encoding="utf-8")
 
     def test_real_tree_is_clean(self):
-        n, _, problems = CJ.check(ROOT)
+        n, w, _, problems = CJ.check(ROOT)
         self.assertEqual(problems, [])
-        self.assertEqual(n, 14)   # web/core 14개(regex.js — 2026-11-09)
+        self.assertEqual(n, 15)   # web/core 15개(regex.js — 2026-11-09, checkup.js — Phase 3)
+        self.assertGreaterEqual(w, 4)   # web/store·web/app·web/*.js·index.html (Phase 3)
 
     def test_good_file(self):
         self.put("x.js", GOOD)
-        self.assertEqual(CJ.check(self.root)[2], [])
+        self.assertEqual(CJ.check(self.root)[3], [])
 
     def test_catches(self):
         self.put("x.js", GOOD.replace("/* MyLearner web/core/x.js", "/* other"))
         self.put("y.js", "/* MyLearner web/core/y.js */\n'use strict';\nfetch('a'); document.body; var u = 'https://evil.example';\nrequire('fs');\n")
         self.put("z.js", "/* MyLearner web/core/z.js */\nvar r = /a b/;\n")
         self.put("t.js", "var s = '';\n", where="tests/ui")
-        problems = "\n".join(CJ.check(self.root)[2])
+        problems = "\n".join(CJ.check(self.root)[3])
         for frag in ("x.js: 머리 주석", "y.js:3: 쓰지 않는 것 'fetch(", "y.js:3: 쓰지 않는 것 'document.", "y.js:3: 쓰지 않는 것 'https://e",
                      "y.js:4: UMD 머리 밖의 require", "z.js: 'use strict' 가 없다", "z.js:2: 보이지 않는 글자 U+2028", "t.js:1: 보이지 않는 글자 U+E000"):
             self.assertIn(frag, problems)
 
+    def test_phase3_groups(self):
+        for d in ("web/store", "web/app"):
+            (self.root / d).mkdir(parents=True)
+        self.put("s.js", "/* MyLearner web/store/s.js */\n'use strict';\nenv.fetch('/api'); fetch('x'); localStorage.x; require('fs');\n", where="web/store")
+        self.put("a.js", "/* MyLearner web/app/a.js */\n'use strict';\nel.innerHTML = ''; document.body; fetch('x'); eval('1');\n", where="web/app")
+        self.put("b.js", "/* other */\nvar x = 1;\n", where="web/app")
+        (self.root / "web" / "index.html").write_text('<html><head></head><body style="x"><script>1</script><script src="a.js"></script>'
+                                                       '<a href="https://evil.example">x</a></body></html>', encoding="utf-8")
+        problems = "\n".join(CJ.check(self.root)[3])
+        for frag in ("s.js:3: 쓰지 않는 것 'fetch(", "s.js:3: 쓰지 않는 것 'localStorage'", "s.js:3: UMD 머리 밖의 require", "a.js:3: 쓰지 않는 것 'fetch(",
+                     "a.js:3: 쓰지 않는 것 'eval(", "b.js: 머리 주석", "b.js: 'use strict' 가 없다", "index.html: 인라인 <script>", "index.html: style= 속성",
+                     "index.html: 외부 주소", "index.html: CSP 메타가 없다"):
+            self.assertIn(frag, problems)
+        self.assertNotIn("env.fetch", problems)
+        self.assertNotIn("innerHTML", problems)
+        self.assertNotIn("document.", problems)
+
     def test_comments_are_ignored(self):
         self.put("x.js", GOOD + "// fetch( 와 https://x.example 는 주석\n/* innerHTML */\n")
-        self.assertEqual(CJ.check(self.root)[2], [])
+        self.assertEqual(CJ.check(self.root)[3], [])
 
 
 class FixtureCheckTest(unittest.TestCase):

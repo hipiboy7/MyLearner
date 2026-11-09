@@ -48,6 +48,11 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   else
     ng "이미지 $NODE_IMAGE 이 없다(약 60MB). docker pull $NODE_IMAGE"
   fi
+  if docker image inspect "$ANDROID_IMAGE" >/dev/null 2>&1; then
+    ok "이미지 ${ANDROID_IMAGE%%@*} (안드로이드 빌드 - Phase 4)"
+  else
+    note "이미지 ${ANDROID_IMAGE%%@*} 이 없다(약 3.8GB, Phase 4 에서 쓴다). docker pull \"\$ANDROID_IMAGE\" (scripts/dev_tools.env)"
+  fi
   if [ -d "${MWL_REPO:-/nonexistent}/.git" ]; then ok "MWL 저장소(읽기만) - 골든 벡터·실데이터 대조"; else note "MWL 저장소가 없다 - 실데이터 대조는 건너뛴다"; fi
 elif [ $QUICK = 1 ]; then
   note "docker 를 쓸 수 없다 - quick 이라 넘어간다"

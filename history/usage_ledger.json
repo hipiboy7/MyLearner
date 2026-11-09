@@ -69,6 +69,11 @@
    "time": "2026-11-09T13:16+09:00",
    "since_baseline_usd": 107.83,
    "estimated_usd": 2.63
+  },
+  {
+   "time": "2026-11-09T15:45+09:00",
+   "since_baseline_usd": 140.44,
+   "estimated_usd": 35.23
   }
  ]
 }

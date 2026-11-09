@@ -4,6 +4,7 @@
 - 계속 고치는 문서다. Phase 마다 정한 것을 해당 절에 더하고, 아직 정하지 않은 것은 "Phase N 에서 정한다"로 남긴다
 - 정정 이력: 2026-10-15 — 7절 시험(Python)에 3.14(`python:3.14.8-slim`)를 더했다(사용자 승인)
 - 정정 이력: 2026-10-15 — 6절 '비밀'에 AI 키를 보내는 조건을 더했다(P1 독립 점검 — Phase 6 의 AI 대리 호출도 따른다)
+- 정정 이력: 2026-11-09 — Phase 3 에서 정한 것: 2절 판 설정 경로, 3절 화면·저장 어댑터·서버·Learn 변환기 행, 7절 접근성 검사·안드로이드 빌드 이미지, 8절 앱 묶음, 11절 디렉토리, 12절 추적성, 13절 접근성 검사 방법
 - 정정 이력: 2026-10-15 — Phase 2 에서 정한 것: 3절(MWL 변환기는 Phase 2), 5절 형식 값, 6절 JS 파일 꼴·상수 위치 확정, 7·9절 JS 시험(Node 22.23.3·내장 커버리지), 11절 디렉토리, 12절 추적성
 
 ## 1. 범위 문서와의 경계
@@ -31,7 +32,7 @@
  tools/ — 단독 도구(폐쇄망 점검 2종, Phase 1)      scripts/ — 검증·포장(개발 VM)
 ```
 
-- 판(폐쇄망·인터넷·모바일) = 설정. 코드 분기는 없다(BRIEF 5.2). 판 설정은 `config/*.json`(Phase 3)
+- 판(폐쇄망·인터넷·모바일) = 설정. 코드 분기는 없다(BRIEF 5.2). 판 설정은 `config/editions/<판>.json` — 묶을 때 `web/config.js`·묶음의 `config.json` 이 된다(`docs/P3_설계서_PC.md` 3.1절)
 - 계산은 JS 한 벌이고 Python 은 서버·도구만 한다(BRIEF 5.3-1). 예외: 비밀값 가리기 규칙은 JSON 한 파일을 두 언어가 같이 읽는다(BRIEF 5.3-1, Phase 5~6)
 
 ## 3. 모듈 구조
@@ -41,13 +42,15 @@
 | `tools/ai_probe.py` | Python | 폐쇄망 AI 점검·`--serve-test`·`--decode` | A(판정·코드)·B(흐름) | 1 |
 | `tools/browser_probe.html` | HTML+JS | 폐쇄망 Chrome 점검 | C | 1 |
 | `web/core/` | JS | SM-2·하루 계획·숙련도, 사건 기록·늦은 복습 규칙·합치기, 렌더러 이스케이프, 과정 검사, 통계 계산, 채점, MWL 진도 변환 — 파일 14개와 싣는 순서는 `docs/P2_설계서_Core.md` 2절 | A | 2 |
-| `web/app.js`·`web/index.html`·`web/styles.css` | JS·CSS | 화면(오늘·복습·강의·퀴즈·점검·통계) — MWL 골격 이식 | C | 3 |
-| `web/store/` | JS | 저장 어댑터(파일·브라우저·안드로이드) — 같은 인터페이스(DIP) | A(순수 부분)·B | 3·4 |
-| `mylearner/` | Python | 로컬 서버(정적 파일·저장·AI 대리 호출), CLI 진입점 | B | 3 |
-| `mylearner/convert/` | Python | MWL 과정(`mwl.py`, Phase 2)·Learn 자료(Phase 3) → 과정 파일 변환 | B | 2·3 |
+| `web/index.html`·`boot.js`·`config.js`·`styles.css`·`app/*.js` | JS·CSS | 화면(오늘·복습·강의·실습·드릴·퀴즈·점검·통계·과정·설정·MWL 들여오기) — MWL 골격 이식, 파일과 싣는 순서는 `docs/P3_설계서_PC.md` 2절 | C | 3 |
+| `web/store/` | JS | 저장 어댑터 — `common.js`(순수, A)·`browser.js`(localStorage 달별 키 + IndexedDB)·`server.js`(로컬 서버)·`idb.js`, 안드로이드는 Phase 4. 같은 인터페이스(DIP, `docs/P3_설계서_PC.md` 3.2절) | A·B | 3·4 |
+| `mylearner/` | Python | 로컬 서버(`server.py` — 정적 파일·기록·과정·백업 API, 토큰, 보안 헤더), 데이터 폴더(`storage.py`), CLI `python -m mylearner serve`(`__main__.py`). AI 대리 호출은 Phase 6 | B(순수 함수 A) | 3 |
+| `mylearner/convert/` | Python | MWL 과정(`mwl.py`, Phase 2)·Learn 자료(`learn.py`, Phase 3) → 과정 파일 변환 | B | 2·3 |
 | `mylearner/extract/` | Python | DOCX·HWPX·PPTX 텍스트 뽑기 | A | 6 |
 | `mylearner/ai/` | Python | 서버×모델 프로필, 긴 자료 처리 단계 | B | 6 |
 | `mobile/android/` | Java | APK 껍데기(인터넷 권한 0) | B | 4 |
+| `scripts/pack_app.py` | Python | 과정 자료 JS 감싸기·판 설정·반입 묶음(.tgz·.zip, 재현·판별 검사) | B(측정 폴더 밖 — 시험만) | 3 |
+| `scripts/app_smoke.py` + `tests/ui/app_check.js`·`a11y.js` | Python·JS | 화면 스모크(Chromium, `file://`·서버 모드)·접근성·스크린샷 | C | 3 |
 
 - 가장 바뀌기 쉬운 두 축은 **저장 어댑터**와 **AI 연결**이다(CLAUDE.md 2절) — 상위 로직은 그 인터페이스에만 기댄다
 
@@ -87,10 +90,10 @@
 |---|---|---|
 | 런타임 서버·도구 | Python 표준 라이브러리 | 3.9 이상(폐쇄망 PC 3.14·3.12·3.9) |
 | 런타임 화면 | 바닐라 JS + 토큰 CSS, 외부 라이브러리 0 | Chrome 150 기준 |
-| 안드로이드 | WebView 껍데기(MWL 시제품 이식) | Phase 4 |
+| 안드로이드 | WebView 껍데기(MWL 시제품 이식) | Phase 4. 빌드 이미지 `ghcr.io/cirruslabs/android-sdk:36`(digest `f9b3ea9ed2b5…`, 2026-11-09 받음) — JDK 21.0.9·build-tools 36.0.0·android-36, Gradle 없음. 이 이미지로 WebView 최소 APK 빌드·서명을 `--network none` 에서 확인(권한 0) |
 | 시험(Python) | `unittest` + `scripts/coverage_lite.py` | 개발 VM 3.9.21·3.11.9, Playwright 이미지의 3.12.3, `python:3.14.8-slim` 의 3.14.8(2026-10-15 받음 — DeprecationWarning 은 실패) |
 | 시험(JS) | Node 내장 시험 실행기 + 내장 커버리지(`--experimental-test-coverage`, `web/core` 줄 90%·분기 80% — `scripts/run_js_tests.sh`) | `node:22.23.3-alpine`(2026-10-15 받음, digest `0a7108bf6c7b…`) |
-| 화면 확인 | Playwright 이미지의 Chromium(헤드리스) | `mcr.microsoft.com/playwright:v1.63.0-noble` — Chromium 153.0.8010.12, 이 VM 에 이미 있다(2026-10-15) |
+| 화면 확인 | Playwright 이미지의 Chromium(헤드리스) | `mcr.microsoft.com/playwright:v1.63.0-noble` — Chromium 153.0.8010.12, 이 VM 에 이미 있다(2026-10-15). 접근성은 `tests/ui/a11y.js` 를 DevTools 평가로 넣어 본다(npm 받지 않음 — Phase 3) |
 
 개발 전용 도구의 판은 `scripts/dev_tools.env` 한 곳에 적고 스크립트가 거기서 읽는다(CLAUDE.md 7절).
 
@@ -99,7 +102,7 @@
 | 묶음 | 내용 | 만드는 것 | Phase |
 |---|---|---|---|
 | 점검 묶음 `dist/mylearner-probe-v<판>.tgz` | `ai_probe.py`·`browser_probe.html`·`README_KO.txt` | `python3 scripts/pack_probe.py` | 1 |
-| 폐쇄망 `.tgz` / 인터넷판 ZIP·`.tgz` | 앱 전체(같은 묶음, 설정만 다름) | Phase 3 | 3 |
+| 폐쇄망 `dist/mylearner-closed-v<판>.tgz` / 인터넷판 `dist/mylearner-internet-v<판>.tgz`·`.zip` | 앱 전체(웹·서버·과정 자료 — 같은 묶음, 판 설정만 다름) | `python3 scripts/pack_app.py --edition closed\|internet` | 3 |
 | APK | 새 패키지 이름·서명 키 | Phase 4 | 4 |
 
 모든 묶음은 같은 입력이면 같은 바이트이고, 폐쇄망 묶음에는 외부 URL 이 없다(CLAUDE.md 5·13절) — 검사는 전체 검증에 있다.
@@ -137,8 +140,10 @@ MyLearner/
 ├── tools/                  단독 도구 — 폐쇄망에 들고 간다(파일 하나씩)
 │   ├── ai_probe.py
 │   └── browser_probe.html
-├── web/core/               계산 한 벌(JS, classic script) — Phase 2
-├── mylearner/              Python 패키지: constants.py · convert/mwl.py(MWL 과정 변환) — 서버는 Phase 3
+├── web/                    화면(Phase 3): index.html · boot.js · config.js(생성물) · styles.css · app/ · store/ · data/(생성물, 커밋 안 함)
+│   └── core/               계산 한 벌(JS, classic script) — Phase 2(+ checkup.js Phase 3)
+├── mylearner/              Python 패키지: constants · server · storage · __main__(serve) · convert/(mwl·learn)
+├── config/                 판 설정 editions/(closed·internet) · 묶음 안내 bundle/
 ├── scripts/                검증·포장(개발 VM). dev_tools.env 에 도구 판
 ├── tests/
 │   ├── unit/py/ · unit/js/             등급 A
@@ -150,7 +155,7 @@ MyLearner/
 ├── docs/                   scope·Architecture·P{N} 문서·트러블슈팅 (+ screenshots/P{N}/)
 ├── history/                세션 기록
 ├── dist/                   생성물(커밋하지 않음 — 바꾼 MWL 과정 파일도)
-│   (Phase 3~) web/ 화면 · config/ · mobile/
+│   (Phase 4~) mobile/
 ```
 
 ## 12. 문서 간 추적성
@@ -159,6 +164,7 @@ MyLearner/
 |---|---|---|---|---|
 | Phase 1 Probe | [`P1_요구사항정의서_Probe.md`](P1_요구사항정의서_Probe.md) FR-101~169 | [`P1_설계서_Probe.md`](P1_설계서_Probe.md) 6절 표 | `tools/`, `scripts/` | [`P1_테스트결과서_Probe.md`](P1_테스트결과서_Probe.md) 4절 |
 | Phase 2 Core | [`P2_요구사항정의서_Core.md`](P2_요구사항정의서_Core.md) FR-201~263 | [`P2_설계서_Core.md`](P2_설계서_Core.md) 6절 표 | `web/core/`, `mylearner/`, `scripts/` | [`P2_테스트결과서_Core.md`](P2_테스트결과서_Core.md) 4절 |
+| Phase 3 PC | [`P3_요구사항정의서_PC.md`](P3_요구사항정의서_PC.md) FR-301~364 | [`P3_설계서_PC.md`](P3_설계서_PC.md) 6절 표 | `web/`, `mylearner/`, `config/`, `scripts/` | [`P3_테스트결과서_PC.md`](P3_테스트결과서_PC.md) 4절 |
 
 코드 머리 주석이 요구사항·설계서 경로를 가리키고, 설계서 6절이 FR → 코드·시험을 가리킨다.
 
@@ -171,4 +177,4 @@ MyLearner/
 - **참고 사례**: 어워드 수상작은 쓰지 않는다 — 사용자가 MWL 골격을 고름(인터뷰 10번). MWL 이 참고한 외부 사례는 MWL `docs/internal/P0_검토서_외부비교.md` 9절
 - **지키는 제약**: 외부 자원 0, 새 CSS 기능(`:has`·중첩·`color-mix`·컨테이너 쿼리) 쓰지 않음(MWL 6.3 — Chrome 150 에서 다시 정할 수 있다, Phase 3), 화면마다 빈 화면·로딩·오류 상태
 - **예외**: `tools/browser_probe.html` 은 토큰 파일보다 먼저 나오는 단독 도구라 인라인 CSS 를 쓴다(P1 설계서 8절)
-- **확인**: 화면을 바꾼 Phase 는 PC(1280px)·휴대폰(390px) 폭 스크린샷을 `docs/screenshots/P{N}/` 에 두고 테스트결과서 "화면 확인"에 남긴다. 접근성 자동 검사는 Phase 1 은 정적 검사(`scripts/check_probe_html.py`), 앱 화면(Phase 3)은 axe-core 등으로 정한다(⚠️ npm 받기는 Phase 3 에서 사용자 확인)
+- **확인**: 화면을 바꾼 Phase 는 PC(1280px)·휴대폰(390px) 폭 스크린샷을 `docs/screenshots/P{N}/` 에 두고 테스트결과서 "화면 확인"에 남긴다. 접근성 자동 검사는 Phase 1 은 정적 검사(`scripts/check_probe_html.py`), 앱 화면(Phase 3)은 `tests/ui/a11y.js`(이름 없는 조작 요소·`lang`·제목 순서·양수 tabindex·중복 id·글자 대비 — npm 을 받지 않고 CDP 로 넣는다, `scripts/app_smoke.py`)

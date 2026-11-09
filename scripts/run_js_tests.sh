@@ -10,5 +10,5 @@ RUN=(docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD:/w:ro" -w 
 if [ $# -gt 0 ]; then
   exec "${RUN[@]}" node --test "$@"
 fi
-exec "${RUN[@]}" node --test --experimental-test-coverage --test-coverage-include='web/core/**' \
+exec "${RUN[@]}" node --test --experimental-test-coverage --test-coverage-include='web/core/**' --test-coverage-include='web/store/**' --test-coverage-exclude='web/store/idb.js' \
   --test-coverage-lines=90 --test-coverage-branches=80 'tests/unit/js/**/*.test.js' 'tests/integration/js/**/*.test.js'
