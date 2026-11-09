@@ -45,12 +45,15 @@
 - 강의 HTML 은 MWL `web/data/bundle.js` 의 `lessons[id].html` 에서 `href="#/learn/<id>"` 만 `href="#/learn/mwl/<id>"` 로 바꾼 것과 같다. 135과에 바깥 링크·그림은 없고 강의 참조 링크가 2,315개다
 - 첫 실행에 일치했다. 다만 그 전에 Python 과 JS 의 차이(줄 나눔 11가지·공백 집합·`\d`·`\w`)를 렌더러 입력 39가지(`tests/fixtures/markdown_inputs.json`)를 MWL `markdown.py` 로 그린 결과(`tests/fixtures/mwl/markdown_parity.json`)와 먼저 맞췄다
 
-### 1.3 기록 왕복 — `scripts/check_log_roundtrip.js` (2026-10-15)
+### 1.3 기록 왕복 — `scripts/check_log_roundtrip.js` (2026-11-09, 커밋 `b30630a`)
+
+`docker run --rm -v "$PWD:/w:ro" -w /w node:22.23.3-alpine node scripts/check_log_roundtrip.js --rounds 365 --seed 7`
 
 ```
-기록 왕복: 365일, 시드 7, 만든 사건 집 PC 1333 · 폰 1262 · 폐쇄망 1721
-  마지막 파일: 집 PC 2595 · 폰 2595 · 폐쇄망 4316줄, 집 PC·폰 같은 바이트 예, 이른 복습 774 · 계산된 복습 1658
-  속도: 사건 50000줄 합치기+다시 계산 507ms (카드 9장)
+기록 왕복: 365일, 시드 7, 만든 사건 집 PC 1655 · 폰 1599 · 폐쇄망 1758
+  폐쇄망 파일의 새 판 줄 32 · 읽을 수 없는 줄 27 · 같은 순번 다른 줄 24
+  마지막 파일: 집 PC 3254 · 폰 3254 · 폐쇄망 5012줄, 집 PC·폰 같은 바이트 예, 이른 복습 979 · 계산된 복습 2065
+  속도: 사건 50000줄 합치기+다시 계산 592ms (카드 9장)
 유실 0 · 없던 사건 0 · 폐쇄망 사건 반출 0
 ```
 

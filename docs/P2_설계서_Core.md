@@ -2,6 +2,7 @@
 
 - 작성 2026-10-15 / 대응 요구사항: [`P2_요구사항정의서_Core.md`](P2_요구사항정의서_Core.md) FR-201~263, NFR-201~205 / 상위 문서: [`설계서_Architecture.md`](설계서_Architecture.md)
 - 코드: `web/core/`, `mylearner/`, `scripts/` / 시험: `tests/unit/js/`, `tests/integration/js/`, `tests/unit/py/`, `tests/integration/py/`, `tests/realdata/`, `tests/ui/render_check.html`
+- 정정 이력: 2026-11-09 — 독립 점검 ②(렌더러, 테스트결과서 5.2절)를 받아 3.6절에 '시간'을 더했다
 - 정정 이력: 2026-10-15 — 독립 점검(기록 합치기, 테스트결과서 5.2절)을 받아 3.3절(해석하지 못한 줄은 글자 그대로·상속 이름 ID·깊은 줄·`session.total`·`setting` 키), 3.4절(규칙 문장·사례 6·한계), 3.8절(가상 기기·순번), 7절을 고쳤다
 - 옮겨 온 코드의 출처: MWL `e55b9c0` 의 `web/engine.js`(SM-2·계획·숙련도·통계·채점), `mwl/content/markdown.py`(렌더러), `mwl/content/frontmatter.py`·`loader.py`(변환기의 읽기), hub `8dee3b8` 의 `src/learnhub/engine/events.py`(사건·합치기의 뼈대)
 
@@ -201,6 +202,7 @@ grade = again 이고, 그 카드에 마지막으로 반영된 복습이 같은 �
 - 강의 참조: 인라인 코드의 내용이 항목 ID 꼴이고 `lessonRef(id)` 가 주소를 주면 `<a class="ref" href="…"><code>id</code></a>`(MWL `linkify_lesson_refs` 와 같은 결과)
 - 펜스 언어: MWL 처럼 `class="language-<언어>"` 에 넣되 속성 이스케이프(따옴표까지)를 한다
 - 깊이: 인용 16단·목록 16단을 넘으면 더 파고들지 않고 글로 보인다(스택 넘침 방지)
+- 시간: 입력 길이에 선형이다. MWL 정규식 가운데 되짚기가 겹치는 다섯은 같은 결과를 내는 꼴로 바꿨다(독립 점검 ②) — `strip`(`\s+$` 2제곱)·제목(`\s+(.*?)\s*#*\s*$` 3제곱)은 손 코드, 표 구분 줄은 끝의 `\s*\|?\s*` 를 `\s*(\|\s*)?` 로(같은 언어), 그림·링크는 다음 `]`·`)`/공백 위치를 기억해 한 번만 훑는다(정규식은 여는 `[` 마다 다시 훑었다). 같은 결과인지는 시험이 옛 정규식과 무작위 글로 대조하고, 20만 자 14가지 꼴을 자식 프로세스에서 1초 안에 끝나는지 잰다(`markdown.test.js` '선형 시간')
 - 135과 대조: MWL `bundle.js` 의 `lessons[id].html` 에서 `href="#/learn/<id>"` 를 `href="#/learn/mwl/<id>"` 로 바꾼 것과 같아야 한다
 
 ### 3.7 채점 (FR-244)

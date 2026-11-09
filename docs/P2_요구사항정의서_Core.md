@@ -3,6 +3,7 @@
 - 작성 2026-10-15 / 근거: [`BRIEF.md`](BRIEF.md) 4.1·4.2·5.3·5.7·5.9, [`P2_인터뷰결과서_Core.md`](P2_인터뷰결과서_Core.md), [`scope-definition.md`](scope-definition.md) 2·3·5절
 - 상위 문서: scope-definition 8절 Phase 2 / 대응 설계서: [`P2_설계서_Core.md`](P2_설계서_Core.md), [`설계서_Architecture.md`](설계서_Architecture.md) / 결과: [`P2_테스트결과서_Core.md`](P2_테스트결과서_Core.md)
 - MWL 기준 커밋 `e55b9c0`(2026-10-15 20:45, `android-v1.7.2-22`). hub `events.py` 기준 커밋 `8dee3b8`
+- 정정 이력: 2026-11-09 — 독립 점검 ②(렌더러, 테스트결과서 5.2절)를 받아 FR-252 에 '줄이 길어도 멈추지 않는다(선형)'를 더했다
 
 ## 1. 목적
 
@@ -85,7 +86,7 @@ Phase 3 화면이 올라설 **계산 한 벌(JS)과 파일 형식**을 만든다
 |---|---|---|
 | FR-250 | MWL `markdown.py` 의 부분집합(제목·문단·굵게·기울임·코드·펜스 코드·인용·목록 2단계·표·가로줄·링크·그림)을 JS 로 옮긴다. 강의 참조(`` `A1-1` ``)는 호출자가 준 함수로 링크를 단다 | BRIEF 5.3-4 |
 | FR-251 | MWL 135과를 그리면 MWL `web/data/bundle.js` 의 HTML 과 같다(강의 참조 주소 모양만 다르다) | BRIEF 5.3-4 '135과 대조' |
-| FR-252 | XSS 대책: 글과 속성값을 모두 이스케이프한다. 링크는 `http://`·`https://`·`#` 만 단다(나머지는 글로). 그림은 과정 파일 안의 그림(호출자가 준 함수가 돌려준 `data:image/png·jpeg·gif·webp` 만)이고 없으면 대체 글을 보인다. 원문 HTML 은 글이 된다. 인용·목록이 깊어도 멈추지 않는다 | BRIEF 5.3-4, CLAUDE.md 13절 |
+| FR-252 | XSS 대책: 글과 속성값을 모두 이스케이프한다. 링크는 `http://`·`https://`·`#` 만 단다(나머지는 글로). 그림은 과정 파일 안의 그림(호출자가 준 함수가 돌려준 `data:image/png·jpeg·gif·webp` 만)이고 없으면 대체 글을 보인다. 원문 HTML 은 글이 된다. 인용·목록이 깊어도, 줄이 길어도(그리는 시간이 입력 길이에 선형) 멈추지 않는다 | BRIEF 5.3-4, CLAUDE.md 13절, 독립 점검 ② |
 | FR-253 | XSS 사례 모음을 Node 시험(출력 허용 목록 검사)과 실제 Chromium(`innerHTML` 뒤 DOM 검사·실행 감지)으로 함께 본다 | CLAUDE.md 3절 '명령 단위' |
 
 ### 3.6 MWL 변환
