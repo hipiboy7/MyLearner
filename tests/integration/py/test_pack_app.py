@@ -14,7 +14,7 @@ from pathlib import Path
 
 from scripts import pack_app as PA
 
-COURSE = {"format": "mylearner-course", "version": 1, "min_reader": 1, "id": "demo", "title": "데모 줄", "kind": "course",
+COURSE = {"format": "mylearner-course", "version": 1, "min_reader": 1, "id": "demo", "title": "데모\u2028줄", "kind": "course",
           "parts": [], "lessons": {"l1": {"title": "x", "body": "[문서](https://docs.example.com/a) 와 </script>"}}}
 
 
@@ -40,7 +40,7 @@ class PackTest(unittest.TestCase):
 
     def test_course_js_escapes_line_separators(self):
         js = PA.course_js(COURSE)
-        self.assertNotIn(" ", js)
+        self.assertNotIn("\u2028", js)
         self.assertIn("\\u2028", js)
         self.assertTrue(js.startswith("/* MyLearner 과정 자료 demo"))
         files = PA.data_files([COURSE])

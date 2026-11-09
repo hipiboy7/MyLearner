@@ -1,7 +1,8 @@
 """MyLearner 명령 — `py -3 -m mylearner serve` (Windows) · `python3 -m mylearner serve` (그 밖).
 
 serve [--port N] [--data 폴더] [--web 폴더] [--config 파일] [--no-browser]
-  127.0.0.1 에 로컬 서버를 켜고 토큰이 붙은 주소를 찍은 뒤 브라우저로 연다. Ctrl+C 로 끈다.
+  127.0.0.1 에 로컬 서버를 켜고 토큰이 붙은 주소를 찍은 뒤, 브라우저는 한 번 쓰는 주소(?once=)로 연다(토큰을 브라우저 명령줄에 싣지 않는다). Ctrl+C 로 끈다.
+  판 설정을 찾지 못하면 내보내기 없는 판으로 켠다(fail-closed).
   기본값: 웹 폴더 = 이 패키지 옆 web/, 데이터 폴더 = 옆 data/, 판 설정 = 옆 config.json(묶음) → 저장소의 config/editions/internet.json(개발)
   포트 = 판 설정 server.port(MWL 기본 8765 와 다르다 — 병행). 출력은 cp949 로 나타낼 수 있는 글자만(한국어 Windows 콘솔)
 입력: 명령줄 / 출력: 서버(끌 때까지) / 트리거: 사용자, 묶음의 MyLearner.cmd
@@ -17,10 +18,11 @@ from pathlib import Path
 
 from mylearner import __version__
 from mylearner.server import AppState, make_server
-from mylearner.storage import DataDir
+from mylearner.storage import DataDir, StorageError
 
 HERE = Path(__file__).resolve().parent
-DEFAULT_EDITION = {"edition": "dev", "label": "개발", "export": True, "server": {"port": 8770}}
+# 판 설정을 찾지 못하면 내보내기 없는 쪽으로(fail-closed — 독립 점검 V1). 폐쇄망판 묶음에서 config.json 이 빠져도 내보내기가 열리지 않게
+DEFAULT_EDITION = {"edition": "unknown", "label": "판 설정 없음", "export": False, "link_hosts": [], "server": {"port": 8770}, "ai_presets": []}
 
 
 def load_edition(path) -> dict:
@@ -33,6 +35,7 @@ def load_edition(path) -> dict:
             return data
     if path:
         raise SystemExit("판 설정 파일이 없습니다: %s" % path)
+    print("판 설정(config.json)을 찾지 못해 내보내기 없는 판으로 켭니다")
     return dict(DEFAULT_EDITION)
 
 
@@ -68,6 +71,11 @@ def main(argv=None, run=None) -> int:
         print("웹 폴더가 없습니다: %s" % web)
         return 2
     data = DataDir(Path(args.data) if args.data else HERE.parent / "data")
+    try:
+        data.lock_process()   # 같은 데이터 폴더를 서버 둘이 쓰지 않게(독립 점검 S4)
+    except StorageError as e:
+        print(str(e))
+        return 1
     state = AppState(web, data, edition, data.token())
     try:
         server = make_server(state, port)
@@ -76,12 +84,14 @@ def main(argv=None, run=None) -> int:
         return 1
     url = "http://127.0.0.1:%d/?token=%s" % (port, state.token)
     print("MyLearner %s %s - %s" % (__version__, edition.get("label", ""), url))
+    # 브라우저에는 한 번 쓰는 주소를 준다 — 브라우저 명령줄은 같은 컴퓨터의 다른 계정에게 ps 로 보인다(독립 점검 V2)
+    open_url = "http://127.0.0.1:%d/?once=%s" % (port, state.new_once())
     print("데이터 폴더: %s" % data.root.resolve())
     print("끄려면 이 창에서 Ctrl+C")
     sys.stdout.flush()
     if not args.no_browser:
         try:
-            webbrowser.open(url)
+            webbrowser.open(open_url)
         except Exception:   # 브라우저를 못 열어도 주소를 찍었다 — 사용자가 연다
             pass
     try:

@@ -173,8 +173,13 @@ def problems_of(ed_name: str, files: dict):
         cfg = files["web/config.js"].decode("utf-8")
         if '"export":false' not in cfg or '"link_hosts":[]' not in cfg:
             out.append("web/config.js 에 폐쇄망판 설정이 들어가지 않았다")
-    missing = [n for n in ("web/index.html", "web/config.js", "web/data/manifest.js", "mylearner/__main__.py", "README_KO.txt", "MyLearner.cmd") if n not in files]
+    missing = [n for n in ("web/index.html", "web/config.js", "web/data/manifest.js", "mylearner/__main__.py", "README_KO.txt", "MyLearner.cmd", "config.json")
+               if n not in files]
     out += ["묶음에 없다: %s" % n for n in missing]
+    if "config.json" in files and "web/config.js" in files:   # 서버(config.json)와 화면(web/config.js)이 같은 판을 읽는다(독립 점검 V1)
+        srv = json.loads(files["config.json"].decode("utf-8"))
+        if config_js(srv).encode("utf-8") != files["web/config.js"]:
+            out.append("config.json 과 web/config.js 의 판 설정이 다르다")
     if any(n.startswith("mylearner/convert") for n in files):
         out.append("변환기(mylearner/convert)는 싣지 않는다")
     return out, hosts

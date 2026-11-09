@@ -50,7 +50,7 @@ def _scalar(v: str) -> str:
 
 
 def parse_front(text: str) -> Tuple[Dict[str, Any], str]:
-    lines = text.lstrip("﻿").splitlines()
+    lines = text.lstrip("\ufeff").splitlines()
     if not lines or lines[0].strip() != "---":
         return {}, text
     meta: Dict[str, Any] = {}

@@ -3,7 +3,7 @@
 index.html 에 인라인 스크립트·인라인 style·외부 주소가 없고, 보이지 않는 글자가 없는지 본다.
 
 입력:  web/core/*.js(규칙 전부), web/store/*.js·web/app/*.js(묶음별 규칙), web/*.js·web/index.html,
-       tests/**/*.js·tests/ui/*.html·scripts/*.js(보이지 않는 글자만)
+       tests/**/*.js·tests/ui/*.html·scripts/*.js·mylearner/**/*.py·scripts/*.py·tests/**/*.py(보이지 않는 글자만)
 출력:  표준 출력 요약, 위반이 있으면 종료 코드 1
 트리거: scripts/verify.sh 'core JS 정적 검사' 단계, 손으로
 규칙:  ① 머리 주석 '/* MyLearner web/core/<이름>.js' ② 'use strict' ③ import·export·fetch·XMLHttpRequest·Worker·eval·new Function·
@@ -99,7 +99,8 @@ def check(root: Path = ROOT):
             problems.append("%s: 외부 주소" % p.relative_to(root).as_posix())
     n_index = check_index(root, problems)
     web_more = groups + tops + ([root / "web" / "index.html"] if n_index else [])
-    others = sorted(set((root / "tests").rglob("*.js")) | set((root / "tests" / "ui").glob("*.html")) | set((root / "scripts").glob("*.js")))
+    others = sorted(set((root / "tests").rglob("*.js")) | set((root / "tests" / "ui").glob("*.html")) | set((root / "scripts").glob("*.js"))
+                    | set((root / "mylearner").rglob("*.py")) | set((root / "scripts").glob("*.py")) | set((root / "tests").rglob("*.py")))   # Python 도(T-005 — U+FEFF 가 날것으로 들어감, P3)
     for p in core + web_more + others:
         for line, what in invisible(p.read_text(encoding="utf-8")):
             problems.append("%s:%d: 보이지 않는 글자 %s — 이스케이프(\\uXXXX)로 쓴다" % (p.relative_to(root).as_posix(), line, what))

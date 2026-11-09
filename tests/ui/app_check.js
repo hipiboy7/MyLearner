@@ -48,6 +48,8 @@
 
   check(A.ready && !A.error, '앱이 준비되지 않았다: ' + (A.error && A.error.message));
   if (S.name === 'persist') {
+    await waitFor(() => A.writer === 'mine' && A.pending.length === 0 && !Object.keys(localStorage).some((k) => k.indexOf('mylearner.pending.') === 0), 12000, '앞 탭이 남긴 줄 되살리기');
+    check(A.counts.conflicts === 0, '같은 (기기, 순번) 다른 줄 ' + A.counts.conflicts + '(독립 점검 S1)');
     const want = JSON.parse(localStorage.getItem('smoke.expect') || '[]');
     const have = new Set(A.events.map((e) => e.line));
     const lost = want.filter((l) => !have.has(l));
@@ -221,15 +223,21 @@
   }
   counts.import = { fresh1: i1.fresh, verify: i1.done.verify, now_mismatch: i1.done.now.mismatches.length, fresh2: i2.fresh };
 
-  // 쓰는 탭 임대 — 다른 탭이 쓰는 중이면 저장하지 않고 남긴다, 넘겨받으면 보낸다
-  localStorage.setItem('mylearner.writer', JSON.stringify({ id: 'other-tab', at: Date.now() + 60000 }));
+  // 쓰는 탭 임대 — 다른 탭이 쓰는 중이면 기록을 만들지 않는다(독립 점검 S1·S8), 넘겨받은 뒤에 다시 한다
+  localStorage.setItem('mylearner.writer', JSON.stringify({ id: 'other-tab', at: Date.now() }));
+  const j0 = byType('journal').length, n0lease = A.events.length;
   await go('#/journal');
   await submit('form[data-submit=journalSubmit]', (f) => { f.querySelector('[name=summary]').value = '임대 시험'; }, true);
-  check(A.pending.length === 1 && A.writer === 'other', '다른 탭이 쓰는 중 — 저장 안 함(남은 ' + A.pending.length + ', ' + A.writer + ')');
+  await sleep(50);
+  check(A.events.length === n0lease && A.pending.length === 0 && A.writer === 'other', '다른 탭이 쓰는 중 — 사건을 만들지 않는다(사건 ' + (A.events.length - n0lease) + ', 남은 ' + A.pending.length + ', ' + A.writer + ')');
+  check(/다른 탭이 기록을 쓰고/.test(($('#banner') || {}).textContent || ''), '알림 띠');
   await go('#/today');
   check(!!$('.ro-band [data-action=takeover]'), '읽기 전용 띠');
   await act('[data-action=takeover]', '이 탭에서 쓰기');
-  check(A.pending.length === 0 && A.writer === 'mine', '넘겨받아 저장');
+  check(A.writer === 'mine', '넘겨받았다');
+  await go('#/journal');
+  await submit('form[data-submit=journalSubmit]', (f) => { f.querySelector('[name=summary]').value = '임대 시험'; });
+  check(byType('journal').length === j0 + 1 && A.pending.length === 0, '넘겨받은 뒤에는 저장');
 
   // 닫을 때(pagehide) 내 임대를 놓는다 — 다시 연 탭이 곧바로 쓴다
   window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false }));
@@ -242,6 +250,18 @@
   const before = A.events.length;
   for (const r of ['#/check/mwl/run', '#/import/mwl', '#/review', '#/settings']) await go(r);
   check(A.events.length === before, '주소만으로 사건이 생겼다');
+
+  // 저장이 실패한 줄은 탭 키에 남긴다 — 이 탭을 그대로 닫고, persist 단계가 되살려 저장하는지 본다(독립 점검 S8)
+  const realAppend = A.store.append;
+  A.store.append = () => Promise.reject(new Error('시험 - 저장 실패'));
+  await go('#/journal');
+  await submit('form[data-submit=journalSubmit]', (f) => { f.querySelector('[name=summary]').value = '저장 실패 시험'; }, true);
+  await sleep(100);
+  const mk = JSON.parse(localStorage.getItem('mylearner.pending.' + A.tabId) || '[]');
+  check(A.pending.length === 1 && mk.length === 1 && mk[0] === A.pending[0], '저장 못 한 줄을 탭 키에 적었다(' + A.pending.length + '/' + mk.length + ')');
+  counts.left_pending = A.pending.length;
+  A.store.append = realAppend;
+  A.pending.length = 0;   // 이 탭은 '닫힌' 것으로 친다 — 메모리의 줄은 버리고 탭 키만 남긴다
 
   const t0 = performance.now(); await go('#/today'); timings.today_ms = Math.round(performance.now() - t0);
   if (S.mode === 'server') { const r = await fetch('/api/log', { credentials: 'same-origin' }); counts.server_lines = (await r.text()).trim().split('\n').length - 1; }

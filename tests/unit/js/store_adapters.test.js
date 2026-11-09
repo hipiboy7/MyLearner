@@ -168,3 +168,12 @@ test('서버 — 다른 서버·꺼진 서버면 probe 는 null, 오류는 상�
 test('공통 상수 — 브라우저 키 접두사는 mylearner. (MWL 의 mwl. 과 겹치지 않는다)', () => {
   Object.keys(SC.KEYS).forEach((k) => assert.ok(SC.KEYS[k].indexOf('mylearner.') === 0));
 });
+
+test('브라우저 — 달 키 쓰기는 주입한 lock 안에서(S11)', async () => {
+  const calls = [];
+  const lock = (fn) => { calls.push('in'); return Promise.resolve().then(fn).then((r) => { calls.push('out'); return r; }); };
+  const st = SB.create({ ls: fakeLs(), kv: fakeKv(), now, random: rand, lock });
+  const { dev } = await st.init();
+  assert.equal((await st.append([ev(dev, 1, '2026-11-09')], null)).added, 1);
+  assert.deepEqual(calls, ['in', 'out']);
+});

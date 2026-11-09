@@ -1,7 +1,8 @@
 """로컬 서버(서버 모드) — 정적 파일(web/)·기록·사용자 과정·백업 API, 접속 토큰, 보안 헤더. 표준 라이브러리 http.server 만.
 
 MWL mwl/web/server.py(MiddlewareLearner@e55b9c0)의 정적 파일·형식 표·토큰 쿠키를 옮겨 고쳤다. 더한 것: Host 검사(DNS 리바인딩),
-쓰기 요청의 Content-Type·Origin 검사, 모든 응답의 CSP·no-referrer·nosniff·no-store, 한도. 127.0.0.1 에만 묶는다.
+쓰기 요청의 Content-Type·Origin 검사, 모든 응답의 CSP·no-referrer·nosniff·no-store, 한도, 소켓 시한, 이번에 켠 동안만 쓰는 쿠키·한 번짜리 여는 주소
+(독립 점검 V1~V8 — docs/P3_테스트결과서_PC.md 5.2절). 127.0.0.1 에만 묶는다.
 API: GET /api/health · /api/device · /api/log · /api/courses · /api/backups[/<이름>](판 설정 export 일 때만)
      POST /api/log {"lines": [...]} · /api/backups {"reason": "..."}   PUT /api/courses/<id>
 입력: AppState(웹 폴더·DataDir·판 설정·토큰) / 출력: ThreadingHTTPServer / 트리거: python -m mylearner serve(mylearner/__main__.py)
@@ -15,15 +16,21 @@ import json
 import logging
 import mimetypes
 import os
+import secrets
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import parse_qsl, unquote, urlencode, urlparse
 
 from mylearner import __version__
-from mylearner.storage import DataDir, StorageError
+from mylearner.storage import DataDir, StorageError, loads
 
 MAX_BODY = 32 * 1024 * 1024
+DRAIN_MAX = 64 * 1024        # 거부하는 요청의 본문은 이만큼만 읽어 버린다(큰 본문을 다 읽고 답하지 않게 — 독립 점검 V5)
+SOCKET_TIMEOUT = 30          # 멈춘 연결이 스레드를 영구히 잡지 않게(V5)
+ONCE_TTL = 120               # 브라우저를 열 때 쓰는 한 번짜리 주소의 수명(초) — 토큰을 브라우저 명령줄에 싣지 않는다(V2)
 COOKIE_DAYS = 30
 TOKEN_HEADER = "X-MyLearner-Token"
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; "
@@ -38,7 +45,7 @@ LOGIN_PAGE = """<!doctype html>
 <body><h1>접속 토큰이 필요합니다</h1>
 <p>@REASON@</p>
 <p>MyLearner 는 <strong>서버를 켠 계정만</strong> 열 수 있습니다. 서버를 켠 창에 나온 주소(끝에 <code>?token=...</code> 이 붙은 것)로 여세요.
-한 번 열면 @DAYS@일 동안은 토큰 없이 열립니다.</p>
+한 번 열면 서버를 끄기 전까지는 토큰 없이 열립니다.</p>
 <form method="get" action="@PATH@"><label>또는 토큰을 붙여 넣으세요 - 데이터 폴더의 <code>token</code> 파일
 <input name="token" autocomplete="off" autofocus></label> <button type="submit">열기</button></form>
 </body></html>
@@ -46,19 +53,39 @@ LOGIN_PAGE = """<!doctype html>
 
 
 class AppState:
-    """핸들러가 공유하는 상태. 시험은 임시 폴더로 만든다."""
+    """핸들러가 공유하는 상태. 시험은 임시 폴더로 만든다.
+
+    token   = 데이터 폴더의 오래가는 접속 토큰(창에 찍는 주소 · 명령줄 도구의 X-MyLearner-Token).
+    session = 이번에 켠 동안만 쓰는 쿠키 값 — 쿠키에 토큰을 싣지 않는다. 127.0.0.1 쿠키는 포트를 가리지 않고 같은 PC 의 다른 서버에도
+              가므로(RFC 6265) 새어도 서버를 다시 켜면 끝난다(독립 점검 '의심 1').
+    once    = 브라우저를 열 때 쓰는 한 번짜리 주소(ONCE_TTL 초, 한 번 쓰면 버린다) — 브라우저 명령줄(ps 로 보인다)에 토큰을 싣지 않는다(V2)"""
 
     def __init__(self, web_dir: Path, data: DataDir, edition: dict, token: Optional[str]):
         self.web_dir = Path(web_dir).resolve()
         self.data = data
         self.edition = edition or {}
         self.token = token     # None 이면 보호하지 않는다(시험용 — serve 는 늘 준다)
+        self.session = secrets.token_hex(32)
+        self._once = {}
+        self._lock = threading.Lock()
+
+    def new_once(self, now=None) -> str:
+        code = secrets.token_hex(16)
+        with self._lock:
+            self._once[code] = (time.monotonic() if now is None else now) + ONCE_TTL
+        return code
+
+    def use_once(self, code: str, now=None) -> bool:
+        with self._lock:
+            until = self._once.pop(code, None)
+        return until is not None and (time.monotonic() if now is None else now) <= until
 
 
 def make_handler(state: AppState):
     class Handler(BaseHTTPRequestHandler):
         server_version = "mylearner/" + __version__
         sys_version = ""
+        timeout = SOCKET_TIMEOUT
 
         def log_message(self, fmt, *args):   # 조용히 — 주소·토큰을 찍지 않는다
             log.debug("%s " + fmt, self.command, *args)
@@ -88,26 +115,33 @@ def make_handler(state: AppState):
         def _text(self, code: int, text: str) -> None:
             self._send(code, "text/plain; charset=utf-8", text.encode("utf-8"))
 
-        def _drain(self) -> None:   # 본문을 안 읽고 닫으면 응답이 TCP RST 로 사라질 수 있다 — 한도 안이면 읽어 버린다
+        def _drain(self) -> None:   # 본문을 안 읽고 닫으면 응답이 TCP RST 로 사라질 수 있다 — 작은 본문만 읽어 버린다(V5)
             try:
                 n = int(self.headers.get("Content-Length") or 0)
             except ValueError:
                 n = 0
-            if 0 < n <= MAX_BODY:
+            if 0 < n <= DRAIN_MAX:
                 self.rfile.read(n)
+            else:
+                self.close_connection = True
 
         def _read_json(self) -> Any:
             try:
                 n = int(self.headers.get("Content-Length") or 0)
             except ValueError:
                 raise StorageError("Content-Length 가 틀렸다")
+            if n < 0:
+                raise StorageError("Content-Length 가 틀렸다")
             if n > MAX_BODY:
+                self.close_connection = True
                 raise OverflowError()
             raw = self.rfile.read(n) if n else b""
             try:
-                return json.loads(raw.decode("utf-8") or "null")
+                return loads(raw.decode("utf-8") or "null")
             except (ValueError, UnicodeDecodeError):
-                raise StorageError("JSON 이 아니다")
+                raise StorageError("JSON 이 아니다(NaN·Infinity 도 받지 않는다)")
+            except RecursionError:
+                raise StorageError("JSON 이 너무 깊다")
 
         # -- 관문
         def _port(self) -> int:
@@ -120,18 +154,19 @@ def make_handler(state: AppState):
         def _cookie_name(self) -> str:
             return "mylearner_%d" % self._port()   # 포트마다 따로 — 두 앱(MWL 병행)·두 계정이 섞이지 않게
 
-        def _same(self, got: str) -> bool:
-            return hmac.compare_digest((got or "").encode("utf-8"), state.token.encode("utf-8"))
+        def _same(self, got: str, want: str) -> bool:
+            return hmac.compare_digest((got or "").encode("utf-8"), want.encode("utf-8"))
 
         def _authorized(self) -> bool:
             got = self.headers.get(TOKEN_HEADER)
-            if got is None:   # 쿠키 헤더를 직접 나눈다 — 같은 주소의 다른 앱 쿠키가 꼴이 틀려도 내 것을 읽는다
-                got = ""
-                for part in (self.headers.get("Cookie") or "").split(";"):
-                    name, _, value = part.strip().partition("=")
-                    if name == self._cookie_name():
-                        got = value.strip().strip('"')
-            return self._same(got)
+            if got is not None:   # 명령줄 도구 — 오래가는 토큰
+                return self._same(got, state.token)
+            got = ""              # 쿠키 헤더를 직접 나눈다 — 같은 주소의 다른 앱 쿠키가 꼴이 틀려도 내 것을 읽는다
+            for part in (self.headers.get("Cookie") or "").split(";"):
+                name, _, value = part.strip().partition("=")
+                if name == self._cookie_name():
+                    got = value.strip().strip('"')
+            return self._same(got, state.session)
 
         def _deny(self, path: str, reason: str) -> None:
             if path.startswith("/api/"):
@@ -151,12 +186,16 @@ def make_handler(state: AppState):
             u = urlparse(self.path)
             params = parse_qsl(u.query, keep_blank_values=True)
             given = [v for k, v in params if k == "token"]
-            if self.command == "GET" and given:
-                if not self._same(given[-1]):
+            once = [v for k, v in params if k == "once"]
+            if self.command == "GET" and (given or once):
+                if given and not self._same(given[-1], state.token):
                     self._deny(u.path, "토큰이 맞지 않습니다. 서버를 켠 창의 주소를 다시 확인하세요.")
                     return False
-                rest = urlencode([(k, v) for k, v in params if k != "token"])
-                cookie = "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d" % (self._cookie_name(), state.token, COOKIE_DAYS * 86400)
+                if not given and not state.use_once(once[-1]):
+                    self._deny(u.path, "한 번 쓰는 주소가 이미 쓰였거나 지났습니다. 서버를 켠 창에 찍힌 주소(?token=...)로 여세요.")
+                    return False
+                rest = urlencode([(k, v) for k, v in params if k not in ("token", "once")])
+                cookie = "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d" % (self._cookie_name(), state.session, COOKIE_DAYS * 86400)
                 self._send(302, "text/plain; charset=utf-8", b"", [("Location", (u.path or "/") + ("?" + rest if rest else "")), ("Set-Cookie", cookie)])
                 return False
             if self._authorized():
@@ -180,14 +219,17 @@ def make_handler(state: AppState):
         # -- 정적 파일
         def _static(self, path: str) -> None:
             rel = unquote(path).lstrip("/") or "index.html"
-            if any(part.startswith(".") for part in rel.split("/")):
+            if any(part.startswith(".") for part in rel.split("/")) or "\x00" in rel or "\\" in rel:
                 return self._json(404, {"error": "not found"})
-            target = (state.web_dir / rel).resolve()
-            if state.web_dir != target and state.web_dir not in target.parents:
-                return self._json(404, {"error": "not found"})
-            if target.is_dir():
-                target = target / "index.html"
-            if not target.is_file():
+            try:   # 아주 긴 이름·예약 이름(OSError)은 없는 파일로(독립 점검 V6)
+                target = (state.web_dir / rel).resolve()
+                if state.web_dir != target and state.web_dir not in target.parents:
+                    return self._json(404, {"error": "not found"})
+                if target.is_dir():
+                    target = target / "index.html"
+                if not target.is_file():
+                    return self._json(404, {"error": "not found"})
+            except (OSError, ValueError):
                 return self._json(404, {"error": "not found"})
             ctype = STATIC_TYPES.get(target.suffix.lower()) or mimetypes.guess_type(str(target))[0] or "application/octet-stream"
             if ctype.startswith("text/") or ctype in ("application/javascript", "application/json"):
@@ -224,6 +266,9 @@ def make_handler(state: AppState):
                 return self._json(404, {"error": "not found"})
             except StorageError as e:
                 return self._json(400, {"error": str(e)})
+            except (ValueError, OSError, RecursionError, TypeError):   # 처리하지 못한 입력 — 응답 없이 끊지 않는다(V6). 절대 경로를 싣지 않는다
+                log.debug("GET 처리 실패", exc_info=True)
+                return self._json(400, {"error": "요청을 처리하지 못했습니다"})
 
         def _write(self, method: str):
             if not self._gate() or not self._write_ok():
@@ -239,7 +284,7 @@ def make_handler(state: AppState):
                 if method == "POST" and path == "/api/backups":
                     body = self._read_json()
                     reason = body.get("reason") if isinstance(body, dict) else None
-                    return self._json(200, {"ok": True, "name": state.data.backup(reason or "")})
+                    return self._json(200, {"ok": True, "name": state.data.backup(reason if isinstance(reason, str) else "")})
                 if method == "PUT" and path.startswith("/api/courses/"):
                     state.data.save_course(unquote(path[len("/api/courses/"):]), self._read_json())
                     return self._json(200, {"ok": True})
@@ -249,6 +294,9 @@ def make_handler(state: AppState):
                 return self._json(413, {"error": "본문이 %d MB 를 넘습니다" % (MAX_BODY // (1024 * 1024))})
             except StorageError as e:
                 return self._json(400, {"error": str(e)})
+            except (ValueError, OSError, RecursionError, TypeError):   # V6
+                log.debug("%s 처리 실패", method, exc_info=True)
+                return self._json(400, {"error": "요청을 처리하지 못했습니다"})
 
         def do_POST(self):
             self._write("POST")

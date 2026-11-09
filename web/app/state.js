@@ -7,13 +7,16 @@
   'use strict';
   var ns = root.MyLearner = root.MyLearner || {};
   var ui = ns.ui, L = ns.log, R = ns.replay, D = ns.dates, K = ns.course, P = ns.plan, C = ns.constants, SC = ns.storeCommon;
-  var DEFAULT_CFG = { edition: 'dev', label: '개발', export: true, link_hosts: ['*'], stats_scope: '이 기기에 모인 기록', ai_presets: [] };
+  // 판 설정(config.js)이 없으면 내보내기·외부 링크가 없는 쪽으로(fail-closed — 독립 점검 V1)
+  var DEFAULT_CFG = { edition: 'unknown', label: '판 설정 없음', export: false, link_hosts: [], stats_scope: '이 기기에 모인 기록', ai_presets: [] };
   var SETTING_TYPES = { weekday_minutes: 'count', weekend_minutes: 'count', weekend_review_only: 'bool', max_reviews_per_day: 'count',
     new_cards_per_day: 'count', study_days: 'days', main_course: 'text', day_start_hour: 'hour' };
 
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
   function hex(n) { var b = root.crypto.getRandomValues(new Uint8Array(n)); return Array.prototype.map.call(b, function (x) { return (x & 255).toString(16).padStart(2, '0'); }).join(''); }
   function ls() { try { return root.localStorage; } catch (e) { return null; } }
+  function lsGet(k) { var s = ls(); try { return s ? s.getItem(k) : null; } catch (e) { return null; } }
+  function lsSet(k, v) { var s = ls(); try { if (s) { if (v === null) s.removeItem(k); else s.setItem(k, v); } return true; } catch (e) { return false; } }
 
   var App = {
     cfg: Object.assign({}, DEFAULT_CFG, ns.config || {}),
@@ -119,7 +122,7 @@
     if (leaseState() === 'mine') {
       claim();
       App.writer = 'mine';
-      if (was === 'other') reloadLog().then(flush).then(function () { if (ns.route) ns.route(); });   // 다른 탭이 닫혀 임대가 끝났다
+      if (was === 'other') reloadLog().then(recover).then(flush).then(function () { if (ns.route) ns.route(); });   // 다른 탭이 닫혀 임대가 끝났다
     } else {
       App.writer = 'other';
       if (was === 'mine' && ns.route) ns.route();
@@ -135,7 +138,7 @@
   function takeover() {
     claim();
     App.writer = 'mine';
-    return reloadLog().then(flush);
+    return reloadLog().then(recover).then(flush);
   }
 
   // ---------------------------------------------------------------- 사건 만들기·저장(FR-326)
@@ -146,13 +149,32 @@
     });
   }
   function nextSeq() { return Math.max(L.nextSeq(App.events, App.dev), App.store.seqFloor() + 1, App.lastSeq + 1); }
+  // 저장 못 한 줄은 이 탭 몫의 키에도 적어 둔다 — 탭을 닫아도 다음에 연 탭이 되살려 보낸다(독립 점검 S8). 저장소가 가득 차 못 적으면 그만이다
+  function mirror() { lsSet(SC.KEYS.pending + App.tabId, App.pending.length ? JSON.stringify(App.pending) : null); }
+  function canWrite() {
+    if (leaseState() !== 'mine') { App.writer = 'other'; return false; }
+    if (App.writer !== 'mine') { leaseTick(); return false; }   // 넘겨받는 중 — 저장소를 다시 읽은 뒤에 쓴다(순번이 겹치지 않게, S1)
+    claim();
+    return true;
+  }
   function record(type, fields) {
+    // 다른 탭이 쓰는 중이면 사건을 만들지 않는다 — 만들면 그 탭과 같은 순번을 받고, 이 탭을 닫으면 사라진다(독립 점검 S1·S8)
+    if (!canWrite()) {
+      ui.banner('다른 탭이 기록을 쓰고 있어 이 탭에서는 기록하지 않았습니다 - 위의 [이 탭에서 쓰기]를 누른 뒤 다시 하세요', 'bad');
+      if (ns.route) ns.route();
+      return Promise.resolve(false);
+    }
     var stamp = L.stamp(new Date(), settings().day_start_hour);
     var seq = nextSeq();
     var ev = L.make(Object.assign({ dev: App.dev, seq: seq, t: stamp.t, day: stamp.day, type: type }, fields));
+    if (SC.utf8Length(ev.line) > SC.MAX_LINE_BYTES) {   // 서버가 받지 않는 길이 — 만들면 그 뒤 저장이 모두 막힌다(S3)
+      ui.banner('기록 하나가 64KB 를 넘어 저장하지 않았습니다 - 적은 글을 줄여 주세요', 'bad');
+      return Promise.resolve(false);
+    }
     App.lastSeq = seq;
     App.events = L.order(App.events.concat([ev]));
     App.pending.push(ev.line);
+    mirror();
     recompute(false);
     return flush();
   }
@@ -171,10 +193,12 @@
       var sent = Object.create(null);
       lines.forEach(function (l) { sent[l] = true; });
       App.pending = App.pending.filter(function (l) { return sent[l] !== true; });
+      mirror();
       if (r && r.warn) ui.banner(r.warn, 'bad');
       return true;
     }, function (e) {
       App.saving -= 1;
+      mirror();
       ui.banner('저장 실패: ' + e.message + ' - 기록 ' + App.pending.length + '건은 이 화면에 남아 있고 다음 저장 때 다시 보냅니다', 'bad');
       return false;
     });
@@ -189,8 +213,40 @@
       return ns.storeIdb.open().then(function (kv) {
         var s = ls();
         if (!s) throw new Error('이 브라우저는 저장소(localStorage)를 쓸 수 없습니다 - 서버 모드(py -3 -m mylearner serve)로 여세요');
-        return ns.storeBrowser.create({ ls: s, kv: kv, random: function (n) { return root.crypto.getRandomValues(new Uint8Array(n)); } });
+        var locks = root.navigator && root.navigator.locks;   // 같은 브라우저의 탭 사이 — 달 키 읽기-합치기-쓰기를 한 번에 하나만(S11)
+        return ns.storeBrowser.create({ ls: s, kv: kv, random: function (n) { return root.crypto.getRandomValues(new Uint8Array(n)); },
+          lock: locks ? function (fn) { return locks.request('mylearner.log', fn); } : undefined });
       });
+    });
+  }
+  // 닫힌 탭이 남긴 '저장 못 한 줄'을 모은다(S8) — 쓰는 탭이 되었을 때만
+  function recoverPending() {
+    var s = ls(), keys = [], lines = [];
+    if (!s) return { keys: keys, lines: lines };
+    try {
+      for (var i = 0; i < s.length; i++) { var k = s.key(i); if (k && k.indexOf(SC.KEYS.pending) === 0 && k !== SC.KEYS.pending + App.tabId) keys.push(k); }
+      keys.forEach(function (k) { var a = JSON.parse(s.getItem(k) || '[]'); if (Array.isArray(a)) a.forEach(function (l) { if (typeof l === 'string') lines.push(l); }); });
+    } catch (e) { /* 깨진 키는 둔다 */ }
+    return { keys: keys, lines: lines };
+  }
+  function browserSuffix() {   // 서버 모드: 브라우저(프로필)마다 기기를 나눈다 — 임대는 한 브라우저 안에서만 통한다(S9)
+    var v = lsGet(SC.KEYS.browser);
+    if (!v || !/^[0-9a-f]{6}$/.test(v)) { v = hex(3); lsSet(SC.KEYS.browser, v); }
+    return v;
+  }
+  // 되살린 줄을 사건·저장 못 한 것에 더하고 보낸다. 저장소는 합집합이라 이미 있던 줄을 다시 보내도 된다
+  function recover() {
+    var rec = recoverPending();
+    if (!rec.lines.length) return Promise.resolve(false);
+    setEvents(App.events.map(function (e) { return e.line; }).concat(App.raw, rec.lines));
+    var inPending = Object.create(null);
+    App.pending.forEach(function (l) { inPending[l] = true; });
+    rec.lines.forEach(function (l) { if (inPending[l] !== true) { inPending[l] = true; App.pending.push(l); } });
+    recompute(false);
+    mirror();
+    return flush().then(function (ok) {
+      if (ok) { rec.keys.forEach(function (k) { lsSet(k, null); }); ui.banner('지난번에 저장하지 못한 기록 ' + rec.lines.length + '줄을 저장했습니다', 'good'); }
+      return ok;
     });
   }
   function boot() {
@@ -198,7 +254,8 @@
       App.store = store;
       return store.init();
     }).then(function (info) {
-      App.dev = info.dev; App.where = info.where;
+      App.dev = App.store.kind === 'server' ? info.dev + '-' + browserSuffix() : info.dev;
+      App.where = info.where;
       return App.store.loadLog();
     }).then(function (lines) {
       setEvents(lines);
@@ -208,6 +265,12 @@
       if (leaseState() === 'mine') claim(); else App.writer = 'other';
       root.setInterval(leaseTick, SC.LEASE_BEAT);
       App.ready = true;
+      return App.writer === 'mine' ? recover() : null;
+    });
+  }
+  if (root.addEventListener) {
+    root.addEventListener('beforeunload', function (ev) {   // 저장 못 한 기록이 있으면 닫기 전에 묻는다(S8)
+      if (App.pending.length) { ev.preventDefault(); ev.returnValue = ''; }
     });
   }
   if (root.addEventListener) {
@@ -252,6 +315,6 @@
 
   App.boot = boot; App.course = course; App.regular = regular; App.settings = settings; App.plan = plan; App.recompute = recompute;
   App.render = render; App.lessonHref = lessonHref; App.allowLink = allowLink; App.record = record; App.flush = flush; App.takeover = takeover;
-  App.reloadLog = reloadLog; App.loadCourses = loadCourses; App.checkDay = checkDay; App.setEvents = setEvents; App.own = own;
+  App.reloadLog = reloadLog; App.loadCourses = loadCourses; App.checkDay = checkDay; App.setEvents = setEvents; App.own = own; App.canWrite = canWrite;
   ns.app = App;
 })(typeof self !== 'undefined' ? self : this);

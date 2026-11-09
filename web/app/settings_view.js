@@ -180,8 +180,12 @@
       route();
     }).catch(function (e) {
       el.disabled = false;
-      ui.banner('들여오지 못했습니다: ' + e.message + ' (백업이 실패했으면 아무것도 더하지 않았습니다)', 'bad');
-      route();
+      // 덧붙이기까지 갔다면 일부가 저장됐을 수 있다 — 다시 읽어 화면을 맞추고, 같은 파일로 다시 들여오면 빠진 것만 더한다고 알린다(독립 점검 S7)
+      A.loadCourses().then(A.reloadLog, A.reloadLog).catch(function () {}).then(function () {
+        ui.banner('들여오기가 끝나지 않았습니다: ' + e.message + ' - 일부만 더해졌을 수 있습니다. 같은 파일로 다시 들여오면 빠진 것만 더합니다' +
+          '(백업이 실패했으면 아무것도 더하지 않았습니다)', 'bad');
+        route();
+      });
     });
   };
   ns.importFile = function (file) {   // main.js 가 #mwl-file 을 고르면 부른다

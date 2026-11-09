@@ -216,7 +216,7 @@
         html += '</fieldset>';
       });
     } else html += '<p class="muted">이 실습에는 자동 채점 문항이 없습니다.</p>';
-    html += '<label class="field">관찰 기록(가상 값으로 쓴 요약)<textarea name="__notes"></textarea></label>';
+    html += '<label class="field">관찰 기록(가상 값으로 쓴 요약)<textarea name="__notes" maxlength="20000"></textarea></label>';
     html += '<button class="btn primary" type="submit">' + (checks.length ? '채점하고 마침' : '마침으로 기록') + '</button></form>';
     if (st && st.done) html += '<p class="good">✅ ' + esc(st.done_at) + ' 마침' + (st.total ? ' · 점검 ' + esc(st.score) + '/' + esc(st.total) : '') + (st.notes ? ' · 기록: ' + esc(st.notes) : '') + '</p>';
     return html + '</article>';
@@ -495,7 +495,7 @@
       '<label class="field">오늘 배운 것 한 문장<input type="text" name="summary"></label>' +
       '<label class="field">실무에서 어디에 적용?<input type="text" name="apply"></label>' +
       '<label class="field">아직 모호한 점<span>다음에 다시 물어볼 항목이 됩니다.</span><input type="text" name="unclear"></label>' +
-      '<label class="field">가르치기 노트(선택)<span>후임에게 설명하듯 한 단원을 정리하면, 본문에 적은 단원 ID(예: A5)가 주 과정의 그 단원 L5 판정에 반영됩니다.</span><textarea name="teach"></textarea></label>' +
+      '<label class="field">가르치기 노트(선택)<span>후임에게 설명하듯 한 단원을 정리하면, 본문에 적은 단원 ID(예: A5)가 주 과정의 그 단원 L5 판정에 반영됩니다.</span><textarea name="teach" maxlength="20000"></textarea></label>' +
       '<button class="btn primary" type="submit">저장</button></form>';
     var list = A.st.journal.slice(-15).reverse();
     if (list.length) {

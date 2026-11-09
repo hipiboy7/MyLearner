@@ -45,8 +45,8 @@ class CoreJsCheckTest(unittest.TestCase):
     def test_catches(self):
         self.put("x.js", GOOD.replace("/* MyLearner web/core/x.js", "/* other"))
         self.put("y.js", "/* MyLearner web/core/y.js */\n'use strict';\nfetch('a'); document.body; var u = 'https://evil.example';\nrequire('fs');\n")
-        self.put("z.js", "/* MyLearner web/core/z.js */\nvar r = /a b/;\n")
-        self.put("t.js", "var s = '';\n", where="tests/ui")
+        self.put("z.js", "/* MyLearner web/core/z.js */\nvar r = /a\u2028b/;\n")
+        self.put("t.js", "var s = '\ue000';\n", where="tests/ui")
         problems = "\n".join(CJ.check(self.root)[3])
         for frag in ("x.js: 머리 주석", "y.js:3: 쓰지 않는 것 'fetch(", "y.js:3: 쓰지 않는 것 'document.", "y.js:3: 쓰지 않는 것 'https://e",
                      "y.js:4: UMD 머리 밖의 require", "z.js: 'use strict' 가 없다", "z.js:2: 보이지 않는 글자 U+2028", "t.js:1: 보이지 않는 글자 U+E000"):

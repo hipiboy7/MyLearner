@@ -52,7 +52,7 @@ test('쓰는 탭 임대 — 없음·오래됨(6초 이상)·내 것이면 mine, 
   assert.equal(SC.lease({ id: 't2', at: 4000 }, 't1', 10000), 'mine');
   assert.equal(SC.lease({ id: 't2', at: 4001 }, 't1', 10000), 'other');
   assert.equal(SC.lease({ id: 't1', at: 9999 }, 't1', 10000), 'mine');
-  assert.equal(SC.lease({ id: 't2', at: 20000 }, 't1', 10000), 'other', '시계가 앞선 다른 탭도 다른 탭');
+  assert.equal(SC.lease({ id: 't2', at: 15000 }, 't1', 10000), 'other', '시계가 조금(6초 안) 앞선 다른 탭도 다른 탭');
   assert.equal(SC.lease({ at: 9000 }, 't1', 10000), 'mine', '꼴이 틀리면 없는 것');
   assert.equal(SC.parseLease('{"id":"t2","at":5}').id, 't2');
   assert.equal(SC.parseLease('{bad'), null);
@@ -80,4 +80,18 @@ test('남길 백업 — 들여오기 전 최근 20, 하루 최근 14, 지울 이
   assert.ok(del.indexOf('20261001T000000000Z-daily') >= 0);
   assert.ok(del.indexOf('junk-name') < 0, '모르는 이름은 지우지 않는다');
   assert.deepEqual(SC.pruneBackups([]), []);
+});
+
+test('독립 점검 반영 — 미래로 멀리 간 임대는 오래된 것(S13), 방금 만든 백업은 지우지 않는다(S6), UTF-8 길이(S3)', () => {
+  assert.equal(SC.lease({ id: 't2', at: 20000 }, 't1', 10000), 'mine', '6초 넘게 미래');
+  assert.equal(SC.lease({ id: 't2', at: 15999 }, 't1', 10000), 'other');
+  const names = [];
+  for (let i = 1; i <= 20; i++) names.push('202611' + String(i).padStart(2, '0') + 'T000000000Z-import-mwl');
+  const back = '20250101T000000000Z-import-mwl';   // 시계가 뒤로 가서 가장 오래돼 보이는 새 백업
+  const del = SC.pruneBackups(names.concat([back]), back);
+  assert.equal(del.indexOf(back), -1);
+  assert.deepEqual(del, ['20261101T000000000Z-import-mwl'], '대신 가장 오래된 것 하나를 지운다');
+  assert.equal(SC.utf8Length('a가\u{1F600}'), 1 + 3 + 4);
+  assert.equal(SC.utf8Length('\uD800x'), 3 + 1, '짝 없는 대리 글자는 3바이트(U+FFFD)');
+  assert.equal(SC.MAX_LINE_BYTES, 65536);
 });

@@ -49,20 +49,29 @@
       if (wrong) wrong.textContent = open ? String(open) : '';
     } catch (e) { if (due) due.textContent = ''; if (wrong) wrong.textContent = ''; }
   }
+  // 기록을 만드는 행동 — 읽기 전용 탭(다른 탭이 쓰는 중)에서는 누르기 전에 막는다(독립 점검 S1·S8). 화면 상태만 바꾸는 행동은 둔다
+  var WRITES = { grade: 1, hold: 1, lessonDone: 1, labSubmit: 1, drillSave: 1, quizSubmit: 1, checkSubmit: 1, setMain: 1, unhold: 1,
+    journalSubmit: 1, settingsSubmit: 1, retrySave: 1, impRun: 1 };
+  function allowed(name) {
+    if (!WRITES[name] || A.canWrite()) return true;
+    ui.banner('다른 탭이 기록을 쓰고 있어 이 탭에서는 기록할 수 없습니다 - 위의 [이 탭에서 쓰기]를 누르세요', 'bad');
+    route();
+    return false;
+  }
   function bind(app) {
     var els = app.querySelectorAll('[data-action]');
     for (var i = 0; i < els.length; i++) {
       (function (el) {
         el.addEventListener('click', function (ev) {
-          var fn = ACT[el.getAttribute('data-action')];
-          if (fn) { ev.preventDefault(); fn(el, ev); }
+          var name = el.getAttribute('data-action'), fn = ACT[name];
+          if (fn) { ev.preventDefault(); if (allowed(name)) fn(el, ev); }
         });
       })(els[i]);
     }
     var forms = app.querySelectorAll('form[data-submit]');
     for (var j = 0; j < forms.length; j++) {
       (function (f) {
-        f.addEventListener('submit', function (ev) { ev.preventDefault(); var fn = ACT[f.getAttribute('data-submit')]; if (fn) fn(f, ev); });
+        f.addEventListener('submit', function (ev) { ev.preventDefault(); var name = f.getAttribute('data-submit'), fn = ACT[name]; if (fn && allowed(name)) fn(f, ev); });
         if (f.getAttribute('data-live')) f.addEventListener('change', function (ev) { ACT[f.getAttribute('data-submit')](f, ev); });
       })(forms[j]);
     }
@@ -81,7 +90,7 @@
     if (ev.code === 'Space' || ev.key === ' ') { if (!A.review.show) { ev.preventDefault(); ACT.reveal(); } }
     else if (A.review.show && ['1', '2', '3', '4'].indexOf(ev.key) >= 0) {
       var b = doc.querySelector('[data-action="grade"][data-g="' + ['again', 'hard', 'good', 'easy'][Number(ev.key) - 1] + '"]');
-      if (b) ACT.grade(b);
+      if (b && allowed('grade')) ACT.grade(b);
     }
   });
   // 통계 차트는 그릴 때 화면 폭을 본다(좁으면 글자를 키운다) — 창 폭이 600px 을 넘나들면 통계 화면만 다시 그린다(입력 칸이 있는 화면은 건드리지 않는다)

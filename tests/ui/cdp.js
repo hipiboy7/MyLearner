@@ -117,6 +117,9 @@ async function runStep(chrome, profile, step) {
         out.log.push('[' + msg.params.entry.source + '] ' + msg.params.entry.text);
       }
     });
+    cdp.on((msg) => {   // 확인 창(beforeunload·confirm)은 받아 넘긴다 — 시험이 멈추지 않게
+      if (msg.sessionId === sessionId && msg.method === 'Page.javascriptDialogOpening') cdp.send('Page.handleJavaScriptDialog', { accept: true }, sessionId).catch(() => null);
+    });
     await cdp.send('Runtime.enable', {}, sessionId);
     await cdp.send('Log.enable', {}, sessionId);
     await cdp.send('Page.enable', {}, sessionId);

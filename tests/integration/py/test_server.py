@@ -40,7 +40,7 @@ class ServerTest(unittest.TestCase):
         self.srv = SV.make_server(self.state, self.port)
         self.th = threading.Thread(target=self.srv.serve_forever, daemon=True)
         self.th.start()
-        self.cookie = "mylearner_%d=%s" % (self.port, self.token)
+        self.cookie = "mylearner_%d=%s" % (self.port, self.state.session)
 
     def tearDown(self):
         self.srv.shutdown()
@@ -79,7 +79,8 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(h["Location"], "/?x=1")
         self.assertIn("HttpOnly", h["Set-Cookie"])
         self.assertIn("SameSite=Strict", h["Set-Cookie"])
-        self.assertTrue(h["Set-Cookie"].startswith("mylearner_%d=" % self.port))
+        self.assertTrue(h["Set-Cookie"].startswith("mylearner_%d=%s;" % (self.port, self.state.session)), "쿠키에는 이번에 켠 동안의 세션 값")
+        self.assertNotIn(self.token, h["Set-Cookie"], "쿠키에 오래가는 토큰을 싣지 않는다(독립 점검 의심 1)")
         self.assertEqual(self.req("GET", "/api/health", cookie=False, headers={SV.TOKEN_HEADER: self.token})[0], 200)
         st, _, body = self.req("POST", "/api/log", {"lines": ["a"]}, cookie=False)
         self.assertEqual(st, 401)
@@ -160,6 +161,53 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(self.req("GET", "/api/backups/20200101T000000000Z-daily")[0], 404)
         self.assertEqual(self.req("GET", "/api/backups/..%2ftoken")[0], 400)
 
+    def test_once_code_and_session_cookie(self):
+        code = self.state.new_once()
+        st, h, _ = self.req("GET", "/?once=%s" % code, cookie=False)
+        self.assertEqual((st, h["Location"]), (302, "/"))
+        self.assertIn("mylearner_%d=%s" % (self.port, self.state.session), h["Set-Cookie"])
+        self.assertEqual(self.req("GET", "/?once=%s" % code, cookie=False)[0], 401, "한 번 쓰면 버린다")
+        late = self.state.new_once(now=0)
+        self.assertFalse(self.state.use_once(late, now=SV.ONCE_TTL + 1), "수명이 지나면 못 쓴다")
+        self.assertEqual(self.req("GET", "/?once=nope", cookie=False)[0], 401)
+        old = "mylearner_%d=%s" % (self.port, self.token)   # 앞 판 꼴(토큰 쿠키)
+        self.assertEqual(self.req("GET", "/api/health", cookie=False, headers={"Cookie": old})[0], 401)
+        other = SV.AppState(self.tmp / "web", self.data, {}, self.token)
+        self.assertNotEqual(other.session, self.state.session, "서버를 다시 켜면 세션이 바뀐다")
+
+    def test_bad_inputs_answer_instead_of_dropping(self):   # 독립 점검 V6·V7
+        for path in ("/index.html%00.txt", "/%00", "/" + "a/" * 3000, "/" + "x" * 300, "/core%5ca.js"):
+            st, h, body = self.req("GET", path)
+            self.assertEqual(st, 404, path[:40])
+            self.assertNotIn(str(self.tmp), body.decode("utf-8"))
+        h = {"Host": "127.0.0.1:%d" % self.port, "Cookie": self.cookie, "Content-Type": "application/json", "Content-Length": "-5"}
+        c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        c.putrequest("POST", "/api/log", skip_host=True)
+        for k, v in h.items():
+            c.putheader(k, v)
+        c.endheaders()
+        self.assertEqual(c.getresponse().status, 400)
+        c.close()
+        self.assertEqual(self.req("PUT", "/api/courses/abc", b"[" * 100000, headers={"Content-Type": "application/json"})[0], 400)
+        self.assertEqual(self.req("POST", "/api/backups", {"reason": ["x"]})[0], 400)
+        self.assertEqual(self.req("POST", "/api/backups", {"reason": "abc\n"})[0], 400, "끝 줄바꿈을 받지 않는다(fullmatch)")
+        self.assertEqual(self.req("PUT", "/api/courses/abc%0A", {"format": "mylearner-course", "id": "abc\n"})[0], 400)
+        nan = b'{"format":"mylearner-course","id":"nan","x":NaN}'
+        self.assertEqual(self.req("PUT", "/api/courses/nan", nan, headers={"Content-Type": "application/json"})[0], 400)
+        self.assertEqual(json.loads(self.req("GET", "/api/courses")[2]), {"courses": []})
+        self.assertEqual(self.req("GET", "/api/health")[0], 200, "서버는 산다")
+
+    def test_socket_timeout_and_small_drain(self):   # 독립 점검 V5
+        self.assertEqual(SV.make_handler(self.state).timeout, SV.SOCKET_TIMEOUT)
+        st, _, _ = self.req("POST", "/api/log", b"x" * 10, cookie=False, host="evil.example:1",
+                            headers={"Content-Type": "application/json", "Content-Length": str(10)})
+        self.assertEqual(st, 400)
+        s = socket.create_connection(("127.0.0.1", self.port), timeout=10)
+        s.sendall(("POST /api/log HTTP/1.1\r\nHost: evil.example\r\nContent-Length: 33000000\r\n\r\nabc").encode())
+        s.settimeout(5)
+        self.assertTrue(s.recv(100).startswith(b"HTTP/1.0 400"), "큰 본문을 다 읽지 않고 바로 답한다")
+        s.close()
+
     def test_concurrent_posts_union(self):
         def post(k):
             for i in range(10):
@@ -231,6 +279,34 @@ class CliTest(unittest.TestCase):
             code, out = self.run_main(["serve", "--no-browser", "--port", str(busy), "--web", str(self.tmp / "web"), "--data", str(self.tmp / "d")])
             self.assertEqual(code, 1)
             self.assertIn("포트", out)
+
+    def test_browser_gets_once_url_not_token(self):   # 독립 점검 V2
+        port = free_port()
+        opened = []
+        real = CLI.webbrowser.open
+        CLI.webbrowser.open = lambda u: opened.append(u)
+        try:
+            self.run_main(["serve", "--web", str(self.tmp / "web"), "--data", str(self.tmp / "data"), "--port", str(port)], run=lambda srv: None)
+        finally:
+            CLI.webbrowser.open = real
+        tok = (self.tmp / "data" / "token").read_text(encoding="utf-8").strip()
+        self.assertEqual(len(opened), 1)
+        self.assertIn("/?once=", opened[0])
+        self.assertNotIn(tok, opened[0])
+
+    def test_missing_edition_is_closed(self):   # 독립 점검 V1 — fail-closed
+        self.assertIs(CLI.DEFAULT_EDITION["export"], False)
+        self.assertEqual(CLI.DEFAULT_EDITION["link_hosts"], [])
+        old = CLI.HERE
+        CLI.HERE = self.tmp / "pkg" / "mylearner"
+        try:
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                ed = CLI.load_edition(None)
+        finally:
+            CLI.HERE = old
+        self.assertIs(ed["export"], False)
+        self.assertIn("내보내기 없는 판", out.getvalue())
 
     def test_default_edition_from_repo(self):
         ed = CLI.load_edition(None)

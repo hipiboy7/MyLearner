@@ -2,6 +2,7 @@
 
 - 작성 2026-11-09 / 대응 요구사항: [`P3_요구사항정의서_PC.md`](P3_요구사항정의서_PC.md) FR-301~364, NFR-301~306 / 상위 문서: [`설계서_Architecture.md`](설계서_Architecture.md), [`P2_설계서_Core.md`](P2_설계서_Core.md)
 - 코드: `web/`(index.html·boot.js·config.js·styles.css·app/·store/·core/ 더하기), `mylearner/`(server.py·storage.py·__main__.py·convert/learn.py), `config/editions/`, `scripts/pack_app.py`·`scripts/app_smoke.py` / 시험: `tests/unit/js/`, `tests/unit/py/`, `tests/integration/py/`, `tests/ui/`
+- 정정 이력: 2026-11-09 — 독립 점검(테스트결과서 5.2절)을 받아 3.2절(읽기 전용 탭·탭 키·`navigator.locks`·서버 모드 기기 ID·64 KiB)·3.3절(세션 쿠키·한 번 쓰는 주소·잠금·권한·시한·fail-closed·`/api/log` 범위)을 고쳤다
 - 옮겨 온 코드의 출처: MWL `e55b9c0` 의 `web/app.js`(라우터·화면 골격·차트·날짜 넘김), `web/styles.css`(토큰), `web/index.html`(껍데기), `mwl/web/server.py`(정적 파일·토큰 쿠키), `web/engine.js` 의 점검 절(`checkBank`·`sampleIds`·`gradeCheck`·`wrongNotes`)
 
 ## 1. 데이터 흐름
@@ -98,7 +99,10 @@ store.usage()           → Promise<{bytes, keys}|null>         브라우저 모
 | 기록 없음 · `now - at > 6000` · `id == me` | `mine` — 쓴다(내 것으로 다시 적음) |
 | 다른 탭이 6초 안에 적음 | `other` — 읽기만. 띠 '다른 탭에서 쓰고 있습니다 [이 탭에서 쓰기]' |
 
-- 쓰는 탭은 2초마다 `at` 을 새로 적는다. 쓰기 직전 다시 판정하고 `other` 면 저장하지 않고(사건은 메모리의 '저장 못 한 것'에 남는다) 읽기 전용으로 바뀐다. '이 탭에서 쓰기' 는 임대를 내 것으로 적고 저장 못 한 것을 보낸다. 다른 탭이 쓴 줄은 `storage` 이벤트로 받아 다시 계산한다
+- 쓰는 탭은 2초마다 `at` 을 새로 적고 닫을 때(`pagehide`) 지운다. 읽기 전용 탭은 기록하는 단추를 누르기 전에 막고 사건을 만들지 않는다(같은 순번을 받지 않게 — 독립 점검 S1). '이 탭에서 쓰기'·임대가 끝남은 저장소를 다시 읽은 뒤 쓰는 탭이 된다. 다른 탭이 쓴 줄은 `storage` 이벤트로 받아 다시 계산한다. 6초 넘게 미래인 임대 기록도 오래된 것으로 본다(S13)
+- 저장 못 한 줄은 메모리와 탭 키 `mylearner.pending.<탭 ID>` 에 둔다. 쓰는 탭이 되면(시작·넘겨받기) 다른 탭 키의 줄을 모아 보내고 지운다(S8). 저장 못 한 것이 있으면 `beforeunload` 로 묻는다
+- 달 키 읽기-합치기-쓰기는 `navigator.locks.request('mylearner.log')` 안에서 한다 — 임대가 새는 틈의 경쟁(S11). 64 KiB(UTF-8)를 넘는 사건은 만들지 않는다(S3)
+- 서버 모드의 기기 ID = 서버 기기 + `-` + 브라우저마다 6자리(`mylearner.browser`) — 임대는 한 브라우저 안에서만 통하므로 브라우저 둘이 같은 순번을 쓰지 않게(S9)
 - 서버 모드도 같은 임대를 쓴다(같은 기기 ID 의 순번이 겹치지 않게). 겹쳐도 서버는 합집합이라 줄은 잃지 않는다
 
 ### 3.3 로컬 서버 (FR-330~335)
@@ -115,7 +119,10 @@ store.usage()           → Promise<{bytes, keys}|null>         브라우저 모
 | `/api/backups` | GET · POST | 목록 · `{"reason": "import-mwl"}` → `{ok, name}` |
 | `/api/backups/<이름>` | GET | 백업 글 — 판 설정 `export` 가 참일 때만, 아니면 404 |
 
-- 토큰: `data/token`(32바이트 16진, 처음 켤 때 만든다). `GET /?token=…` → 302 + `Set-Cookie: mylearner_<포트>=<토큰>; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000`. 비교는 `hmac.compare_digest`. 명령줄 도구는 헤더 `X-MyLearner-Token`
+- 토큰: `data/token`(32바이트 16진, 처음 켤 때 만든다, 0600). `GET /?token=…` 또는 `GET /?once=…`(켤 때 브라우저에 준 한 번 쓰는 값 — 120초·한 번, 브라우저 명령줄에 토큰을 싣지 않는다, V2) → 302 + `Set-Cookie: mylearner_<포트>=<세션>; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000`. 세션은 서버를 켤 때마다 새로 만든다 — 127.0.0.1 쿠키는 포트를 가리지 않고 다른 서버에도 가므로 토큰을 싣지 않는다. 비교는 `hmac.compare_digest`. 명령줄 도구는 헤더 `X-MyLearner-Token`(토큰)
+- 데이터 폴더: 0700, 파일은 처음부터 0600(임시 파일도), 서버 하나만(`data/.lock` 잠금 — 둘째 서버는 이유를 찍고 끝남, S4). 판 설정을 못 찾으면 `export: false`·`link_hosts: []` 로 켠다(fail-closed, V1)
+- 시한·한도: 소켓 30초, 거부할 요청은 본문 64 KB 까지만 읽고 닫는다(V5), 처리 못 한 입력은 400·404(V6), 이름·ID 는 `fullmatch`, JSON 의 NaN·Infinity 거부(V7)
+- `GET /api/log` 는 화면이 기록을 읽는 길이라 폐쇄망판에서도 열려 있다(토큰 필요, V8). 폐쇄망판이 막는 것은 백업 내려받기 API 와 화면의 내보내기 단추다
 - 거부 순서: `Host` 검사(400) → 토큰(401, 화면은 안내 페이지) → 쓰기 요청의 `Content-Type`·`Origin`(403) → 한도(413·400)
 - 헤더(모든 응답): `Content-Security-Policy`(4절과 같은 글), `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, `Cache-Control: no-store`, `X-Frame-Options: DENY`
 - 동시성: 저장은 프로세스 안 잠금 하나로 줄 세운다(`ThreadingHTTPServer`)
