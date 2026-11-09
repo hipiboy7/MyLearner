@@ -1,7 +1,7 @@
 /* MyLearner web/core/markdown.js — 마크다운 부분집합 → 안전한 HTML. MWL mwl/content/markdown.py(MiddlewareLearner@e55b9c0)를 JS 로 옮겼다.
  * 문법·출력은 MWL 과 같다(135과 대조 — scripts/check_mwl_real.py). 다른 점은 XSS 대책뿐이다(BRIEF 5.3-4):
  *   속성값을 모두 이스케이프, 링크는 http(s)·# 만, 그림은 호출자가 준 data:image 만, 그림·링크 태그는 자리표로 감싸
- *   굵게·기울임 정규식이 속성을 건드리지 못하게, 인용·목록 깊이 상한.
+ *   굵게·기울임 정규식이 속성을 건드리지 못하게, 인용·목록 깊이 상한, 펜스 언어는 첫 낱말만(class 하나).
  * 시간: 입력 길이에 선형이다. MWL 정규식 가운데 되짚기가 겹치는 것(strip 의 \s+$, 제목, 표 구분 줄, 그림·링크)은
  *   같은 결과를 내는 손 코드·겹치지 않는 정규식으로 바꿨다(독립 점검 ② — 남이 만든 과정 파일 하나로 화면이 멈추지 않게).
  * Python 과 같게: 줄 나눔(str.splitlines), 공백(str.isspace), \d = \p{Nd}, \w = [\p{L}\p{N}_].
@@ -147,7 +147,9 @@
       var line = lines[i];
       if (!strip(line)) { i++; continue; }
       if (lstrip(line).indexOf('```') === 0) {   // 펜스 코드
-        var lang = strip(strip(line).slice(3));
+        var lang = strip(strip(line).slice(3)), sp = 0;
+        while (sp < lang.length && !isWS(lang.charCodeAt(sp))) sp++;
+        lang = lang.slice(0, sp);   // 첫 낱말만(CommonMark 처럼) — MWL 은 줄 전체라 'a ref hidden' 이 class 여럿이 됐다(독립 점검 ② F4)
         i++; buf = [];
         while (i < n && strip(lines[i]).indexOf('```') !== 0) { buf.push(lines[i]); i++; }
         i++;

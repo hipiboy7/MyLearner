@@ -111,8 +111,10 @@ test('답 — 문항 꼴과 맞아야 한다', () => {
   const l = (i, v) => mutate((c) => { Object.assign(c.labs['LAB-A1-1'].checks[i], v); });
   assert.deepEqual(codes(l(0, { answer: 'z' })), ['E-ANSWER labs.LAB-A1-1.checks[0].answer']);
   assert.deepEqual(codes(l(2, { answer: '' })), ['E-ANSWER labs.LAB-A1-1.checks[2].answer']);
-  assert.deepEqual(codes(l(1, { answer: '(a+)+' })), ['E-REGEX labs.LAB-A1-1.checks[1].answer']);
+  assert.deepEqual(codes(l(1, { answer: '(a)\\1' })), ['E-REGEX labs.LAB-A1-1.checks[1].answer']);
   assert.deepEqual(codes(l(1, { answer: '([' })), ['E-REGEX labs.LAB-A1-1.checks[1].answer']);
+  assert.deepEqual(codes(l(1, { answer: 'a)|(b' })), ['E-REGEX labs.LAB-A1-1.checks[1].answer'], '감싸개를 닫는 패턴(독립 점검 ② F5)');
+  assert.deepEqual(codes(l(1, { answer: '(a+)+' })), [], '겹친 반복도 이제 선형으로 맞춰 보므로 받는다');
 });
 
 test('경고 — 모르는 키는 지우지 않고 알린다, 목차에 없는 강의', () => {

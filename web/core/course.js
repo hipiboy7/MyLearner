@@ -195,8 +195,7 @@
         if (k.type === 'choice') { if (!opts.length || opts.indexOf(k.answer) < 0) err('E-ANSWER', kp + '.answer', '답이 보기에 없다'); return; }
         if (typeof k.answer !== 'string' || !k.answer.trim()) { err('E-ANSWER', kp + '.answer', '답이 비어 있다'); return; }
         if (k.type === 'regex') {
-          var why = G.unsafeRegex(k.answer);
-          if (!why) { try { G.compileLab(k.answer); } catch (e) { why = '컴파일되지 않는다'; } }
+          var why = G.labPattern(k.answer).why;   // 길이·문법·역참조·지원하지 않는 문법·너무 큼(grade.js·regex.js)
           if (why) err('E-REGEX', kp + '.answer', why);
         }
       });

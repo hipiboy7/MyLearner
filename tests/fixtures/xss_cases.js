@@ -1,9 +1,34 @@
 // 렌더러 XSS 사례 모음(FR-252·253). Node 시험(tests/unit/js/xss.test.js)과 실제 Chromium(tests/ui/render_check.html)이 함께 읽는다.
 // 실행되면 window.__xss 가 1 이 되는 꼴로 쓴다. opts: 'badRef'(강의 참조 함수가 위험한 주소를 준다)·'badImage'·'goodImage'.
 // 문서: docs/P2_설계서_Core.md 3.6절
+// fuzz(seed, n): 같은 시드면 같은 무작위 글 n 가지 {name, md, opts} — 마크다운 기호·XSS 조각·자리표·공백·줄 나눔 섞기(독립 점검 ② '시험 빈틈')
 (function (root, factory) {
   var cases = factory();
+  cases.fuzz = fuzz;
   if (typeof module === 'object' && module.exports) module.exports = cases; else root.XSS_CASES = cases;
+  function fuzz(seed, n) {
+    'use strict';
+    var a = (seed >>> 0) || 1;
+    function r() {   // mulberry32(tests/unit/js/helpers.js 와 같다)
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+    function pick(arr) { return arr[Math.floor(r() * arr.length)]; }
+    var T = ['[', ']', '(', ')', '![', '](', '*', '**', '`', '```', '#', '# ', '> ', '- ', '1. ', '|', '|---|', '---', ' ', '  ', '\t', '\n', '\n\n',
+      '\u3000', '\u00a0', '\u2028', '\u0085', '\uE000', '\uE001', '0', '&', '&amp;', '&lt;', '&#x6A;', '"', "'", '<', '>', '=', '/', ':', '\\',
+      'a', 'x', 'A1-1', 'http://x.example/', 'https://y.example/?q="a"', '#frag', 'javascript:window.__xss=1', 'data:text/html,<script>window.__xss=1</script>',
+      '<script>window.__xss=1</script>', '<img src=x onerror=window.__xss=1>', '" onmouseover="window.__xss=1', "' onfocus='window.__xss=1",
+      '<svg onload=window.__xss=1>', 'fig.png', 'ref', 'img-missing', 'language-', ' hidden', '\ud83d\ude00', '\ud800'];
+    var OPTS = ['', '', 'badRef', 'badImage', 'goodImage'], out = [];
+    for (var k = 0; k < n; k++) {
+      var md = '', len = 1 + Math.floor(r() * 24);
+      for (var j = 0; j < len; j++) md += pick(T);
+      out.push({ name: 'fuzz-' + seed + '-' + k, md: md, opts: pick(OPTS) || undefined });
+    }
+    return out;
+  }
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
   var J = 'javascript:window.__xss=1';

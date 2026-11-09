@@ -40,7 +40,7 @@
 |---|---|---|---|---|
 | `tools/ai_probe.py` | Python | 폐쇄망 AI 점검·`--serve-test`·`--decode` | A(판정·코드)·B(흐름) | 1 |
 | `tools/browser_probe.html` | HTML+JS | 폐쇄망 Chrome 점검 | C | 1 |
-| `web/core/` | JS | SM-2·하루 계획·숙련도, 사건 기록·늦은 복습 규칙·합치기, 렌더러 이스케이프, 과정 검사, 통계 계산, 채점, MWL 진도 변환 — 파일 13개와 싣는 순서는 `docs/P2_설계서_Core.md` 2절 | A | 2 |
+| `web/core/` | JS | SM-2·하루 계획·숙련도, 사건 기록·늦은 복습 규칙·합치기, 렌더러 이스케이프, 과정 검사, 통계 계산, 채점, MWL 진도 변환 — 파일 14개와 싣는 순서는 `docs/P2_설계서_Core.md` 2절 | A | 2 |
 | `web/app.js`·`web/index.html`·`web/styles.css` | JS·CSS | 화면(오늘·복습·강의·퀴즈·점검·통계) — MWL 골격 이식 | C | 3 |
 | `web/store/` | JS | 저장 어댑터(파일·브라우저·안드로이드) — 같은 인터페이스(DIP) | A(순수 부분)·B | 3·4 |
 | `mylearner/` | Python | 로컬 서버(정적 파일·저장·AI 대리 호출), CLI 진입점 | B | 3 |

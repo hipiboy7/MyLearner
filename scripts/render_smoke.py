@@ -24,7 +24,8 @@ from scripts.import_mwl_fixtures import dev_tools  # noqa: E402
 
 PARITY = ('<h1>제목</h1>\n<ul>\n<li><a class="ref" href="#/learn/mwl/A1-1"><code>A1-1</code></a> <strong>굵게</strong> 한*글*</li>\n</ul>\n'
           '<ol>\n<li>전각</li>\n</ol>')
-CORE_FILES = 13
+CORE_FILES = 14
+FUZZ_N = 5000   # tests/ui/render_check.html 의 FUZZ_N 과 같다
 
 
 def main() -> int:
@@ -58,6 +59,8 @@ def main() -> int:
             problems.append("classic script 로 실린 core 파일 %r개(기대 %d)" % (res.get("classic"), CORE_FILES))
         if res.get("cases", 0) < 40:
             problems.append("사례 수 %r" % res.get("cases"))
+        if res.get("fuzz") != FUZZ_N:
+            problems.append("무작위 글 수 %r(기대 %d)" % (res.get("fuzz"), FUZZ_N))
         if res.get("parity") != PARITY:
             problems.append("브라우저 렌더가 Node 와 다르다: %r" % res.get("parity"))
         if res.get("scripts") != CORE_FILES + 2:
@@ -68,8 +71,8 @@ def main() -> int:
             and any("control: href javascript:" in p for p in control.get("problems", []))
         if not caught:
             problems.append("대조군을 잡지 못했다: %r" % control)
-        print("Chromium %.1f초: core %s개 classic script · XSS 사례 %s가지 · 실행된 XSS %s · 렌더 Node 와 같음 %s · 대조군 잡음 %s" % (
-            time.monotonic() - t0, res.get("classic"), res.get("cases"), res.get("xss"), "예" if res.get("parity") == PARITY else "아니오",
+        print("Chromium %.1f초: core %s개 classic script · XSS 사례 %s가지 · 무작위 글 %s가지 · 실행된 XSS %s · 렌더 Node 와 같음 %s · 대조군 잡음 %s" % (
+            time.monotonic() - t0, res.get("classic"), res.get("cases"), res.get("fuzz"), res.get("xss"), "예" if res.get("parity") == PARITY else "아니오",
             "예" if caught else "아니오"))
         if problems:
             print("문제 %d건:" % len(problems))

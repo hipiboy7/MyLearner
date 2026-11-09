@@ -2,7 +2,7 @@
 
 - 작성 2026-10-15 / 대응 요구사항: [`P2_요구사항정의서_Core.md`](P2_요구사항정의서_Core.md) FR-201~263, NFR-201~205 / 상위 문서: [`설계서_Architecture.md`](설계서_Architecture.md)
 - 코드: `web/core/`, `mylearner/`, `scripts/` / 시험: `tests/unit/js/`, `tests/integration/js/`, `tests/unit/py/`, `tests/integration/py/`, `tests/realdata/`, `tests/ui/render_check.html`
-- 정정 이력: 2026-11-09 — 독립 점검 ②(렌더러, 테스트결과서 5.2절)를 받아 3.6절에 '시간'을 더했다
+- 정정 이력: 2026-11-09 — 독립 점검 ②(렌더러·채점, 테스트결과서 5.2절)를 받아 2절(`regex.js`·싣는 순서), 3.2절 `E-REGEX`, 3.6절('시간'·펜스 언어 첫 낱말), 3.7절(실습 정규식을 선형 엔진으로)을 고쳤다
 - 정정 이력: 2026-10-15 — 독립 점검(기록 합치기, 테스트결과서 5.2절)을 받아 3.3절(해석하지 못한 줄은 글자 그대로·상속 이름 ID·깊은 줄·`session.total`·`setting` 키), 3.4절(규칙 문장·사례 6·한계), 3.8절(가상 기기·순번), 7절을 고쳤다
 - 옮겨 온 코드의 출처: MWL `e55b9c0` 의 `web/engine.js`(SM-2·계획·숙련도·통계·채점), `mwl/content/markdown.py`(렌더러), `mwl/content/frontmatter.py`·`loader.py`(변환기의 읽기), hub `8dee3b8` 의 `src/learnhub/engine/events.py`(사건·합치기의 뼈대)
 
@@ -37,6 +37,7 @@
 | `web/core/plan.js` | 하루 계획(여러 과정 — 인터뷰 1번 A) | A | MWL `buildDailyPlan` |
 | `web/core/mastery.js` | 단원 숙련도 L0~L5, 영역 요약 | A | MWL `moduleLevel` |
 | `web/core/stats.js` | 연속 학습일·요약(MWL `summary` 이식) | A | MWL |
+| `web/core/regex.js` | 실습 정규식을 선형 시간에 맞춰 보기(톰프슨 NFA·Pike VM) — V8 RegExp(유니코드 아닌 모드)와 같은 문법·뜻, 뒤돌아보기·역참조 제외 | A | 새로(독립 점검 ②) |
 | `web/core/grade.js` | 퀴즈·실습·드릴 채점 | A | MWL |
 | `web/core/markdown.js` | 마크다운 → 안전한 HTML | A | MWL `markdown.py` + XSS 대책 |
 | `web/core/mwl_import.js` | MWL 진도(스키마 1·2) → 사건 + 메모 과정, N/N 대조 | A | 새로(BRIEF 5.7) |
@@ -47,7 +48,7 @@
 | `scripts/check_log_roundtrip.js` | 기록 왕복(S3) 명령 단위 증명 | C | — |
 | `scripts/render_smoke.py` + `tests/ui/render_check.html` | 렌더러를 실제 Chromium 에서(XSS 사례·classic script·`file://`) | C | P1 `browser_smoke.py`·`cdp.js` |
 
-브라우저에서 싣는 순서: `constants` → `dates` → `hash` → `srs` → `grade` → `course` → `log` → `replay` → `plan` → `mastery` → `stats` → `markdown` → `mwl_import`(`course` 가 `grade.unsafeRegex` 를 쓴다 — `tests/unit/js/umd.test.js`·`tests/ui/render_check.html` 이 이 순서로 싣는다). 앞 파일이 없으면 `MyLearner.<이름> 을 먼저 싣는다` 오류를 낸다.
+브라우저에서 싣는 순서: `constants` → `dates` → `hash` → `srs` → `regex` → `grade` → `course` → `log` → `replay` → `plan` → `mastery` → `stats` → `markdown` → `mwl_import`(`grade` 가 `regex` 를, `course` 가 `grade.labPattern` 을 쓴다 — `tests/unit/js/umd.test.js`·`tests/ui/render_check.html` 이 이 순서로 싣는다). 앞 파일이 없으면 `MyLearner.<이름> 을 먼저 싣는다` 오류를 낸다.
 
 ## 3. 인터페이스
 
@@ -96,7 +97,7 @@
 | `E-TYPE`·`E-EMPTY`·`E-ENUM`·`E-RANGE` | 값의 꼴 · 빈 글 · 정해진 값이 아님 · 범위 밖 |
 | `E-ID`·`E-DUP`·`E-REF` | ID 규칙 · 중복 · 없는 강의·단원·실습·드릴·단계를 가리킴 |
 | `E-ANSWER` | 퀴즈·실습 답이 문항 꼴과 맞지 않음(mcq 답 ∉ 보기, order 답 ≠ 보기의 순열 …) |
-| `E-REGEX` | 실습 `regex` 가 컴파일되지 않거나 위험(3.7절) |
+| `E-REGEX` | 실습 `regex` 를 쓸 수 없다 — 길이·문법·역참조·지원하지 않는 문법·너무 큼(3.7절) |
 | `W-UNKNOWN`·`W-ORPHAN` | 모르는 키(지우지 않는다) · 목차에 없는 강의 |
 
 ### 3.3 사건과 기록 파일 v1 (FR-220~227)
@@ -200,14 +201,20 @@ grade = again 이고, 그 카드에 마지막으로 반영된 복습이 같은 �
 - 링크: 이스케이프를 푼 주소가 `http://`·`https://`(대소문자 무관)·`#` 로 시작하고 제어 글자가 없을 때만 `<a href="…">`. 아니면 링크 글만 남긴다. `rel` 은 달지 않는다(MWL 출력과 같게 — 새 창을 열지 않으므로 `noopener` 가 할 일이 없다). 참조 정보(Referer)는 화면이 `<meta name="referrer" content="no-referrer">` 로 막는다(Phase 3)
 - 그림: `image(src)` 가 `^data:image/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/]+={0,2}$` 를 돌려줄 때만 `<img src alt>`. 아니면 `<span class="img-missing">[그림: 대체 글]</span>`
 - 강의 참조: 인라인 코드의 내용이 항목 ID 꼴이고 `lessonRef(id)` 가 주소를 주면 `<a class="ref" href="…"><code>id</code></a>`(MWL `linkify_lesson_refs` 와 같은 결과)
-- 펜스 언어: MWL 처럼 `class="language-<언어>"` 에 넣되 속성 이스케이프(따옴표까지)를 한다
+- 펜스 언어: 첫 낱말만 `class="language-<낱말>"` 에 넣고(CommonMark 처럼) 속성 이스케이프(따옴표까지)를 한다. MWL 은 줄 전체를 넣어 ```` ```a ref hidden ```` 이 앱의 다른 class 를 붙일 수 있었다(독립 점검 ② F4). MWL 과 일부러 다른 곳은 이것 하나다 — 렌더러 39가지 중 1가지(```` ```js extra ````), 135과에는 없다
 - 깊이: 인용 16단·목록 16단을 넘으면 더 파고들지 않고 글로 보인다(스택 넘침 방지)
 - 시간: 입력 길이에 선형이다. MWL 정규식 가운데 되짚기가 겹치는 다섯은 같은 결과를 내는 꼴로 바꿨다(독립 점검 ②) — `strip`(`\s+$` 2제곱)·제목(`\s+(.*?)\s*#*\s*$` 3제곱)은 손 코드, 표 구분 줄은 끝의 `\s*\|?\s*` 를 `\s*(\|\s*)?` 로(같은 언어), 그림·링크는 다음 `]`·`)`/공백 위치를 기억해 한 번만 훑는다(정규식은 여는 `[` 마다 다시 훑었다). 같은 결과인지는 시험이 옛 정규식과 무작위 글로 대조하고, 20만 자 14가지 꼴을 자식 프로세스에서 1초 안에 끝나는지 잰다(`markdown.test.js` '선형 시간')
 - 135과 대조: MWL `bundle.js` 의 `lessons[id].html` 에서 `href="#/learn/<id>"` 를 `href="#/learn/mwl/<id>"` 로 바꾼 것과 같아야 한다
 
 ### 3.7 채점 (FR-244)
 
-`grade.checkAnswer`·`gradeItems`·`checkLab`·`runDrill` 는 MWL 과 같다. 실습 `regex` 만 다르다: ① MWL Python(`mwl/cli/commands/lab.py` 의 `re.fullmatch`)처럼 앞의 `(?i)` 를 대소문자 무시로 받는다 — MWL 의 JS 는 `new RegExp('^(?:(?i)…)$')` 가 `SyntaxError` 라 이런 문항(MWL 54개 중 5개)을 늘 오답으로 냈다 ② 패턴 200자·답 500자 상한 ③ 반복되는 묶음 안에 반복·대안(`|`)이 있으면(`(a+)+`·`(a|aa)+`·`(.*a){3,}`) 또는 역참조면 위험으로 보고 `false`(과정 검사는 `E-REGEX`). MWL 54개 패턴은 모두 통과한다.
+`grade.checkAnswer`·`gradeItems`·`checkLab`·`runDrill` 는 MWL 과 같다. 실습 `regex` 만 다르다:
+
+- ① MWL Python(`mwl/cli/commands/lab.py` 의 `re.fullmatch`)처럼 앞의 `(?i)` 를 대소문자 무시로 받는다 — MWL 의 JS 는 `new RegExp('^(?:(?i)…)$')` 가 `SyntaxError` 라 이런 문항(MWL 54개 중 5개)을 늘 오답으로 냈다
+- ② `grade.labPattern(답)` → `{prog}` 또는 `{why}`: 패턴 200자 넘음 `길이` → V8 이 패턴만으로 읽지 못함 `문법`(`^(?:…)$` 감싸개를 닫는 `a)|(b` 도 여기서 — F5) → `regex.compile` 의 `역참조`(`\1`~`\9`·`\k<이름>`)·`지원하지 않는 문법`(`(?=`·`(?!`·`(?<=`·`(?<!`·옛 8진수)·`너무 큼`(엮은 명령 2,000개 넘음). 과정 검사 `E-REGEX` 도 이것을 쓴다
+- ③ 맞춰 보기는 V8 RegExp(되짚기)가 아니라 `regex.fullMatch` — 패턴을 톰프슨 NFA 명령으로 엮어 Pike VM 으로 돌린다. 글 위치마다 살아 있는 명령을 한 번씩만 들고 가므로 O(명령 × 답) ≤ 2,000 × 501. 처음에는 '반복되는 묶음 안의 반복·대안' 만 위험으로 막았는데 이어진 반복(`.*.*.*.*b` — 답 300자에 2.2초)·`{n}` 반복(`(a+){20}b`)·대안 사슬(`(a|a)` × 40)·`[]` 를 잘못 읽는 틈(`[]?(a+)+$]`)으로 멈췄다(독립 점검 ② F1·F2) — 규칙으로 막는 대신 엔진을 바꿨다
+- ④ 문법·뜻은 V8 의 유니코드 아닌 모드(Annex B)와 같다 — 대소문자 무시는 Canonicalize(대문자가 한 글자, 128 이상 → 128 미만은 바꾸지 않음) 그대로, `\b`·`\B`·`^`·`$`·이름 붙은 묶음·게으른 수량자(일치 여부엔 같다) 포함. 시험이 V8 과 무작위 4천 패턴 × 답 10 을 대조한다(`regex.test.js`). MWL 54개 패턴은 모두 받는다
+- ⑤ 답 500자 상한은 그대로 둔다(엮은 명령 상한과 함께 한 번 맞춰 보기의 걸음 수를 묶는다)
 
 ### 3.8 MWL 진도 변환 (FR-261·262)
 
@@ -273,7 +280,7 @@ grade = again 이고, 그 카드에 마지막으로 반영된 복습이 같은 �
 | 228 | `scripts/check_log_roundtrip.js` | 전체 검증 '기록 왕복' |
 | 230 | `srs.js` | `srs.test.js`(골든 12) |
 | 240~243 | `plan.js`·`mastery.js`·`stats.js` | `golden.test.js`(계획 19·숙련도 2·통계 2), `plan.test.js` |
-| 244 | `grade.js` | `grade.test.js` |
+| 244 | `grade.js`, `regex.js` | `grade.test.js`, `regex.test.js`, `course.test.js`(`E-REGEX`), 실데이터 대조(MWL 54 × 84) |
 | 250~253 | `markdown.js` | `markdown.test.js`, `xss.test.js`, 렌더러 Chromium 단계, 실데이터 대조 |
 | 260 | `mylearner/convert/mwl.py` | `tests/unit/py/test_convert_mwl.py`, `tests/integration/py/test_convert_mwl_cli.py`, 실데이터 대조 |
 | 261·262 | `mwl_import.js` | `mwl_import.test.js`, `golden.test.js` |
@@ -287,7 +294,7 @@ grade = again 이고, 그 카드에 마지막으로 반영된 복습이 같은 �
 | 통계 항목 넓히기 | Phase 3 — 보류 결정 1 |
 | 점검·오답노트를 여러 과정에서 | Phase 3 |
 | 과정 항목 수정 합치기 | Phase 5 |
-| 해시 라우터가 과정 안 `#…` 링크를 어떻게 받을지 | Phase 3(렌더러는 `#` 링크를 그대로 둔다) |
+| 해시 라우터가 과정 안 `#…` 링크를 어떻게 받을지 | Phase 3(렌더러는 `#` 링크를 그대로 둔다). 과정 파일의 `[x](#/아무/경로)` 가 앱 화면으로 가므로, 상태를 바꾸는 일(지우기·들여오기·설정)은 해시 경로만으로 하지 말고 확인을 받는다(독립 점검 ② 설계 의견) |
 | 참조 정보(Referer) 막기·CSP | Phase 3 화면·로컬 서버(렌더러는 `rel` 을 달지 않는다) |
 | 월별 저장에서 해석하지 못한 줄(`raw`)이 갈 곳, 순번 계수기 | Phase 3 저장 어댑터 — `splitByMonth` 는 사건만 나눈다. `nextSeq` 는 그 기기의 모든 달을 보거나 따로 둔 계수기를 써야 한다(독립 점검 F12) |
 | MWL 진도를 몇 번 들여오게 할지 | 보류 결정 2(Phase 3) — 같은 설치의 스냅숏은 다시 들여와도 겹치지 않지만, MWL 을 동결한 뒤 한 번 들여오는 것을 안내한다 |

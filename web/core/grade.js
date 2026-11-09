@@ -1,5 +1,5 @@
 /* MyLearner web/core/grade.js — 퀴즈·실습·드릴 채점. MWL web/engine.js(MiddlewareLearner@e55b9c0) 의 checkAnswer·gradeItems·checkLab·runDrill 을 옮겼다.
- * 다른 점: 실습 regex 는 MWL Python(mwl/cli/commands/lab.py 의 re.fullmatch)처럼 앞의 (?i) 를 받고, 위험한 패턴·긴 답은 돌리지 않는다
+ * 다른 점: 실습 regex 는 MWL Python(mwl/cli/commands/lab.py 의 re.fullmatch)처럼 앞의 (?i) 를 받고, 선형 시간 엔진(regex.js)으로 맞춰 본다
  * (과정 파일은 남이 만든 것일 수 있다 — 화면이 멈추면 안 된다). MWL 의 JS 는 (?i) 에서 SyntaxError 로 늘 오답이었다.
  * 입력: 문항·답 / 출력: MyLearner.grade / 트리거: (Phase 3) 퀴즈·실습·드릴 화면, course.js 의 E-REGEX 검사
  * 문서: docs/P2_요구사항정의서_Core.md FR-244, docs/P2_설계서_Core.md 3.7절 */
@@ -11,7 +11,7 @@
   if (node) module.exports = mod; else ns.grade = mod;
 })(typeof self !== 'undefined' ? self : this, function (dep) {
   'use strict';
-  var C = dep('constants');
+  var C = dep('constants'), R = dep('regex');
   var SEP = '|';
 
   function checkAnswer(item, raw) {
@@ -33,38 +33,15 @@
     return { score: items.length ? Math.round(100 * correct.length / items.length) : 0, correct: correct };
   }
 
-  // 위험한 정규식인가 — 이유 글 또는 null. 반복되는 묶음 안에 반복·대안이 있으면(겹친 반복) 지수 시간이 될 수 있다
-  function unsafeRegex(p) {
-    if (typeof p !== 'string' || p.length > C.REGEX_MAX_PATTERN) return '길이';
-    if (/\\[1-9]|\\k</.test(p)) return '역참조';
-    var stack = [{ inner: false }], i = 0;
-    function outerQuant(j) {
-      var c = p.charAt(j);
-      if (c === '+' || c === '*') return true;
-      if (c !== '{') return false;
-      var m = /^\{(\d+)(,(\d*))?\}/.exec(p.slice(j));
-      return !!m && (m[2] !== undefined && (m[3] === '' || Number(m[3]) > 1));
-    }
-    while (i < p.length) {
-      var c = p.charAt(i);
-      if (c === '\\') { i += 2; continue; }
-      if (c === '[') { i += 1; if (p.charAt(i) === ']') i += 1; while (i < p.length && p.charAt(i) !== ']') { if (p.charAt(i) === '\\') i += 1; i += 1; } i += 1; continue; }
-      if (c === '(') { stack.push({ inner: false }); i += 1; continue; }
-      if (c === ')') {
-        var g = stack.length > 1 ? stack.pop() : { inner: false };
-        if (g.inner && outerQuant(i + 1)) return '겹친 반복';
-        if (g.inner || outerQuant(i + 1)) stack[stack.length - 1].inner = true;
-        i += 1; continue;
-      }
-      if (c === '|' || c === '+' || c === '*' || (c === '{' && /^\{\d+(,\d*)?\}/.test(p.slice(i)))) stack[stack.length - 1].inner = true;
-      i += 1;
-    }
-    return null;
-  }
-  function compileLab(answer) {
-    var src = String(answer), flags = '';
-    if (src.indexOf('(?i)') === 0) { src = src.slice(4); flags = 'i'; }
-    return new RegExp('^(?:' + src + ')$', flags);
+  // 실습 정규식 답 → {prog}(regex.js 가 엮은 것) 또는 {why}. 앞의 (?i) 는 대소문자 무시(MWL Python re.fullmatch 처럼).
+  // 먼저 V8 이 패턴만으로 읽는지 본다 — '^(?:…)$' 감싸개를 닫는 'a)|(b' 같은 패턴은 여기서 '문법'(독립 점검 ② F5).
+  // 맞춰 보기는 V8 RegExp(되짚기)가 아니라 regex.js(선형) — 과정 파일이 남이 만든 것이어도 화면이 멈추지 않는다(F1·F2)
+  function labPattern(answer) {
+    var src = String(answer), ic = false;
+    if (src.length > C.REGEX_MAX_PATTERN) return { why: '길이' };
+    if (src.indexOf('(?i)') === 0) { src = src.slice(4); ic = true; }
+    try { new RegExp(src, ic ? 'i' : ''); } catch (e) { return { why: '문법' }; }
+    return R.compile(src, ic);
   }
   function checkLab(check, raw) {
     raw = String(raw).trim();
@@ -73,8 +50,9 @@
       return raw.toLowerCase() === String(check.answer).trim().toLowerCase();
     }
     if (check.type === 'text') return raw.toLowerCase() === String(check.answer).trim().toLowerCase();
-    if (raw.length > C.REGEX_MAX_INPUT || unsafeRegex(String(check.answer))) return false;
-    try { return compileLab(check.answer).test(raw); } catch (e) { return false; }
+    if (raw.length > C.REGEX_MAX_INPUT) return false;
+    var lp = labPattern(check.answer);
+    return !lp.why && R.fullMatch(lp.prog, raw);
   }
   function runDrill(drill, choices) {
     var run = { score: 0, max: drill.max_score, path: [], steps: [], finished: false, next_step: null };
@@ -93,5 +71,5 @@
     return run;
   }
 
-  return { checkAnswer: checkAnswer, gradeItems: gradeItems, checkLab: checkLab, unsafeRegex: unsafeRegex, compileLab: compileLab, runDrill: runDrill };
+  return { checkAnswer: checkAnswer, gradeItems: gradeItems, checkLab: checkLab, labPattern: labPattern, runDrill: runDrill };
 });

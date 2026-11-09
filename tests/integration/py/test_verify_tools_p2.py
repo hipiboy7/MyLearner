@@ -35,7 +35,7 @@ class CoreJsCheckTest(unittest.TestCase):
     def test_real_tree_is_clean(self):
         n, _, problems = CJ.check(ROOT)
         self.assertEqual(problems, [])
-        self.assertEqual(n, 13)
+        self.assertEqual(n, 14)   # web/core 14개(regex.js — 2026-11-09)
 
     def test_good_file(self):
         self.put("x.js", GOOD)

@@ -30,13 +30,21 @@ test('실습 채점 — 고르기·글·정규식(Python re.fullmatch 와 같게
   assert.equal(G.checkLab({ type: 'regex', answer: '([' }, 'x'), false);
 });
 
-test('정규식 안전 — 겹친 반복·역참조·길이는 위험, MWL 실습 54개 꼴은 안전', () => {
-  for (const p of ['(a+)+', '(a*)*', '(a+)*b', '((ab)+)+', '(a|aa)+', '(x{2,})+', '(.*a){3,}', '(a)\\1', '(?<n>a)\\k<n>', 'a'.repeat(201)])
-    assert.ok(G.unsafeRegex(p), p);
+test('실습 정규식 — 쓸 수 없는 패턴은 이유, 멈추던 패턴은 선형으로 빨리(독립 점검 ② F1·F2·F5)', () => {
+  for (const [p, why] of [['(a)\\1', '역참조'], ['(?<n>a)\\k<n>', '역참조'], ['a'.repeat(201), '길이'], ['([', '문법'], ['a)|(b', '문법'], ['(?=a)a', '지원하지 않는 문법'],
+    ['(a{100}){100}', '너무 큼']])
+    assert.equal(G.labPattern(p).why, why, p);
   for (const p of ['^[0-9]+(\\.[0-9]+)?$', '^(MinProc( ?= ?2)?|MinProc 2|2)$', '(?i)(full\\s*gc|풀\\s*gc)', 'modify-logger.*jeus\\.jdbc\\.sql.*FINE',
-    '^\\[?SERVER-0300\\]?$', '[(]a+[)]+', '\\(a+\\)+', '(ab){2}', '(a|b)', 'SQLNET\\.EXPIRE_TIME\\s*=?\\s*([1-9]|[1-5][0-9])'])
-    assert.equal(G.unsafeRegex(p), null, p);
-  assert.equal(G.checkLab({ type: 'regex', answer: '(a+)+$' }, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab'), false, '위험한 패턴은 돌리지 않는다');
+    '^\\[?SERVER-0300\\]?$', '[(]a+[)]+', '\\(a+\\)+', '(ab){2}', '(a|b)', 'SQLNET\\.EXPIRE_TIME\\s*=?\\s*([1-9]|[1-5][0-9])', '(a+)+', '(.*a){3,}'])
+    assert.equal(G.labPattern(p).why, undefined, p);
+  assert.equal(G.checkLab({ type: 'regex', answer: 'a)|(b' }, 'abc'), false, '감싸개를 닫는 패턴은 오답(전에는 abc 가 맞았다)');
+  assert.equal(G.checkLab({ type: 'regex', answer: '(?i)SQLNET\\.EXPIRE_TIME\\s*=?\\s*([1-9]|[1-5][0-9])' }, 'sqlnet.expire_time = 10'), true);
+  const t0 = Date.now();
+  for (const [p, s] of [['.*.*.*.*b', 'a'.repeat(500)], ['(a+){20}b', 'a'.repeat(500)], ['[]?(a+)+$]', 'a'.repeat(500)], ['(a|a)'.repeat(40), 'a'.repeat(40) + 'x']])
+    assert.equal(G.checkLab({ type: 'regex', answer: p }, s), false, p);
+  assert.ok(Date.now() - t0 < 1000, (Date.now() - t0) + 'ms');
+  assert.equal(G.checkLab({ type: 'regex', answer: '(a+)+$' }, 'a'.repeat(37) + 'b'), false);
+  assert.equal(G.checkLab({ type: 'regex', answer: '(a+)+' }, 'a'.repeat(37)), true, '겹친 반복도 맞으면 맞다');
   assert.equal(G.checkLab({ type: 'regex', answer: 'a+' }, 'a'.repeat(501)), false, '답 길이 상한');
 });
 

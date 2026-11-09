@@ -8,10 +8,15 @@ const { core, fixture, rng, pick } = require('./helpers');
 const Mk = core('markdown');
 const md = (t, o) => Mk.render(t, o);
 
-test('MWL 렌더러와 같다 — 39가지(Python 줄 나눔·공백·\\d·\\w 차이까지)', () => {
+test('MWL 렌더러와 같다 — 39가지(Python 줄 나눔·공백·\\d·\\w 차이까지). 일부러 다른 것 하나: 펜스 언어는 첫 낱말만(독립 점검 ② F4)', () => {
   const cases = fixture('mwl/markdown_parity.json');
   assert.ok(cases.length >= 39);
-  for (const c of cases) assert.equal(md(c.md), c.html, c.name);
+  let firstWord = 0;
+  for (const c of cases) {
+    const want = c.html.replace(/class="language-([^\s"]+)\s[^"]*"/g, (m, w) => { firstWord++; return 'class="language-' + w + '"'; });
+    assert.equal(md(c.md), want, c.name);
+  }
+  assert.equal(firstWord, 1, '여러 낱말 펜스 언어 사례(```js extra)는 하나 — MWL 135과에는 없다(check_mwl_real.py)');
 });
 
 test('MWL test_markdown.py 사례', () => {
@@ -54,9 +59,12 @@ test('링크 — http(s)·# 만, 속성값 이스케이프, 나머지는 글만'
   assert.equal(md('**[x](javascript:y)**'), '<p><strong>x</strong></p>');
 });
 
-test('펜스 언어는 MWL 처럼 class 에 넣되 따옴표까지 이스케이프한다', () => {
+test('펜스 언어는 첫 낱말만 class 에 넣고 따옴표까지 이스케이프한다(독립 점검 ② F4 — 앱의 다른 class 를 붙이지 못하게)', () => {
   assert.equal(md('```c++\nx\n```'), '<pre><code class="language-c++">x\n</code></pre>');
-  assert.equal(md('```" onmouseover="x\ncode\n```'), '<pre><code class="language-&quot; onmouseover=&quot;x">code\n</code></pre>');
+  assert.equal(md('``` python3  extra\nx\n```'), '<pre><code class="language-python3">x\n</code></pre>');
+  assert.equal(md('```"x"\u3000hidden\ncode\n```'), '<pre><code class="language-&quot;x&quot;">code\n</code></pre>');
+  assert.equal(md('```a ref img-missing hidden\nx\n```'), '<pre><code class="language-a">x\n</code></pre>');
+  assert.equal(md('```" onmouseover="x\ncode\n```'), '<pre><code class="language-&quot;">code\n</code></pre>');
 });
 
 test('깊이 — 깊은 인용·목록은 16단까지만 파고든다', () => {
@@ -97,7 +105,7 @@ test('선형 시간 — 바꾼 strip·제목·표 구분 줄·그림·링크가 
   }
 });
 
-test('선형 시간 — 긴 글(20만 자)도 꼴마다 1초 안에 끝난다(자식 프로세스, 멈추면 30초에 끊는다)', () => {
+test('선형 시간 — 긴 글(20만 자) 19가지 꼴이 꼴마다 1초 안에 끝난다(자식 프로세스, 멈추면 30초에 끊는다)', () => {
   // 옛 정규식에서: 제목 꼴은 3제곱(2만 자에서 10분 넘게), 나머지는 2제곱(2만 자에서 약 1초 → 20만 자에서 100초)
   const N = 200000;
   const cases = {
@@ -111,6 +119,8 @@ test('선형 시간 — 긴 글(20만 자)도 꼴마다 1초 안에 끝난다(�
     '[a](x 반복': '[a](x'.repeat(N / 5),
     '별': '*'.repeat(N), '**a 반복': '**a '.repeat(N / 4), '` 반복': '`a'.repeat(N / 2),
     '목록 공백': '- ' + ' '.repeat(N) + 'x', '번호 숫자': '1'.repeat(N) + 'x', '가로줄 대시': '-'.repeat(N) + ' x',
+    '제목 끝 # 공백 반복': '# a' + ' #'.repeat(N / 2) + ' x', '[a](http://x 반복': '[a](http://x'.repeat(N / 12), '![a](http://x 반복': '![a](http://x'.repeat(N / 13),
+    '표 구분 칸 반복': '|a|\n' + '|---'.repeat(N / 4) + ' x', '인용 > 반복': '> '.repeat(N / 2) + 'x',
   };
   const code = 'const Mk = require(' + JSON.stringify(require.resolve('../../../web/core/markdown.js')) + ');' +
     'const cases = JSON.parse(require("fs").readFileSync(0, "utf8")); const out = {};' +

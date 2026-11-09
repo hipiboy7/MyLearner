@@ -31,7 +31,8 @@ function check(html) {
       if (k === 'href' && !/^(https?:\/\/|#)/i.test(u)) problems.push('href ' + u.slice(0, 40));
       if (k === 'href' && /[\u0000-\u001f\u007f]/.test(u)) problems.push('href 제어 글자');
       if (k === 'src' && !/^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(u)) problems.push('src ' + u.slice(0, 40));
-      if (k === 'class' && !/^(ref|img-missing|language-.+)$/.test(u)) problems.push('class ' + u.slice(0, 40));
+      if (k === 'class' && !(name === 'a' && u === 'ref') && !(name === 'span' && u === 'img-missing') && !(name === 'code' && /^language-\S+$/.test(u)))
+        problems.push('class ' + name + ' ' + u.slice(0, 40));   // 태그마다 정해진 class 하나(독립 점검 ② F4)
     }
     if (!VOID[name]) stack.push(name);
   }
