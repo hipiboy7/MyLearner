@@ -1,0 +1,3330 @@
+{
+ "content": {
+  "cards": {
+   "A1-1-c01": {
+    "a": "A1",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-1-c01",
+    "lesson": "A1-1",
+    "q": "Q1",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-1-c02": {
+    "a": "A2",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-1-c02",
+    "lesson": "A1-1",
+    "q": "Q2",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-1-c03": {
+    "a": "A3",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-1-c03",
+    "lesson": "A1-1",
+    "q": "Q3",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-1-c04": {
+    "a": "A4",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-1-c04",
+    "lesson": "A1-1",
+    "q": "Q4",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-1-c05": {
+    "a": "A5",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-1-c05",
+    "lesson": "A1-1",
+    "q": "Q5",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-1-c06": {
+    "a": "A6",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-1-c06",
+    "lesson": "A1-1",
+    "q": "Q6",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-2-c01": {
+    "a": "A1",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-2-c01",
+    "lesson": "A1-2",
+    "q": "Q1",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-2-c02": {
+    "a": "A2",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-2-c02",
+    "lesson": "A1-2",
+    "q": "Q2",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-2-c03": {
+    "a": "A3",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-2-c03",
+    "lesson": "A1-2",
+    "q": "Q3",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-2-c04": {
+    "a": "A4",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-2-c04",
+    "lesson": "A1-2",
+    "q": "Q4",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-2-c05": {
+    "a": "A5",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-2-c05",
+    "lesson": "A1-2",
+    "q": "Q5",
+    "tags": [],
+    "type": "concept"
+   },
+   "A1-2-c06": {
+    "a": "A6",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A1-2-c06",
+    "lesson": "A1-2",
+    "q": "Q6",
+    "tags": [],
+    "type": "concept"
+   },
+   "A2-1-c01": {
+    "a": "A1",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A2-1-c01",
+    "lesson": "A2-1",
+    "q": "Q1",
+    "tags": [],
+    "type": "concept"
+   },
+   "A2-1-c02": {
+    "a": "A2",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A2-1-c02",
+    "lesson": "A2-1",
+    "q": "Q2",
+    "tags": [],
+    "type": "concept"
+   },
+   "A2-1-c03": {
+    "a": "A3",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A2-1-c03",
+    "lesson": "A2-1",
+    "q": "Q3",
+    "tags": [],
+    "type": "concept"
+   },
+   "A2-1-c04": {
+    "a": "A4",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A2-1-c04",
+    "lesson": "A2-1",
+    "q": "Q4",
+    "tags": [],
+    "type": "concept"
+   },
+   "A2-1-c05": {
+    "a": "A5",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A2-1-c05",
+    "lesson": "A2-1",
+    "q": "Q5",
+    "tags": [],
+    "type": "concept"
+   },
+   "A2-1-c06": {
+    "a": "A6",
+    "difficulty": 1,
+    "hint": "",
+    "id": "A2-1-c06",
+    "lesson": "A2-1",
+    "q": "Q6",
+    "tags": [],
+    "type": "concept"
+   },
+   "B1-1-c01": {
+    "a": "A1",
+    "difficulty": 1,
+    "hint": "",
+    "id": "B1-1-c01",
+    "lesson": "B1-1",
+    "q": "Q1",
+    "tags": [],
+    "type": "concept"
+   },
+   "B1-1-c02": {
+    "a": "A2",
+    "difficulty": 1,
+    "hint": "",
+    "id": "B1-1-c02",
+    "lesson": "B1-1",
+    "q": "Q2",
+    "tags": [],
+    "type": "concept"
+   },
+   "B1-1-c03": {
+    "a": "A3",
+    "difficulty": 1,
+    "hint": "",
+    "id": "B1-1-c03",
+    "lesson": "B1-1",
+    "q": "Q3",
+    "tags": [],
+    "type": "concept"
+   },
+   "B1-1-c04": {
+    "a": "A4",
+    "difficulty": 1,
+    "hint": "",
+    "id": "B1-1-c04",
+    "lesson": "B1-1",
+    "q": "Q4",
+    "tags": [],
+    "type": "concept"
+   },
+   "B1-1-c05": {
+    "a": "A5",
+    "difficulty": 1,
+    "hint": "",
+    "id": "B1-1-c05",
+    "lesson": "B1-1",
+    "q": "Q5",
+    "tags": [],
+    "type": "concept"
+   },
+   "B1-1-c06": {
+    "a": "A6",
+    "difficulty": 1,
+    "hint": "",
+    "id": "B1-1-c06",
+    "lesson": "B1-1",
+    "q": "Q6",
+    "tags": [],
+    "type": "concept"
+   },
+   "E1-1-c01": {
+    "a": "A1",
+    "difficulty": 1,
+    "hint": "",
+    "id": "E1-1-c01",
+    "lesson": "E1-1",
+    "q": "Q1",
+    "tags": [],
+    "type": "concept"
+   },
+   "E1-1-c02": {
+    "a": "A2",
+    "difficulty": 1,
+    "hint": "",
+    "id": "E1-1-c02",
+    "lesson": "E1-1",
+    "q": "Q2",
+    "tags": [],
+    "type": "concept"
+   },
+   "E1-1-c03": {
+    "a": "A3",
+    "difficulty": 1,
+    "hint": "",
+    "id": "E1-1-c03",
+    "lesson": "E1-1",
+    "q": "Q3",
+    "tags": [],
+    "type": "concept"
+   },
+   "E1-1-c04": {
+    "a": "A4",
+    "difficulty": 1,
+    "hint": "",
+    "id": "E1-1-c04",
+    "lesson": "E1-1",
+    "q": "Q4",
+    "tags": [],
+    "type": "concept"
+   },
+   "E1-1-c05": {
+    "a": "A5",
+    "difficulty": 1,
+    "hint": "",
+    "id": "E1-1-c05",
+    "lesson": "E1-1",
+    "q": "Q5",
+    "tags": [],
+    "type": "concept"
+   },
+   "E1-1-c06": {
+    "a": "A6",
+    "difficulty": 1,
+    "hint": "",
+    "id": "E1-1-c06",
+    "lesson": "E1-1",
+    "q": "Q6",
+    "tags": [],
+    "type": "concept"
+   }
+  },
+  "curriculum": {
+   "domains": [
+    {
+     "code": "JEUS",
+     "id": "A",
+     "modules": [
+      {
+       "goal": "",
+       "id": "A1",
+       "lessons": [
+        {
+         "id": "A1-1",
+         "level": 1,
+         "minutes": 20,
+         "prereqs": [],
+         "tags": [],
+         "title": "첫"
+        },
+        {
+         "id": "A1-2",
+         "level": 1,
+         "minutes": 20,
+         "prereqs": [],
+         "tags": [],
+         "title": "둘"
+        }
+       ],
+       "title": "개관"
+      },
+      {
+       "goal": "",
+       "id": "A2",
+       "lessons": [
+        {
+         "id": "A2-1",
+         "level": 1,
+         "minutes": 20,
+         "prereqs": [
+          "A1-1"
+         ],
+         "tags": [],
+         "title": "셋"
+        }
+       ],
+       "title": "도메인"
+      }
+     ],
+     "summary": "",
+     "title": "JEUS"
+    },
+    {
+     "code": "WEBTOB",
+     "id": "B",
+     "modules": [
+      {
+       "goal": "",
+       "id": "B1",
+       "lessons": [
+        {
+         "id": "B1-1",
+         "level": 1,
+         "minutes": 20,
+         "prereqs": [],
+         "tags": [],
+         "title": "웹"
+        }
+       ],
+       "title": "개관"
+      }
+     ],
+     "summary": "",
+     "title": "WebtoB"
+    },
+    {
+     "code": "ORACLE",
+     "id": "E",
+     "modules": [
+      {
+       "goal": "",
+       "id": "E1",
+       "lessons": [
+        {
+         "id": "E1-1",
+         "level": 1,
+         "minutes": 20,
+         "prereqs": [],
+         "tags": [],
+         "title": "RDB"
+        }
+       ],
+       "title": "RDB"
+      }
+     ],
+     "summary": "",
+     "title": "Oracle"
+    }
+   ],
+   "version": 1
+  },
+  "diagnostic": [
+   {
+    "answer": "a",
+    "explain": "e",
+    "id": "dg-01",
+    "lesson": "A1-1",
+    "options": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "q": "?",
+    "type": "mcq"
+   },
+   {
+    "answer": "b",
+    "explain": "e",
+    "id": "dg-02",
+    "lesson": "B1-1",
+    "options": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "q": "?",
+    "type": "mcq"
+   }
+  ],
+  "drills": {
+   "DR-01": {
+    "debrief": "복기",
+    "debrief_html": "<p>복기</p>",
+    "difficulty": 1,
+    "domains": [
+     "A",
+     "B"
+    ],
+    "id": "DR-01",
+    "lessons": [
+     "A1-1",
+     "B1-1"
+    ],
+    "max_score": 20,
+    "minutes": 15,
+    "situation": "상황",
+    "situation_html": "<p>상황</p>",
+    "start": "s1",
+    "steps": {
+     "s1": {
+      "id": "s1",
+      "options": [
+       {
+        "feedback": "맞다",
+        "next": "s2",
+        "score": 10,
+        "text": "좋은 선택"
+       },
+       {
+        "feedback": "아니다",
+        "next": "s2",
+        "score": 0,
+        "text": "나쁜 선택"
+       }
+      ],
+      "prompt": "첫 단계",
+      "prompt_html": "<p>첫 단계</p>"
+     },
+     "s2": {
+      "id": "s2",
+      "options": [
+       {
+        "feedback": "끝",
+        "next": null,
+        "score": 10,
+        "text": "끝(좋음)"
+       },
+       {
+        "feedback": "끝",
+        "next": null,
+        "score": 5,
+        "text": "끝(보통)"
+       }
+      ],
+      "prompt": "둘째",
+      "prompt_html": "<p>둘째</p>"
+     }
+    },
+    "title": "드릴"
+   }
+  },
+  "glossary": [
+   {
+    "domain": "A",
+    "en": "thread pool",
+    "id": "T-001",
+    "lesson": "A1-1",
+    "short": "설명",
+    "term": "스레드 풀"
+   }
+  ],
+  "labs": {
+   "LAB-A1-1": {
+    "checks": [
+     {
+      "answer": "a",
+      "explain": "",
+      "id": "q1",
+      "options": [
+       "a",
+       "b"
+      ],
+      "q": "?",
+      "type": "choice"
+     }
+    ],
+    "html": "",
+    "meta": {
+     "domain": "A",
+     "env": "browser",
+     "id": "LAB-A1-1",
+     "lessons": [
+      "A1-1"
+     ],
+     "minutes": 15,
+     "module": "A1",
+     "tier": "L1",
+     "title": "실습1"
+    }
+   },
+   "LAB-A1-2": {
+    "checks": [],
+    "html": "",
+    "meta": {
+     "domain": "A",
+     "env": "docker",
+     "id": "LAB-A1-2",
+     "lessons": [
+      "A1-1"
+     ],
+     "minutes": 20,
+     "module": "A1",
+     "tier": "L2",
+     "title": "실습2"
+    }
+   },
+   "LAB-B1-1": {
+    "checks": [],
+    "html": "",
+    "meta": {
+     "domain": "B",
+     "env": "work",
+     "id": "LAB-B1-1",
+     "lessons": [
+      "B1-1"
+     ],
+     "minutes": 10,
+     "module": "B1",
+     "tier": "L3",
+     "title": "실습3"
+    }
+   }
+  },
+  "lessons": {
+   "A1-1": {
+    "html": "<h2>결론 먼저</h2>\n<p>결론 먼저에 대한 본문입니다.</p>\n<h2>실무 장면</h2>\n<p>실무 장면에 대한 본문입니다.</p>\n<h2>원리</h2>\n<p>원리에 대한 본문입니다.</p>\n<h2>운영자 체크포인트</h2>\n<p>운영자 체크포인트에 대한 본문입니다.</p>\n<h2>자주 하는 실수와 장애 연결</h2>\n<p>자주 하는 실수와 장애 연결에 대한 본문입니다.</p>\n<h2>더 깊이</h2>\n<p>더 깊이에 대한 본문입니다.</p>\n<h2>스스로 확인</h2>\n<ol>\n<li>질문 1?</li>\n</ol>\n<blockquote><p>답: 답 1</p></blockquote>\n<ol>\n<li>질문 2?</li>\n</ol>\n<blockquote><p>답: 답 2</p></blockquote>\n<ol>\n<li>질문 3?</li>\n</ol>\n<blockquote><p>답: 답 3</p></blockquote>",
+    "meta": {
+     "confidence": "likely",
+     "domain": "A",
+     "id": "A1-1",
+     "level": 2,
+     "minutes": 20,
+     "module": "A1",
+     "sources": [
+      "매뉴얼 1장"
+     ],
+     "tags": [
+      "t"
+     ],
+     "title": "제목"
+    },
+    "sections": [
+     "결론 먼저",
+     "실무 장면",
+     "원리",
+     "운영자 체크포인트",
+     "자주 하는 실수와 장애 연결",
+     "더 깊이",
+     "스스로 확인"
+    ]
+   },
+   "A1-2": {
+    "html": "<h2>결론 먼저</h2>\n<p>결론 먼저에 대한 본문입니다.</p>\n<h2>실무 장면</h2>\n<p>실무 장면에 대한 본문입니다.</p>\n<h2>원리</h2>\n<p>원리에 대한 본문입니다.</p>\n<h2>운영자 체크포인트</h2>\n<p>운영자 체크포인트에 대한 본문입니다.</p>\n<h2>자주 하는 실수와 장애 연결</h2>\n<p>자주 하는 실수와 장애 연결에 대한 본문입니다.</p>\n<h2>더 깊이</h2>\n<p>더 깊이에 대한 본문입니다.</p>\n<h2>스스로 확인</h2>\n<ol>\n<li>질문 1?</li>\n</ol>\n<blockquote><p>답: 답 1</p></blockquote>\n<ol>\n<li>질문 2?</li>\n</ol>\n<blockquote><p>답: 답 2</p></blockquote>\n<ol>\n<li>질문 3?</li>\n</ol>\n<blockquote><p>답: 답 3</p></blockquote>",
+    "meta": {
+     "confidence": "likely",
+     "domain": "A",
+     "id": "A1-2",
+     "level": 2,
+     "minutes": 20,
+     "module": "A1",
+     "sources": [
+      "매뉴얼 1장"
+     ],
+     "tags": [
+      "t"
+     ],
+     "title": "제목"
+    },
+    "sections": [
+     "결론 먼저",
+     "실무 장면",
+     "원리",
+     "운영자 체크포인트",
+     "자주 하는 실수와 장애 연결",
+     "더 깊이",
+     "스스로 확인"
+    ]
+   },
+   "A2-1": {
+    "html": "<h2>결론 먼저</h2>\n<p>결론 먼저에 대한 본문입니다.</p>\n<h2>실무 장면</h2>\n<p>실무 장면에 대한 본문입니다.</p>\n<h2>원리</h2>\n<p>원리에 대한 본문입니다.</p>\n<h2>운영자 체크포인트</h2>\n<p>운영자 체크포인트에 대한 본문입니다.</p>\n<h2>자주 하는 실수와 장애 연결</h2>\n<p>자주 하는 실수와 장애 연결에 대한 본문입니다.</p>\n<h2>더 깊이</h2>\n<p>더 깊이에 대한 본문입니다.</p>\n<h2>스스로 확인</h2>\n<ol>\n<li>질문 1?</li>\n</ol>\n<blockquote><p>답: 답 1</p></blockquote>\n<ol>\n<li>질문 2?</li>\n</ol>\n<blockquote><p>답: 답 2</p></blockquote>\n<ol>\n<li>질문 3?</li>\n</ol>\n<blockquote><p>답: 답 3</p></blockquote>",
+    "meta": {
+     "confidence": "likely",
+     "domain": "A",
+     "id": "A2-1",
+     "level": 2,
+     "minutes": 20,
+     "module": "A2",
+     "sources": [
+      "매뉴얼 1장"
+     ],
+     "tags": [
+      "t"
+     ],
+     "title": "제목"
+    },
+    "sections": [
+     "결론 먼저",
+     "실무 장면",
+     "원리",
+     "운영자 체크포인트",
+     "자주 하는 실수와 장애 연결",
+     "더 깊이",
+     "스스로 확인"
+    ]
+   },
+   "B1-1": {
+    "html": "<h2>결론 먼저</h2>\n<p>결론 먼저에 대한 본문입니다.</p>\n<h2>실무 장면</h2>\n<p>실무 장면에 대한 본문입니다.</p>\n<h2>원리</h2>\n<p>원리에 대한 본문입니다.</p>\n<h2>운영자 체크포인트</h2>\n<p>운영자 체크포인트에 대한 본문입니다.</p>\n<h2>자주 하는 실수와 장애 연결</h2>\n<p>자주 하는 실수와 장애 연결에 대한 본문입니다.</p>\n<h2>더 깊이</h2>\n<p>더 깊이에 대한 본문입니다.</p>\n<h2>스스로 확인</h2>\n<ol>\n<li>질문 1?</li>\n</ol>\n<blockquote><p>답: 답 1</p></blockquote>\n<ol>\n<li>질문 2?</li>\n</ol>\n<blockquote><p>답: 답 2</p></blockquote>\n<ol>\n<li>질문 3?</li>\n</ol>\n<blockquote><p>답: 답 3</p></blockquote>",
+    "meta": {
+     "confidence": "likely",
+     "domain": "B",
+     "id": "B1-1",
+     "level": 2,
+     "minutes": 20,
+     "module": "B1",
+     "sources": [
+      "매뉴얼 1장"
+     ],
+     "tags": [
+      "t"
+     ],
+     "title": "제목"
+    },
+    "sections": [
+     "결론 먼저",
+     "실무 장면",
+     "원리",
+     "운영자 체크포인트",
+     "자주 하는 실수와 장애 연결",
+     "더 깊이",
+     "스스로 확인"
+    ]
+   },
+   "E1-1": {
+    "html": "<h2>결론 먼저</h2>\n<p>결론 먼저에 대한 본문입니다.</p>\n<h2>실무 장면</h2>\n<p>실무 장면에 대한 본문입니다.</p>\n<h2>원리</h2>\n<p>원리에 대한 본문입니다.</p>\n<h2>운영자 체크포인트</h2>\n<p>운영자 체크포인트에 대한 본문입니다.</p>\n<h2>자주 하는 실수와 장애 연결</h2>\n<p>자주 하는 실수와 장애 연결에 대한 본문입니다.</p>\n<h2>더 깊이</h2>\n<p>더 깊이에 대한 본문입니다.</p>\n<h2>스스로 확인</h2>\n<ol>\n<li>질문 1?</li>\n</ol>\n<blockquote><p>답: 답 1</p></blockquote>\n<ol>\n<li>질문 2?</li>\n</ol>\n<blockquote><p>답: 답 2</p></blockquote>\n<ol>\n<li>질문 3?</li>\n</ol>\n<blockquote><p>답: 답 3</p></blockquote>",
+    "meta": {
+     "confidence": "likely",
+     "domain": "E",
+     "id": "E1-1",
+     "level": 2,
+     "minutes": 20,
+     "module": "E1",
+     "sources": [
+      "매뉴얼 1장"
+     ],
+     "tags": [
+      "t"
+     ],
+     "title": "제목"
+    },
+    "sections": [
+     "결론 먼저",
+     "실무 장면",
+     "원리",
+     "운영자 체크포인트",
+     "자주 하는 실수와 장애 연결",
+     "더 깊이",
+     "스스로 확인"
+    ]
+   }
+  },
+  "plans": {
+   "default": {
+    "weeks": [
+     {
+      "days": [
+       {
+        "day": 1,
+        "lab": null,
+        "lesson": "A1-1"
+       },
+       {
+        "day": 2,
+        "lab": null,
+        "lesson": "B1-1"
+       },
+       {
+        "day": 3,
+        "lab": null,
+        "lesson": "A1-2"
+       },
+       {
+        "day": 4,
+        "lab": null,
+        "lesson": "E1-1"
+       },
+       {
+        "day": 5,
+        "lab": null,
+        "lesson": "A2-1"
+       }
+      ],
+      "drill": "DR-01",
+      "theme": "테마1",
+      "week": 1
+     }
+    ]
+   },
+   "sqld": {
+    "weeks": [
+     {
+      "days": [
+       {
+        "day": 1,
+        "lab": null,
+        "lesson": "E1-1"
+       },
+       {
+        "day": 2,
+        "lab": null,
+        "lesson": "A1-1"
+       },
+       {
+        "day": 3,
+        "lab": null,
+        "lesson": "B1-1"
+       },
+       {
+        "day": 4,
+        "lab": null,
+        "lesson": "A1-2"
+       },
+       {
+        "day": 5,
+        "lab": null,
+        "lesson": "A2-1"
+       }
+      ],
+      "drill": null,
+      "theme": "SQLD",
+      "week": 1
+     }
+    ]
+   }
+  },
+  "quizzes": {
+   "QZ-A1": {
+    "id": "QZ-A1",
+    "items": [
+     {
+      "answer": "a",
+      "explain": "e",
+      "id": "q1",
+      "lesson": "A1-1",
+      "options": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ],
+      "q": "?",
+      "type": "mcq"
+     },
+     {
+      "answer": "답",
+      "explain": "e",
+      "id": "q2",
+      "lesson": "A1-2",
+      "options": [],
+      "q": "?",
+      "type": "short"
+     }
+    ],
+    "module": "A1"
+   }
+  }
+ },
+ "mastery_cases": [
+  {
+   "expected": {
+    "A": {
+     "avg_level": 0.5,
+     "code": "JEUS",
+     "lessons_done": 1,
+     "lessons_total": 3,
+     "modules": {
+      "A1": {
+       "lessons_done": 1,
+       "lessons_total": 2,
+       "level": 1,
+       "retention": null,
+       "title": "개관"
+      },
+      "A2": {
+       "lessons_done": 0,
+       "lessons_total": 1,
+       "level": 0,
+       "retention": null,
+       "title": "도메인"
+      }
+     },
+     "title": "JEUS"
+    },
+    "B": {
+     "avg_level": 0.0,
+     "code": "WEBTOB",
+     "lessons_done": 0,
+     "lessons_total": 1,
+     "modules": {
+      "B1": {
+       "lessons_done": 0,
+       "lessons_total": 1,
+       "level": 0,
+       "retention": null,
+       "title": "개관"
+      }
+     },
+     "title": "WebtoB"
+    },
+    "E": {
+     "avg_level": 0.0,
+     "code": "ORACLE",
+     "lessons_done": 0,
+     "lessons_total": 1,
+     "modules": {
+      "E1": {
+       "lessons_done": 0,
+       "lessons_total": 1,
+       "level": 0,
+       "retention": null,
+       "title": "RDB"
+      }
+     },
+     "title": "Oracle"
+    }
+   },
+   "name": "l1",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {
+     "A1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     }
+    },
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   }
+  },
+  {
+   "expected": {
+    "A": {
+     "avg_level": 2.5,
+     "code": "JEUS",
+     "lessons_done": 2,
+     "lessons_total": 3,
+     "modules": {
+      "A1": {
+       "lessons_done": 2,
+       "lessons_total": 2,
+       "level": 5,
+       "retention": 1.0,
+       "title": "개관"
+      },
+      "A2": {
+       "lessons_done": 0,
+       "lessons_total": 1,
+       "level": 0,
+       "retention": null,
+       "title": "도메인"
+      }
+     },
+     "title": "JEUS"
+    },
+    "B": {
+     "avg_level": 0.0,
+     "code": "WEBTOB",
+     "lessons_done": 0,
+     "lessons_total": 1,
+     "modules": {
+      "B1": {
+       "lessons_done": 0,
+       "lessons_total": 1,
+       "level": 0,
+       "retention": null,
+       "title": "개관"
+      }
+     },
+     "title": "WebtoB"
+    },
+    "E": {
+     "avg_level": 0.0,
+     "code": "ORACLE",
+     "lessons_done": 0,
+     "lessons_total": 1,
+     "modules": {
+      "E1": {
+       "lessons_done": 0,
+       "lessons_total": 1,
+       "level": 0,
+       "retention": null,
+       "title": "RDB"
+      }
+     },
+     "title": "Oracle"
+    }
+   },
+   "name": "l5",
+   "progress": {
+    "cards": {
+     "A1-1-c01": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-1-c02": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-1-c03": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-1-c04": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-1-c05": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-1-c06": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-2-c01": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-2-c02": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-2-c03": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-2-c04": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-2-c05": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     },
+     "A1-2-c06": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       3,
+       3,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     }
+    },
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [
+     {
+      "at": "2026-09-15",
+      "id": "DR-01",
+      "max": 20,
+      "path": [],
+      "score": 17
+     }
+    ],
+    "journal": [
+     {
+      "apply": "",
+      "date": "2026-09-15",
+      "summary": "",
+      "teach": "A1 모듈을 후임에게 설명",
+      "unclear": ""
+     }
+    ],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {
+     "LAB-A1-1": {
+      "done_at": "2026-09-14",
+      "notes": "",
+      "score": null,
+      "status": "done",
+      "total": null
+     }
+    },
+    "lessons": {
+     "A1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     },
+     "A1-2": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     }
+    },
+    "quizzes": [
+     {
+      "answers": {},
+      "at": "2026-09-15",
+      "id": "QZ-A1",
+      "score": 80
+     }
+    ],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   }
+  }
+ ],
+ "scheduler_cases": [
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-A1-1",
+    "lesson": "A1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 15,
+     "lesson": 20
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 40,
+    "week": 1
+   },
+   "name": "first_day",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-B1-1",
+    "lesson": "B1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 10,
+     "lesson": 20,
+     "review": 2
+    },
+    "new_cards": [
+     "A1-1-c01",
+     "A1-1-c02",
+     "A1-1-c03",
+     "A1-1-c04",
+     "A1-1-c05",
+     "A1-1-c06"
+    ],
+    "quiz": null,
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 37,
+    "week": 1
+   },
+   "name": "after_lesson_done",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {
+     "A1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     }
+    },
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-B1-1",
+    "lesson": "B1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 10,
+     "lesson": 20,
+     "review": 1
+    },
+    "new_cards": [
+     "A1-1-c01",
+     "A1-1-c02",
+     "A1-1-c03",
+     "A1-1-c04"
+    ],
+    "quiz": null,
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 36,
+    "week": 1
+   },
+   "name": "after_lesson_done_cap4",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {
+     "A1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     }
+    },
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 4,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-A1-1",
+    "lesson": "A1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 15,
+     "lesson": 20,
+     "review": 1
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [
+     "A1-1-c02",
+     "A1-1-c03",
+     "A1-1-c01"
+    ],
+    "theme": "테마1",
+    "total_minutes": 41,
+    "week": 1
+   },
+   "name": "due_sorted",
+   "progress": {
+    "cards": {
+     "A1-1-c01": {
+      "due": "2026-09-15",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 1
+     },
+     "A1-1-c02": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       0
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "A1-1-c03": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "A1-1-c04": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       2,
+       2
+      ],
+      "interval": 5,
+      "lapses": 0,
+      "last": "2026-09-15",
+      "reps": 2
+     }
+    },
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-A1-1",
+    "lesson": "A1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 15,
+     "lesson": 20,
+     "review": 1
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [
+     "A1-1-c02",
+     "A1-1-c03"
+    ],
+    "theme": "테마1",
+    "total_minutes": 41,
+    "week": 1
+   },
+   "name": "due_capped",
+   "progress": {
+    "cards": {
+     "A1-1-c01": {
+      "due": "2026-09-15",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 1
+     },
+     "A1-1-c02": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       0
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "A1-1-c03": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "A1-1-c04": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       2,
+       2
+      ],
+      "interval": 5,
+      "lapses": 0,
+      "last": "2026-09-15",
+      "reps": 2
+     }
+    },
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 2,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-19",
+    "drill": null,
+    "is_study_day": false,
+    "journal": false,
+    "lab": null,
+    "lesson": null,
+    "minutes_estimate": {
+     "review": 1
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [
+     "A1-1-c02",
+     "A1-1-c03",
+     "A1-1-c01"
+    ],
+    "theme": null,
+    "total_minutes": 1,
+    "week": null
+   },
+   "name": "weekend_review_only",
+   "progress": {
+    "cards": {
+     "A1-1-c01": {
+      "due": "2026-09-15",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 1
+     },
+     "A1-1-c02": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       0
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "A1-1-c03": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "A1-1-c04": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       2,
+       2
+      ],
+      "interval": 5,
+      "lapses": 0,
+      "last": "2026-09-15",
+      "reps": 2
+     }
+    },
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-19"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-19",
+    "drill": null,
+    "is_study_day": false,
+    "journal": true,
+    "lab": "LAB-A1-1",
+    "lesson": "A1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 15,
+     "lesson": 20,
+     "review": 1
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [
+     "A1-1-c02",
+     "A1-1-c03",
+     "A1-1-c01"
+    ],
+    "theme": "테마1",
+    "total_minutes": 41,
+    "week": 1
+   },
+   "name": "weekend_full",
+   "progress": {
+    "cards": {
+     "A1-1-c01": {
+      "due": "2026-09-15",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 1
+     },
+     "A1-1-c02": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       0
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "A1-1-c03": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "A1-1-c04": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       2,
+       2
+      ],
+      "interval": 5,
+      "lapses": 0,
+      "last": "2026-09-15",
+      "reps": 2
+     }
+    },
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": false
+   },
+   "today": "2026-09-19"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-19",
+    "drill": null,
+    "is_study_day": false,
+    "journal": false,
+    "lab": null,
+    "lesson": null,
+    "minutes_estimate": {},
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [],
+    "theme": null,
+    "total_minutes": 0,
+    "week": null
+   },
+   "name": "weekend_zero",
+   "progress": {
+    "cards": {
+     "A1-1-c01": {
+      "due": "2026-09-15",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 1
+     },
+     "A1-1-c02": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       0
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "A1-1-c03": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "A1-1-c04": {
+      "due": "2026-09-20",
+      "ef": 2.5,
+      "grades": [
+       2,
+       2
+      ],
+      "interval": 5,
+      "lapses": 0,
+      "last": "2026-09-15",
+      "reps": 2
+     }
+    },
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 0,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-19"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": null,
+    "lesson": null,
+    "minutes_estimate": {
+     "journal": 5,
+     "quiz": 10,
+     "review": 3
+    },
+    "new_cards": [
+     "A1-1-c01",
+     "A1-1-c02",
+     "A1-1-c03",
+     "A1-1-c04",
+     "A1-1-c05",
+     "A1-1-c06",
+     "B1-1-c01",
+     "B1-1-c02",
+     "B1-1-c03",
+     "B1-1-c04",
+     "B1-1-c05",
+     "B1-1-c06"
+    ],
+    "quiz": "QZ-A1",
+    "reviews": [],
+    "theme": null,
+    "total_minutes": 18,
+    "week": null
+   },
+   "name": "all_done",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {
+     "A1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     },
+     "A1-2": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     },
+     "A2-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     },
+     "B1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     },
+     "E1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     }
+    },
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-18",
+    "drill": "DR-01",
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-A1-1",
+    "lesson": "A1-1",
+    "minutes_estimate": {
+     "drill": 15,
+     "journal": 5,
+     "lab": 15,
+     "lesson": 20
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 55,
+    "week": 1
+   },
+   "name": "friday_drill",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-18"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-18",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-A1-1",
+    "lesson": "A1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 15,
+     "lesson": 20
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 40,
+    "week": 1
+   },
+   "name": "friday_drill_done",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [
+     {
+      "at": "2026-09-17",
+      "id": "DR-01",
+      "max": 20,
+      "path": [],
+      "score": 15
+     }
+    ],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-18"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-B1-1",
+    "lesson": "B1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 10,
+     "lesson": 20,
+     "quiz": 10,
+     "review": 3
+    },
+    "new_cards": [
+     "A1-1-c01",
+     "A1-1-c02",
+     "A1-1-c03",
+     "A1-1-c04",
+     "A1-1-c05",
+     "A1-1-c06",
+     "A1-2-c01",
+     "A1-2-c02",
+     "A1-2-c03",
+     "A1-2-c04",
+     "A1-2-c05",
+     "A1-2-c06"
+    ],
+    "quiz": "QZ-A1",
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 48,
+    "week": 1
+   },
+   "name": "quiz_ready",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {
+     "A1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     },
+     "A1-2": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     }
+    },
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-B1-1",
+    "lesson": "B1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 10,
+     "lesson": 20,
+     "review": 3
+    },
+    "new_cards": [
+     "A1-1-c01",
+     "A1-1-c02",
+     "A1-1-c03",
+     "A1-1-c04",
+     "A1-1-c05",
+     "A1-1-c06",
+     "A1-2-c01",
+     "A1-2-c02",
+     "A1-2-c03",
+     "A1-2-c04",
+     "A1-2-c05",
+     "A1-2-c06"
+    ],
+    "quiz": null,
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 38,
+    "week": 1
+   },
+   "name": "quiz_attempted",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {
+     "A1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     },
+     "A1-2": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     }
+    },
+    "quizzes": [
+     {
+      "answers": {},
+      "at": "2026-09-14",
+      "id": "QZ-A1",
+      "score": 50
+     }
+    ],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": true,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-A1-1",
+    "lesson": "A1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 15,
+     "lesson": 20
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 40,
+    "week": 1
+   },
+   "name": "lab_docker",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-A1-2",
+    "lesson": "A1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 20,
+     "lesson": 20
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 45,
+    "week": 1
+   },
+   "name": "lab_second_no_docker",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {
+     "LAB-A1-1": {
+      "done_at": "2026-09-14",
+      "notes": "",
+      "score": null,
+      "status": "done",
+      "total": null
+     }
+    },
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": null,
+    "lesson": "A1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lesson": 20
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 25,
+    "week": 1
+   },
+   "name": "lab_none",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {
+     "LAB-A1-1": {
+      "done_at": "2026-09-14",
+      "notes": "",
+      "score": null,
+      "status": "done",
+      "total": null
+     },
+     "LAB-A1-2": {
+      "done_at": "2026-09-14",
+      "notes": "",
+      "score": null,
+      "status": "done",
+      "total": null
+     }
+    },
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": null,
+    "lesson": "E1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lesson": 20
+    },
+    "new_cards": [],
+    "quiz": null,
+    "reviews": [],
+    "theme": "SQLD",
+    "total_minutes": 25,
+    "week": 1
+   },
+   "name": "variant_sqld",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 12,
+    "plan_variant": "sqld",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-B1-1",
+    "lesson": "B1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 10,
+     "lesson": 20,
+     "review": 1
+    },
+    "new_cards": [
+     "K0001-c01",
+     "K0001-c02",
+     "K0002-c01",
+     "A1-1-c01"
+    ],
+    "quiz": null,
+    "reviews": [],
+    "theme": "테마1",
+    "total_minutes": 36,
+    "week": 1
+   },
+   "name": "knowledge_first",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [
+     {
+      "body": "b",
+      "cards": [
+       {
+        "a": "a",
+        "q": "q"
+       }
+      ],
+      "confidence": "unverified",
+      "created": "2026-09-15",
+      "domain": "B",
+      "id": "K0002",
+      "kind": "term",
+      "module": null,
+      "origin": "manual",
+      "source": "",
+      "tags": [],
+      "title": "t2",
+      "updated": null
+     },
+     {
+      "body": "b",
+      "cards": [
+       {
+        "a": "a1",
+        "q": "q1"
+       },
+       {
+        "a": "a2",
+        "q": "q2"
+       }
+      ],
+      "confidence": "unverified",
+      "created": "2026-09-14",
+      "domain": "A",
+      "id": "K0001",
+      "kind": "field",
+      "module": null,
+      "origin": "manual",
+      "source": "",
+      "tags": [],
+      "title": "t1",
+      "updated": null
+     }
+    ],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {
+     "A1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     }
+    },
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 4,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  },
+  {
+   "docker_available": false,
+   "expected": {
+    "date": "2026-09-15",
+    "drill": null,
+    "is_study_day": true,
+    "journal": true,
+    "lab": "LAB-B1-1",
+    "lesson": "B1-1",
+    "minutes_estimate": {
+     "journal": 5,
+     "lab": 10,
+     "lesson": 20,
+     "review": 2
+    },
+    "new_cards": [
+     "K0001-c02",
+     "K0002-c01",
+     "A1-1-c01",
+     "A1-1-c02"
+    ],
+    "quiz": null,
+    "reviews": [
+     "K0001-c01"
+    ],
+    "theme": "테마1",
+    "total_minutes": 37,
+    "week": 1
+   },
+   "name": "knowledge_due_and_deleted",
+   "progress": {
+    "cards": {
+     "K0001-c01": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     },
+     "K0009-c01": {
+      "due": "2026-09-14",
+      "ef": 2.5,
+      "grades": [
+       2
+      ],
+      "interval": 1,
+      "lapses": 0,
+      "last": "2026-09-13",
+      "reps": 1
+     }
+    },
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [
+     {
+      "body": "b",
+      "cards": [
+       {
+        "a": "a",
+        "q": "q"
+       }
+      ],
+      "confidence": "unverified",
+      "created": "2026-09-15",
+      "domain": "B",
+      "id": "K0002",
+      "kind": "term",
+      "module": null,
+      "origin": "manual",
+      "source": "",
+      "tags": [],
+      "title": "t2",
+      "updated": null
+     },
+     {
+      "body": "b",
+      "cards": [
+       {
+        "a": "a1",
+        "q": "q1"
+       },
+       {
+        "a": "a2",
+        "q": "q2"
+       }
+      ],
+      "confidence": "unverified",
+      "created": "2026-09-14",
+      "domain": "A",
+      "id": "K0001",
+      "kind": "field",
+      "module": null,
+      "origin": "manual",
+      "source": "",
+      "tags": [],
+      "title": "t1",
+      "updated": null
+     }
+    ],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {
+     "A1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     }
+    },
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [],
+    "version": "0.1.0"
+   },
+   "settings": {
+    "agent_timeout": 180,
+    "agent_url": "http://127.0.0.1:8787",
+    "ai_body": "",
+    "ai_format": "openai",
+    "ai_headers": "",
+    "ai_key": "",
+    "ai_max_tokens": 4096,
+    "ai_mode": "api",
+    "ai_model": "",
+    "ai_path": "",
+    "ai_reasoning": "",
+    "ai_url": "",
+    "host": "127.0.0.1",
+    "max_reviews_per_day": 40,
+    "new_cards_per_day": 4,
+    "plan_variant": "default",
+    "port": 8765,
+    "study_days": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "weekday_minutes": 50,
+    "weekend_minutes": 15,
+    "weekend_review_only": true
+   },
+   "today": "2026-09-15"
+  }
+ ],
+ "stats_cases": [
+  {
+   "expected": {
+    "accuracy": 0.6666666666666666,
+    "cards_due_today": 1,
+    "cards_seen": 1,
+    "checks": 1,
+    "date": "2026-09-15",
+    "diagnostic": {
+     "A": 40,
+     "B": 60
+    },
+    "diagnostic_latest": null,
+    "domains": {
+     "A": {
+      "avg_level": 0.5,
+      "code": "JEUS",
+      "lessons_done": 1,
+      "lessons_total": 3,
+      "modules": {
+       "A1": {
+        "lessons_done": 1,
+        "lessons_total": 2,
+        "level": 1,
+        "retention": 0.6666666666666666,
+        "title": "개관"
+       },
+       "A2": {
+        "lessons_done": 0,
+        "lessons_total": 1,
+        "level": 0,
+        "retention": null,
+        "title": "도메인"
+       }
+      },
+      "title": "JEUS"
+     },
+     "B": {
+      "avg_level": 0.0,
+      "code": "WEBTOB",
+      "lessons_done": 0,
+      "lessons_total": 1,
+      "modules": {
+       "B1": {
+        "lessons_done": 0,
+        "lessons_total": 1,
+        "level": 0,
+        "retention": null,
+        "title": "개관"
+       }
+      },
+      "title": "WebtoB"
+     },
+     "E": {
+      "avg_level": 0.0,
+      "code": "ORACLE",
+      "lessons_done": 0,
+      "lessons_total": 1,
+      "modules": {
+       "E1": {
+        "lessons_done": 0,
+        "lessons_total": 1,
+        "level": 0,
+        "retention": null,
+        "title": "RDB"
+       }
+      },
+      "title": "Oracle"
+     }
+    },
+    "drills": 0,
+    "journal_entries": 0,
+    "knowledge": 0,
+    "knowledge_cards": 0,
+    "labs_done": 0,
+    "last7": [
+     {
+      "date": "2026-09-09",
+      "minutes": 0
+     },
+     {
+      "date": "2026-09-10",
+      "minutes": 0
+     },
+     {
+      "date": "2026-09-11",
+      "minutes": 0
+     },
+     {
+      "date": "2026-09-12",
+      "minutes": 0
+     },
+     {
+      "date": "2026-09-13",
+      "minutes": 0
+     },
+     {
+      "date": "2026-09-14",
+      "minutes": 50
+     },
+     {
+      "date": "2026-09-15",
+      "minutes": 30
+     }
+    ],
+    "lessons_done": 1,
+    "lessons_total": 5,
+    "quizzes": 0,
+    "streak": 2,
+    "study_days_total": 2,
+    "total_minutes": 80,
+    "total_reviewed": 15
+   },
+   "name": "two_days",
+   "progress": {
+    "cards": {
+     "A1-1-c01": {
+      "due": "2026-09-15",
+      "ef": 2.5,
+      "grades": [
+       2,
+       0,
+       3
+      ],
+      "interval": 3,
+      "lapses": 0,
+      "last": "2026-09-14",
+      "reps": 2
+     }
+    },
+    "created": "2026-09-14",
+    "diagnostics": [
+     {
+      "at": "2026-09-14",
+      "items": [],
+      "mode": "baseline",
+      "scores": {
+       "A": 40,
+       "B": 60
+      },
+      "total": null
+     }
+    ],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {
+     "A1-1": {
+      "confidence": 3,
+      "done_at": "2026-09-14",
+      "status": "done"
+     }
+    },
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [
+     {
+      "date": "2026-09-14",
+      "lab": null,
+      "lesson": "A1-1",
+      "minutes": 50,
+      "reviewed": 10
+     },
+     {
+      "date": "2026-09-15",
+      "lab": null,
+      "lesson": null,
+      "minutes": 30,
+      "reviewed": 5
+     }
+    ],
+    "version": "0.1.0"
+   },
+   "study_days": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "today": "2026-09-15"
+  },
+  {
+   "expected": {
+    "accuracy": null,
+    "cards_due_today": 0,
+    "cards_seen": 0,
+    "checks": 0,
+    "date": "2026-09-15",
+    "diagnostic": null,
+    "diagnostic_latest": null,
+    "domains": {
+     "A": {
+      "avg_level": 0.0,
+      "code": "JEUS",
+      "lessons_done": 0,
+      "lessons_total": 3,
+      "modules": {
+       "A1": {
+        "lessons_done": 0,
+        "lessons_total": 2,
+        "level": 0,
+        "retention": null,
+        "title": "개관"
+       },
+       "A2": {
+        "lessons_done": 0,
+        "lessons_total": 1,
+        "level": 0,
+        "retention": null,
+        "title": "도메인"
+       }
+      },
+      "title": "JEUS"
+     },
+     "B": {
+      "avg_level": 0.0,
+      "code": "WEBTOB",
+      "lessons_done": 0,
+      "lessons_total": 1,
+      "modules": {
+       "B1": {
+        "lessons_done": 0,
+        "lessons_total": 1,
+        "level": 0,
+        "retention": null,
+        "title": "개관"
+       }
+      },
+      "title": "WebtoB"
+     },
+     "E": {
+      "avg_level": 0.0,
+      "code": "ORACLE",
+      "lessons_done": 0,
+      "lessons_total": 1,
+      "modules": {
+       "E1": {
+        "lessons_done": 0,
+        "lessons_total": 1,
+        "level": 0,
+        "retention": null,
+        "title": "RDB"
+       }
+      },
+      "title": "Oracle"
+     }
+    },
+    "drills": 0,
+    "journal_entries": 0,
+    "knowledge": 0,
+    "knowledge_cards": 0,
+    "labs_done": 0,
+    "last7": [
+     {
+      "date": "2026-09-09",
+      "minutes": 0
+     },
+     {
+      "date": "2026-09-10",
+      "minutes": 0
+     },
+     {
+      "date": "2026-09-11",
+      "minutes": 10
+     },
+     {
+      "date": "2026-09-12",
+      "minutes": 0
+     },
+     {
+      "date": "2026-09-13",
+      "minutes": 0
+     },
+     {
+      "date": "2026-09-14",
+      "minutes": 10
+     },
+     {
+      "date": "2026-09-15",
+      "minutes": 0
+     }
+    ],
+    "lessons_done": 0,
+    "lessons_total": 5,
+    "quizzes": 0,
+    "streak": 2,
+    "study_days_total": 2,
+    "total_minutes": 20,
+    "total_reviewed": 2
+   },
+   "name": "streak_skips_weekend",
+   "progress": {
+    "cards": {},
+    "created": "2026-09-14",
+    "diagnostics": [],
+    "drills": [],
+    "journal": [],
+    "knowledge": [],
+    "knowledge_seq": 0,
+    "labs": {},
+    "lessons": {},
+    "quizzes": [],
+    "schema": 2,
+    "sessions": [
+     {
+      "date": "2026-09-11",
+      "lab": null,
+      "lesson": null,
+      "minutes": 10,
+      "reviewed": 1
+     },
+     {
+      "date": "2026-09-14",
+      "lab": null,
+      "lesson": null,
+      "minutes": 10,
+      "reviewed": 1
+     }
+    ],
+    "version": "0.1.0"
+   },
+   "study_days": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "today": "2026-09-15"
+  }
+ ]
+}

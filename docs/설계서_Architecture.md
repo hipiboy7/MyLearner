@@ -4,6 +4,7 @@
 - 계속 고치는 문서다. Phase 마다 정한 것을 해당 절에 더하고, 아직 정하지 않은 것은 "Phase N 에서 정한다"로 남긴다
 - 정정 이력: 2026-10-15 — 7절 시험(Python)에 3.14(`python:3.14.8-slim`)를 더했다(사용자 승인)
 - 정정 이력: 2026-10-15 — 6절 '비밀'에 AI 키를 보내는 조건을 더했다(P1 독립 점검 — Phase 6 의 AI 대리 호출도 따른다)
+- 정정 이력: 2026-10-15 — Phase 2 에서 정한 것: 3절(MWL 변환기는 Phase 2), 5절 형식 값, 6절 JS 파일 꼴·상수 위치 확정, 7·9절 JS 시험(Node 22.23.3·내장 커버리지), 11절 디렉토리, 12절 추적성
 
 ## 1. 범위 문서와의 경계
 
@@ -39,11 +40,11 @@
 |---|---|---|---|---|
 | `tools/ai_probe.py` | Python | 폐쇄망 AI 점검·`--serve-test`·`--decode` | A(판정·코드)·B(흐름) | 1 |
 | `tools/browser_probe.html` | HTML+JS | 폐쇄망 Chrome 점검 | C | 1 |
-| `web/core/` | JS | SM-2·하루 계획·숙련도, 사건 기록·늦은 복습 규칙·합치기, 렌더러 이스케이프, 과정 검사, 통계 계산 | A | 2 |
+| `web/core/` | JS | SM-2·하루 계획·숙련도, 사건 기록·늦은 복습 규칙·합치기, 렌더러 이스케이프, 과정 검사, 통계 계산, 채점, MWL 진도 변환 — 파일 14개와 싣는 순서는 `docs/P2_설계서_Core.md` 2절 | A | 2 |
 | `web/app.js`·`web/index.html`·`web/styles.css` | JS·CSS | 화면(오늘·복습·강의·퀴즈·점검·통계) — MWL 골격 이식 | C | 3 |
 | `web/store/` | JS | 저장 어댑터(파일·브라우저·안드로이드) — 같은 인터페이스(DIP) | A(순수 부분)·B | 3·4 |
 | `mylearner/` | Python | 로컬 서버(정적 파일·저장·AI 대리 호출), CLI 진입점 | B | 3 |
-| `mylearner/convert/` | Python | MWL 과정·Learn 자료 → 과정 파일 변환 | B | 2·3 |
+| `mylearner/convert/` | Python | MWL 과정(`mwl.py`, Phase 2)·Learn 자료(Phase 3) → 과정 파일 변환 | B | 2·3 |
 | `mylearner/extract/` | Python | DOCX·HWPX·PPTX 텍스트 뽑기 | A | 6 |
 | `mylearner/ai/` | Python | 서버×모델 프로필, 긴 자료 처리 단계 | B | 6 |
 | `mobile/android/` | Java | APK 껍데기(인터넷 권한 0) | B | 4 |
@@ -63,21 +64,22 @@
 
 - 과정: 원본(MWL `content/`·Learn `content/`·사용자 자료) → 변환·만들기 → **과정 파일**(머리 `{format, version, min_reader}`) → 브라우저가 읽어 그린다. 원본 → 산출물 단방향, 산출물을 손으로 고치지 않는다(CLAUDE.md 6절)
 - 기록: 브라우저가 사건을 덧붙인다 → 저장 어댑터 → 기록 파일(JSONL)·하루 스냅숏. 기기 사이는 파일로 합친다(합집합). 폐쇄망은 들여오기만
-- 형식의 자세한 값은 Phase 2 설계서에서 정한다(CLAUDE.md 0절 '핵심 상수')
+- 형식: 과정 파일 `mylearner-course` v1, 기록 파일 `mylearner-log` v1(첫 줄 머리 + 사건 한 줄씩), 사건 봉투 `{v, dev, seq, t, day, type}` — 값과 규칙은 `docs/P2_설계서_Core.md` 3.2·3.3절, 상수는 `web/core/constants.js` 의 `SHARED`
 
 ## 6. 공통 규약
 
 | 규약 | 내용 |
 |---|---|
 | 파일 머리 | 코드 파일 첫 주석·docstring 에 입력·출력·트리거·대응 문서(요구사항·설계서 경로)를 적는다(CLAUDE.md 4·6절) |
-| 도메인 상수 | Python 은 `mylearner/constants.py`, JS 는 `web/core/constants.js` 한 곳(Phase 2). **예외**: `tools/` 의 단독 도구는 들고 다니는 파일 하나라 자기 상수를 머리에 둔다 |
+| 도메인 상수 | Python 은 `mylearner/constants.py`, JS 는 `web/core/constants.js` 한 곳. 두 언어가 함께 쓰는 값은 `SHARED` 묶음으로 두고 `tests/unit/py/test_constants_shared.py` 가 같은지 본다. **예외**: `tools/` 의 단독 도구는 들고 다니는 파일 하나라 자기 상수를 머리에 둔다 |
 | 판별 설정 | `config/*.json`(AI 프리셋·허용 행선지·저장 어댑터·포장). 코드 분기 없음 |
 | 비밀 | 키는 로컬 서버가 읽는 파일에만, 커밋은 `*.example` 만. 화면·로그·결과 요약에 주소·키를 찍지 않는다. **AI 키를 보내는 조건**(P1 독립 점검, `docs/P1_설계서_Probe.md` 3.3절 '키 정책'): 리다이렉트를 따르지 않는다(3xx 처리기 자체를 끈다 — T-003), 서버가 JSON 401·403 으로 요구할 때만, 평문 http 는 프록시를 지나지 않게(urllib 의 `NO_PROXY` 판정을 믿지 않는다 — T-004). 서버가 준 글(Server 헤더·판·모델 이름)은 정해진 모양만 화면·결과로 낸다 |
-| 브라우저 JS | **classic script 만 쓴다** — `file://` 에서 `<script type="module">` 은 돌지 않고 `new Worker()` 는 `SecurityError` 다(2026-10-15 헤드리스 Chromium 153 으로 확인, 폐쇄망 Chrome 150 은 `browser_probe.html` 결과로 다시 본다). 파일마다 즉시 실행 함수로 감싸 전역 이름 하나(`MyLearner`)에만 붙이고, Node 시험을 위해 `module.exports` 도 둔다(Phase 2 에서 확정) |
+| 브라우저 JS | **classic script 만 쓴다** — `file://` 에서 `<script type="module">` 은 돌지 않고 `new Worker()` 는 `SecurityError` 다(2026-10-15 헤드리스 Chromium 153 으로 확인, 폐쇄망 Chrome 150 은 `browser_probe.html` 결과로 다시 본다). 파일마다 즉시 실행 함수로 감싸 전역 이름 하나(`MyLearner`)에만 붙이고, Node 시험을 위해 `module.exports` 도 둔다(2026-10-15 확정 — 꼴은 `docs/P2_설계서_Core.md` 3.1절, 실제 Chromium `file://` 확인은 `scripts/render_smoke.py`, 규칙 검사는 `scripts/check_core_js.py`) |
 | 자기 파일 읽기 | `file://` 에서 `fetch` 가 막힌다(같은 확인) → 데이터는 `<script>` 로 싣는 묶음 파일 또는 사용자가 고른 파일로 읽는다(Phase 3) |
 | 콘솔 출력 | cp949 로 나타낼 수 있는 글자만(한국어 Windows). 이모지·특수 기호를 쓰지 않는다 |
 | Python 판 | 3.9 문법·표준 라이브러리. 3.12~3.14 에서 없어진 모듈(`distutils`·`imp`·`cgi`·`asyncore` 등)을 쓰지 않는다 |
-| 날짜·시각 | 사건에는 UTC 시각과 그 기기의 학습일(`day`)을 함께 둔다(BRIEF 5.3-2, Phase 2) |
+| 날짜·시각 | 사건에는 UTC 시각(`toISOString` 꼴)과 그 기기의 학습일(`day`)을 함께 둔다(BRIEF 5.3-2). 학습일은 `day_start_hour`(기본 0 — 자정, P2 인터뷰 2번)에 바뀐다 |
+| 소스 글자 | JS·HTML 소스에 보이지 않는 글자(제어·서식·사용자 영역·U+2028/2029)를 날것으로 두지 않고 `\uXXXX` 로 쓴다(트러블슈팅 T-005, `scripts/check_core_js.py`) |
 
 ## 7. 기술 스택
 
@@ -87,7 +89,7 @@
 | 런타임 화면 | 바닐라 JS + 토큰 CSS, 외부 라이브러리 0 | Chrome 150 기준 |
 | 안드로이드 | WebView 껍데기(MWL 시제품 이식) | Phase 4 |
 | 시험(Python) | `unittest` + `scripts/coverage_lite.py` | 개발 VM 3.9.21·3.11.9, Playwright 이미지의 3.12.3, `python:3.14.8-slim` 의 3.14.8(2026-10-15 받음 — DeprecationWarning 은 실패) |
-| 시험(JS) | Node 내장 시험 실행기(⚠️ 커버리지 방식은 Phase 2 에서 확인) | `node:22-alpine`(Phase 2 에서 받아 태그를 고정한다) |
+| 시험(JS) | Node 내장 시험 실행기 + 내장 커버리지(`--experimental-test-coverage`, `web/core` 줄 90%·분기 80% — `scripts/run_js_tests.sh`) | `node:22.23.3-alpine`(2026-10-15 받음, digest `0a7108bf6c7b…`) |
 | 화면 확인 | Playwright 이미지의 Chromium(헤드리스) | `mcr.microsoft.com/playwright:v1.63.0-noble` — Chromium 153.0.8010.12, 이 VM 에 이미 있다(2026-10-15) |
 
 개발 전용 도구의 판은 `scripts/dev_tools.env` 한 곳에 적고 스크립트가 거기서 읽는다(CLAUDE.md 7절).
@@ -106,8 +108,8 @@
 
 | 등급 | Python | JS | 실행 |
 |---|---|---|---|
-| A 핵심 순수 로직 | `tests/unit/py/` | `tests/unit/js/`(Phase 2) | 시험 먼저 |
-| B 오케스트레이션·통합 | `tests/integration/py/`(가짜 서버) | `tests/integration/js/`(Phase 2~) | 구현 뒤 |
+| A 핵심 순수 로직 | `tests/unit/py/` | `tests/unit/js/` | 시험 먼저 |
+| B 오케스트레이션·통합 | `tests/integration/py/`(가짜 서버) | `tests/integration/js/` | 구현 뒤 |
 | 실제 외부 호출 | `tests/e2e/`(기본 실행 제외) | — | 손으로 |
 | C 화면·콘텐츠·도구 | 산출물 검사 스크립트(`scripts/check_*.py`)·헤드리스 스모크(`scripts/browser_smoke.py`) | — | 전체 검증 |
 
@@ -123,7 +125,9 @@
 | 검증 단계 더하기 | `scripts/verify.sh` 의 단계 목록 | P{N} 테스트결과서의 단계 표 |
 | 개발 도구 판 바꾸기 | `scripts/dev_tools.env` | 이 문서 7절 |
 | 새 문서 종류 | `scripts/verify_docs.py` 대상 묶음 | CLAUDE.md 9절 |
-| (Phase 2~) 계산 규칙 | `web/core/*.js` + 골든 벡터 | 그 Phase 설계서 |
+| 계산 규칙 | `web/core/*.js` + 골든 벡터(`tests/fixtures/mwl/`) | 그 Phase 설계서 |
+| core JS 파일 더하기 | `web/core/<이름>.js`(3.1절 꼴) | 싣는 순서 — `tests/unit/js/umd.test.js` 의 `ORDER`, `tests/ui/render_check.html`, `scripts/render_smoke.py` 의 수 |
+| MWL 기준 커밋 바꾸기 | `mylearner/constants.py` 의 `MWL_COMMIT` → `python3 scripts/import_mwl_fixtures.py` | CLAUDE.md 0절, 옮긴 코드의 머리 주석 |
 
 ## 11. 디렉토리 구조
 
@@ -133,15 +137,20 @@ MyLearner/
 ├── tools/                  단독 도구 — 폐쇄망에 들고 간다(파일 하나씩)
 │   ├── ai_probe.py
 │   └── browser_probe.html
+├── web/core/               계산 한 벌(JS, classic script) — Phase 2
+├── mylearner/              Python 패키지: constants.py · convert/mwl.py(MWL 과정 변환) — 서버는 Phase 3
 ├── scripts/                검증·포장(개발 VM). dev_tools.env 에 도구 판
 ├── tests/
-│   ├── unit/py/            등급 A (Python)
-│   ├── integration/py/     등급 B (Python) — fakes.py 가짜 AI 서버
+│   ├── unit/py/ · unit/js/             등급 A
+│   ├── integration/py/ · integration/js/  등급 B — fakes.py 가짜 AI 서버
+│   ├── fixtures/           고정 자료 — mwl/(MWL 골든 벡터 복사본·기준 커밋 source.json), XSS 사례, 렌더러 입력
+│   ├── realdata/           MWL 실데이터 대조(Node)
+│   ├── ui/                 CDP 로 Chromium 을 몬다(cdp.js), 렌더러 점검 페이지
 │   └── e2e/                실제 외부 호출(기본 실행 제외, 아직 없음)
 ├── docs/                   scope·Architecture·P{N} 문서·트러블슈팅 (+ screenshots/P{N}/)
 ├── history/                세션 기록
-├── dist/                   생성물(커밋하지 않음)
-│   (Phase 2~) web/ · mylearner/ · config/ · mobile/
+├── dist/                   생성물(커밋하지 않음 — 바꾼 MWL 과정 파일도)
+│   (Phase 3~) web/ 화면 · config/ · mobile/
 ```
 
 ## 12. 문서 간 추적성
@@ -149,6 +158,7 @@ MyLearner/
 | 묶음 | 요구사항 | 설계 | 코드 | 결과 |
 |---|---|---|---|---|
 | Phase 1 Probe | [`P1_요구사항정의서_Probe.md`](P1_요구사항정의서_Probe.md) FR-101~169 | [`P1_설계서_Probe.md`](P1_설계서_Probe.md) 6절 표 | `tools/`, `scripts/` | [`P1_테스트결과서_Probe.md`](P1_테스트결과서_Probe.md) 4절 |
+| Phase 2 Core | [`P2_요구사항정의서_Core.md`](P2_요구사항정의서_Core.md) FR-201~263 | [`P2_설계서_Core.md`](P2_설계서_Core.md) 6절 표 | `web/core/`, `mylearner/`, `scripts/` | [`P2_테스트결과서_Core.md`](P2_테스트결과서_Core.md) 4절 |
 
 코드 머리 주석이 요구사항·설계서 경로를 가리키고, 설계서 6절이 FR → 코드·시험을 가리킨다.
 

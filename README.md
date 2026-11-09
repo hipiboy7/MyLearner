@@ -2,14 +2,16 @@
 
 내가 넣은 자료로 강의·카드·퀴즈를 만들고 매일 복습해 몸에 익히는 **1인용 학습 플랫폼** — 폐쇄망 PC · 내 PC · 안드로이드 폰.
 
-**지금 상태(2026-10-15): Phase 1 끝, Phase 2 시작 전** — 폐쇄망 점검 도구 2종과 전체 검증 명령을 만들었다(Python 3.9·3.11·3.12·3.14 시험, 키 유출 독립 점검까지). 폐쇄망에서 돌리는 것은 사용자가 나중에 한다([`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md), CLAUDE.md 보류 결정 8). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다. GitHub `hipiboy7/MyLearner`(private)의 `main` 에 Phase 1 을 병합했다(2026-10-15, 브랜치 `impl-phase1` 은 남겨 둔다).
+**지금 상태(2026-11-09): Phase 2(코어, 화면 없음)까지 `main` 에 병합 — 다음은 Phase 3(PC 에서 배우기)** — 과정·기록 파일 형식, 기록 합치기(합집합)·늦은 복습 규칙, SM-2·하루 계획·숙련도·통계(MWL 골든 벡터 통과), 렌더러(MWL 135과와 같은 HTML·XSS 대책·입력 길이에 선형), 실습 정규식 선형 엔진, MWL 과정 변환기·진도 변환을 만들었다. 독립 점검 둘(기록 합치기·렌더러)의 지적을 반영했다. 써 보기는 [`docs/P2_체크리스트_Core.md`](docs/P2_체크리스트_Core.md)(사용자가 나중에 몰아서). Phase 1(폐쇄망 점검 도구 2종)도 `main` 에 있고, 폐쇄망에서 돌리는 것은 사용자가 나중에 한다([`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md), CLAUDE.md 보류 결정 8). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다.
 
-## 0. 빠른 시작 — 개발 VM (Phase 1)
+## 0. 빠른 시작 — 개발 VM (Phase 1·2)
 
 ```bash
 cd /data/projects/MyLearner
 bash scripts/check_env.sh        # 마지막 줄 READY
-bash scripts/verify.sh           # 전체 검증 12단계(약 1분 10초). Docker 단계를 빼려면 --quick
+bash scripts/verify.sh           # 전체 검증 18단계(약 2분). 느린 Docker 단계를 빼려면 --quick
+bash scripts/run_js_tests.sh     # JS 시험만(Docker Node 22) — 파일을 주면 그것만
+python3 scripts/check_mwl_real.py --out dist/courses/mwl.course.json   # MWL 미들웨어 과정 → 과정 파일 + 135과 렌더 대조
 python3 scripts/pack_probe.py    # 폐쇄망 점검 묶음 dist/mylearner-probe-v1.tgz
 ```
 

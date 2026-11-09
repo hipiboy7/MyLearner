@@ -1,0 +1,10 @@
+{
+  "commit": "e55b9c0",
+  "note": "scheduler_course.json 은 scheduler_cases.json 의 content 를 mylearner.convert.mwl.to_course 로 바꾼 것",
+  "path": "tests/fixtures/",
+  "repo": "MiddlewareLearner",
+  "sha256": {
+    "scheduler_cases.json": "790194c476ff7d9c5dd6d8dfa83a7841c4489361aa7c40ff8784122f77d317a1",
+    "srs_vectors.json": "6d3f510d6d9f744e778fc1d525c089ad47f89cbe1a61b6c8b285c6075ff03106"
+  }
+}

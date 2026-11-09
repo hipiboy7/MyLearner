@@ -1,6 +1,9 @@
 {
-  "_comment": "coverage_lite.py 등급 배정 — 파일 경로 앞부분 또는 '경로::최상위 함수이름 패턴'. CLAUDE.md 3절 등급표, docs/P1_설계서_Probe.md 2절과 맞아야 한다. 함수 단위 항목에 없는 줄은 파일 단위 항목을 따른다.",
-  "roots": ["tools", "mylearner"],
+  "_comment": "coverage_lite.py 등급 배정 — 파일 경로 앞부분 또는 '경로::최상위 함수이름 패턴'. CLAUDE.md 3절 등급표, docs/P1_설계서_Probe.md 2절·docs/P2_설계서_Core.md 2절과 맞아야 한다. JS(web/core)는 scripts/run_js_tests.sh 가 Node 커버리지로 잰다. 함수 단위 항목에 없는 줄은 파일 단위 항목을 따른다.",
+  "roots": [
+    "tools",
+    "mylearner"
+  ],
   "A": [
     "tools/ai_probe.py::crc16",
     "tools/ai_probe.py::canonical",
@@ -51,10 +54,14 @@
     "tools/ai_probe.py::reasoning_*",
     "tools/ai_probe.py::combine_*",
     "tools/ai_probe.py::_schema_ok",
-    "tools/ai_probe.py::chat_body"
+    "tools/ai_probe.py::chat_body",
+    "mylearner/constants.py"
   ],
   "B": [
-    "tools/ai_probe.py"
+    "tools/ai_probe.py",
+    "mylearner/convert/mwl.py",
+    "mylearner/__init__.py",
+    "mylearner/convert/__init__.py"
   ],
   "exclude": [],
   "thresholds": {
