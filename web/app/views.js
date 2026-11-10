@@ -61,7 +61,7 @@
     var sess = st.sessions.filter(function (x) { return x.date === A.today; })[0], spent = sess ? sess.minutes : 0;
     var goal = p.is_study_day ? s.weekday_minutes : s.weekend_minutes;
     var streak = T.streak(st.sessions.map(function (x) { return x.date; }), A.today, s.study_days);
-    var html = '<div class="today-head"><div><p class="eyebrow">' + esc(A.today) + ' (' + WEEKDAY[D.isoWeekday(A.today) - 1] + ')' +
+    var html = (ns.mergeView ? ns.mergeView.reminder() : '') + '<div class="today-head"><div><p class="eyebrow">' + esc(A.today) + ' (' + WEEKDAY[D.isoWeekday(A.today) - 1] + ')' +
       (main ? ' · ' + esc(main.title) : '') + (p.week ? ' · ' + p.week + '주차' : '') + '</p><h1>' + (p.theme ? esc(p.theme) : '오늘의 학습') + '</h1></div>';
     html += '<div class="goal"><div class="goal-row"><span>오늘 학습</span><span>연속 ' + streak + '일</span></div><div class="goal-v">' + esc(spent) + '<small> / ' + esc(goal) + '분</small></div>' +
       ui.bar('오늘 학습 시간', spent, goal) + '<div class="goal-row"><span>계획 약 ' + p.total_minutes + '분</span><span>' + (p.is_study_day ? '학습일' : '비학습일') + '</span></div></div></div>';

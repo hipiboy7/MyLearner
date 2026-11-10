@@ -3,11 +3,12 @@
 데이터 폴더(기본: 묶음 폴더의 data/):
   device.json  {"dev": "<16자리 16진>"}           token  접속 토큰(64자리 16진, 처음 켤 때 만든다)
   log.jsonl    mylearner-log v1 — 머리 한 줄 + 사건 줄(서버는 줄을 해석하지 않는다 — 같은 줄 = 같은 글)
-  courses/<id>.json   사용자 과정        backups/<UTC 시각>-<까닭>.jsonl   백업(들여오기 전 20개·하루 14개)
+  courses/<id>.json   사용자 과정        backups/<UTC 시각>-<까닭>.jsonl   백업(들여오기 전 각 20개·되살리기 전 10개·하루 14개)
   daily        마지막 하루 백업의 날짜(서버 현지 날짜)
 규칙은 web/store/common.js 와 같다(백업 이름·남길 것). 화면이 줄을 해석하고(log.merge), 서버는 합집합만 한다.
 입력: 데이터 폴더 경로·시계 / 출력: DataDir / 트리거: mylearner/server.py
-문서: docs/P3_요구사항정의서_PC.md FR-321·324·335, docs/P3_설계서_PC.md 3.2·3.3절
+되살리기(P4): backup_diff(지금에만 있는 줄·백업에만 있는 줄의 수 — 백업 글은 내주지 않는다)·restore((지금 − 뺄 줄) ∪ 백업, 먼저 'restore' 백업).
+문서: docs/P3_요구사항정의서_PC.md FR-321·324·335, docs/P3_설계서_PC.md 3.2·3.3절, docs/P4_설계서_Mobile.md 3.6절
 """
 from __future__ import annotations
 
@@ -26,7 +27,7 @@ LOG_HEADER = json.dumps({"format": C.SHARED["LOG_FORMAT"], "version": C.SHARED["
                          "min_reader": C.SHARED["LOG_MIN_READER"]}, sort_keys=True, separators=(",", ":"))
 MAX_LINE_BYTES = 65536
 MAX_LINES = 50000
-KEEP = {"import-mwl": 20, "daily": 14}
+KEEP = {"import-mwl": 20, "import-merge": 20, "restore": 10, "daily": 14}   # web/store/common.js KEEP 와 같다(시험이 본다)
 REASON_RE = re.compile(r"^[a-z][a-z0-9-]{0,31}$")
 NAME_RE = re.compile(r"^(\d{8}T\d{9}Z)-([a-z][a-z0-9-]{0,31})$")
 DEVICE_RE = re.compile(C.SHARED["DEVICE_RE"])
@@ -275,6 +276,32 @@ class DataDir:
         if not p.is_file():
             raise FileNotFoundError(name)
         return p.read_text(encoding="utf-8")
+
+    # -- 되살리기(P4 FR-440~443) — 줄을 해석하지 않고 집합 연산만 한다. 어느 줄이 '이 기기' 것인지는 화면이 정해 remove 로 보낸다
+    def backup_diff(self, name: str) -> Tuple[List[str], int]:
+        backup = split_log(self.backup_text(name))
+        with self.lock:
+            have = self._read_lines()
+        inb = set(backup)
+        only_current = [ln for ln in dict.fromkeys(have) if ln not in inb]
+        return only_current, len(inb - set(have))
+
+    def restore(self, name: str, remove) -> dict:
+        if not isinstance(remove, list):
+            raise StorageError("remove 는 목록이어야 한다")
+        if len(remove) > MAX_LINES:
+            raise StorageError("한 번에 %d 줄까지" % MAX_LINES)
+        drop = set(check_line(x) for x in remove)
+        backup = split_log(self.backup_text(name))
+        with self.lock:
+            have = self._read_lines()
+            pre = self._backup_locked("restore", have)   # 실패하면 여기서 멈춘다 — 아무것도 바꾸지 않는다
+            inb = set(backup)
+            kept = [ln for ln in have if ln not in drop or ln in inb]
+            out, added = union(kept, backup)
+            removed = len(set(have)) - len(set(kept))
+            _atomic_write(self.log_path, ("\n".join([LOG_HEADER] + out) + "\n").encode("utf-8"))
+            return {"removed": removed, "added": added, "backup": pre, "total": len(out)}
 
     # -- 사용자 과정
     def courses(self) -> List[dict]:

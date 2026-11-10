@@ -1,7 +1,7 @@
 /* MyLearner web/store/server.js — 서버 모드 저장 어댑터(등급 B): 로컬 서버(mylearner/server.py)의 /api/… 를 부른다.
  * 인터페이스는 store/browser.js 와 같다(docs/P3_설계서_PC.md 3.2절). 기록 파일·백업·사용자 과정은 서버의 데이터 폴더에 있다.
  * 입력: {fetch, base('' = 같은 출처)} / 출력: MyLearner.storeServer.create(…)·probe(…) / 트리거: app/state.js(http://127.0.0.1)
- * 문서: docs/P3_요구사항정의서_PC.md FR-320·321·327, docs/P3_설계서_PC.md 3.2·3.3절 */
+ * 문서: docs/P3_요구사항정의서_PC.md FR-320·321·327, docs/P3_설계서_PC.md 3.2·3.3절, docs/P4_설계서_Mobile.md 3.6절(backupDiff·restore) */
 (function (root, factory) {
   var node = typeof module === 'object' && module.exports;
   var ns = node ? null : (root.MyLearner = root.MyLearner || {});
@@ -55,6 +55,14 @@
       backup: function (reason) { return json(env, '/api/backups', 'POST', { reason: reason }).then(function (j) { return { name: j.name }; }); },
       listBackups: function () { return json(env, '/api/backups').then(function (j) { return j.backups || []; }); },
       backupText: function (name) { return call(env, '/api/backups/' + encodeURIComponent(name)).then(function (r) { return r.text(); }); },
+      // 되살리기(P4): 서버는 백업 글을 내주지 않고 지금 기록에만 있는 줄과 백업에만 있는 줄의 수만 준다(폐쇄망판도 쓴다 — FR-451)
+      backupDiff: function (name) {
+        return json(env, '/api/backups/' + encodeURIComponent(name) + '/diff').then(function (j) { return { onlyCurrent: j.only_current || [], onlyBackup: j.only_backup || 0 }; });
+      },
+      restore: function (name, remove) {
+        return json(env, '/api/backups/' + encodeURIComponent(name) + '/restore', 'POST', { remove: remove || [] })
+          .then(function (j) { return { removed: j.removed, added: j.added, backup: j.backup }; });
+      },
       usage: function () { return Promise.resolve(null); }
     };
   }

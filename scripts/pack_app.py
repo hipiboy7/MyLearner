@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-"""앱 묶음 — 과정 자료를 JS 로 감싸고(web/data), 판 설정을 넣고(web/config.js), 반입 묶음(.tgz, 인터넷판은 .zip 도)을 만든다 (FR-302·353·354).
+"""앱 묶음 — 과정 자료를 JS 로 감싸고(web/data), 판 설정을 넣고(web/config.js), 반입 묶음(.tgz·.zip — 폐쇄망 반입은 zip 이 기본)을 만든다 (FR-302·353·354, P4 FR-409·450).
 
 입력:  web/(index.html·boot.js·styles.css·app/·core/·store/), mylearner/(서버 파일만), config/editions/<판>.json, config/bundle/(안내·실행 파일),
        과정 파일(--courses, 기본 dist/courses/*.course.json — python3 scripts/check_mwl_real.py --out … · python3 -m mylearner.convert.learn …)
 출력:  --web-data            web/config.js(인터넷판, 개발용) · web/data/manifest.js · web/data/courses/<id>.js (커밋하지 않음)
-       --edition 판          dist/mylearner-<판>-v<판번호>.tgz (internet 은 .zip 도). 크기와 SHA-256 을 찍는다
-       --check               두 판을 두 번씩 만들어 바이트가 같은지와 판별 검사만 보고 쓰지 않는다
+       --edition 판          dist/mylearner-<판>-v<판번호>.tgz 와 .zip(두 판 모두 — P4). 크기와 SHA-256 을 찍는다
+       --edition mobile --web-out 폴더   <폴더>/web/ 에 APK 용 web 사본(모바일판 config.js + data/) — scripts/build_android.sh 가 부른다
+       --check               두 판(+ 모바일판 web 사본)을 두 번씩 만들어 바이트가 같은지와 판별 검사만 보고 쓰지 않는다
 재현성: 이름순, mtime 고정, uid/gid 0, USTAR, gzip 머리의 이름·시각 없음, ZIP 시각 고정 -> 같은 입력이면 같은 바이트
 판별:  폐쇄망판 — 앱 파일(과정 자료 밖)에 외부 URL 0(P1 pack_probe 규칙), config 의 export 거짓·link_hosts 빔·ai_presets 빔.
        과정 자료 안의 외부 주소는 읽을거리라 호스트별 개수만 찍는다(폐쇄망판은 링크로 만들지 않는다 — P3 인터뷰결과서 3절)
 트리거: scripts/verify.sh 의 앱 묶음 단계(--check), 개발 중 화면(--web-data), 반입할 때 손으로(--edition)
-문서:  docs/P3_설계서_PC.md 3.1·3.9절
+문서:  docs/P3_설계서_PC.md 3.1·3.9절, docs/P4_설계서_Mobile.md 3.1·3.8절
 사용:  python3 scripts/pack_app.py --web-data [--courses F ...]
        python3 scripts/pack_app.py --edition closed|internet [--courses F ...] [--out DIR]
+       python3 scripts/pack_app.py --edition mobile --web-out DIR [--courses F ...]
        python3 scripts/pack_app.py --check [--courses F ...]
 """
 from __future__ import annotations
@@ -38,7 +40,8 @@ BOM = b"\xef\xbb\xbf"
 SERVER_FILES = ["__init__.py", "__main__.py", "constants.py", "server.py", "storage.py"]
 WEB_TOP = ["index.html", "boot.js", "styles.css"]
 WEB_DIRS = ["app", "core", "store"]
-EDITIONS = ("closed", "internet")
+EDITIONS = ("closed", "internet")      # 반입 묶음(서버 + 화면)
+WEB_ONLY = ("mobile",)                 # 화면 사본만(APK 에 싣는다 — 서버 없음)
 COURSE_FILE = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 URL_HOST = re.compile(r"https?://([^\s/'\"<>),\\]+)")
 
@@ -54,6 +57,7 @@ def _json(obj) -> str:
 
 
 def config_js(ed: dict) -> str:
+    ed = dict(ed, app_version=__version__)   # 교환 파일 머리·설정 '이 앱' 줄이 쓴다(P4 설계서 3.1절)
     return ("/* MyLearner web/config.js — 판 설정(%s). 생성물: python3 scripts/pack_app.py — 손으로 고치지 않는다(config/editions/%s.json 을 고친다) */\n"
             "(function (root) { 'use strict'; (root.MyLearner = root.MyLearner || {}).config = %s; })(typeof self !== 'undefined' ? self : this);\n"
             % (ed["edition"], ed["edition"], _json(ed)))
@@ -100,11 +104,10 @@ def top_name(ed: str) -> str:
     return "mylearner-%s-v%s" % (ed, __version__)
 
 
-def bundle_files(ed_name: str, courses) -> dict:
+def web_files(ed_name: str, courses) -> dict:
+    """화면 파일만 — {'web/...': bytes}. 반입 묶음과 APK 사본이 같은 것을 쓴다"""
     ed = edition(ed_name)
     files = {}
-    for f in SERVER_FILES:
-        files["mylearner/" + f] = (ROOT / "mylearner" / f).read_bytes()
     for f in WEB_TOP:
         files["web/" + f] = (ROOT / "web" / f).read_bytes()
     for d in WEB_DIRS:
@@ -113,6 +116,14 @@ def bundle_files(ed_name: str, courses) -> dict:
     files["web/config.js"] = config_js(ed).encode("utf-8")
     for k, v in data_files(courses).items():
         files["web/data/" + k] = v
+    return files
+
+
+def bundle_files(ed_name: str, courses) -> dict:
+    ed = edition(ed_name)
+    files = web_files(ed_name, courses)
+    for f in SERVER_FILES:
+        files["mylearner/" + f] = (ROOT / "mylearner" / f).read_bytes()
     port = str((ed.get("server") or {}).get("port", ""))
     readme = (ROOT / "config" / "bundle" / "README_KO.txt").read_text(encoding="utf-8")
     readme = readme.replace("@EDITION@", ed.get("label", ed_name)).replace("@VERSION@", __version__).replace("@PORT@", port)
@@ -149,6 +160,34 @@ def zip_bytes(top: str, files: dict) -> bytes:
             zi.compress_type, zi.external_attr, zi.create_system = zipfile.ZIP_DEFLATED, 0o644 << 16, 3
             z.writestr(zi, files[name])
     return buf.getvalue()
+
+
+def unpacked(blob: bytes, top: str, kind: str) -> dict:
+    """만든 묶음을 다시 풀어 {이름: 바이트} — 두 꼴(.tgz·.zip)이 같은 파일을 담았는지 본다(P4 FR-450)"""
+    out = {}
+    if kind == "zip":
+        with zipfile.ZipFile(io.BytesIO(blob)) as z:
+            for n in z.namelist():
+                out[n[len(top) + 1:]] = z.read(n)
+    else:
+        with tarfile.open(fileobj=io.BytesIO(blob), mode="r:gz") as t:
+            for m in t.getmembers():
+                if m.isfile():
+                    out[m.name[len(top) + 1:]] = t.extractfile(m).read()
+    return out
+
+
+def mobile_problems(files: dict):
+    """모바일판 web 사본 — 외부 AI 프리셋 없음·서버 없음, 웹 진입 파일과 과정 목록이 있다"""
+    out = []
+    ed = edition("mobile")
+    if ed.get("ai_presets") != []:
+        out.append("모바일판 ai_presets 가 비어 있지 않다(폰은 AI 없음 — BRIEF 5.2)")
+    if ed.get("server") is not None:
+        out.append("모바일판 server 는 null 이다(APK 에 서버 없음)")
+    out += ["사본에 없다: %s" % n for n in ("web/index.html", "web/config.js", "web/data/manifest.js") if n not in files]
+    out += ["사본에 서버 파일: %s" % n for n in files if not n.startswith("web/")]
+    return out
 
 
 def problems_of(ed_name: str, files: dict):
@@ -208,11 +247,27 @@ def main(argv=None) -> int:
     ap.add_argument("--out", default=str(ROOT / "dist"))
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--web-data", action="store_true")
-    g.add_argument("--edition", choices=EDITIONS)
+    g.add_argument("--edition", choices=EDITIONS + WEB_ONLY)
     g.add_argument("--check", action="store_true")
+    ap.add_argument("--web-out", default=None, help="--edition mobile 과 함께: <폴더>/web/ 에 화면 사본")
     args = ap.parse_args(argv)
     paths = args.courses if args.courses is not None else default_courses()
     courses = load_courses(paths)
+    if args.edition in WEB_ONLY or args.web_out:
+        if args.edition not in WEB_ONLY or not args.web_out:
+            raise SystemExit("--web-out 은 --edition mobile 과 함께 쓴다(반입 묶음은 --edition closed|internet)")
+        files = web_files(args.edition, courses)
+        problems = mobile_problems(files) + (["두 번 만든 사본이 다르다"] if files != web_files(args.edition, courses) else [])
+        for pr in problems:
+            print("문제(mobile): %s" % pr)
+        if problems:
+            return 1
+        out = Path(args.web_out)
+        for name, data in sorted(files.items()):
+            (out / name).parent.mkdir(parents=True, exist_ok=True)
+            (out / name).write_bytes(data)
+        print("모바일판 web 사본: %s - 파일 %d개 · 과정 %d개(%s)" % (out / "web", len(files), len(courses), ", ".join(c["id"] for c in courses) or "없음"))
+        return 0
     if args.web_data:
         write_web_data(courses)
         print("web/data: 과정 %d개(%s) · web/config.js(인터넷판)" % (len(courses), ", ".join(c["id"] for c in courses) or "없음"))
@@ -226,9 +281,11 @@ def main(argv=None) -> int:
         problems, hosts = problems_of(ed, files)
         if a != b:
             problems.append("두 번 만든 묶음의 바이트가 다르다")
-        z = zip_bytes(top, files) if ed == "internet" else None
-        if z is not None and z != zip_bytes(top, bundle_files(ed, courses)):
+        z = zip_bytes(top, files)
+        if z != zip_bytes(top, bundle_files(ed, courses)):
             problems.append("두 번 만든 ZIP 의 바이트가 다르다")
+        if unpacked(a, top, "tgz") != files or unpacked(z, top, "zip") != files:   # 판별 검사는 files 에 했다 — 두 꼴이 그 파일을 그대로 담았나
+            problems.append(".tgz·.zip 을 풀면 검사한 파일과 다르다")
         for p in problems:
             print("문제(%s): %s" % (ed, p))
         bad += len(problems)
@@ -244,8 +301,14 @@ def main(argv=None) -> int:
             if z is not None:
                 (out / (top + ".zip")).write_bytes(z)
                 print("만듦: %s" % (out / (top + ".zip")))
+    if args.check:
+        mf = web_files("mobile", courses)
+        mp = mobile_problems(mf) + (["모바일판 사본을 두 번 만들어 다르다"] if mf != web_files("mobile", courses) else [])
+        for pr in mp:
+            print("문제(mobile): %s" % pr)
+        bad += len(mp)
     if args.check and not bad:
-        print("두 판 모두 두 번 만들어 같음 · 폐쇄망판 앱 파일 외부 URL 0 · 내보내기 꺼짐 · 외부 AI 프리셋 없음")
+        print("두 판 모두 두 번 만들어 같음(.tgz·.zip) · 폐쇄망판 앱 파일 외부 URL 0 · 내보내기 꺼짐 · 외부 AI 프리셋 없음 · 모바일판 사본 같음·AI 없음")
     return 1 if bad else 0
 
 

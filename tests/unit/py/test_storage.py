@@ -33,6 +33,14 @@ class PureTest(unittest.TestCase):
         self.assertNotIn("junk", dele)
         self.assertEqual(S.prune([]), [])
 
+    def test_keep_table_same_as_js(self):   # P4 — 백업 남기기 표는 web/store/common.js 와 같다(FR-443)
+        import re
+        js = (Path(__file__).resolve().parents[3] / "web" / "store" / "common.js").read_text(encoding="utf-8")
+        m = re.search(r"var KEEP = \{([^}]*)\}", js)
+        pairs = dict((k.strip().strip("'"), int(v)) for k, v in (x.split(":") for x in m.group(1).split(",")))
+        self.assertEqual(pairs, S.KEEP)
+        self.assertEqual(S.KEEP, {"import-mwl": 20, "import-merge": 20, "restore": 10, "daily": 14})
+
     def test_check_line(self):
         self.assertEqual(S.check_line('  {"a":1}  '), '{"a":1}')
         for bad in (1, None, "a\nb", "a\rb", "   ", "x" * (S.MAX_LINE_BYTES + 1)):
@@ -231,3 +239,58 @@ class DataDirTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RestoreTest(unittest.TestCase):   # P4 FR-440~443 — 결과 = (지금 − 뺄 줄) ∪ 백업, 백업 글은 밖으로 내지 않고 차이만
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="ml-restore-"))
+        self.clock = [dt.datetime(2026, 11, 10, 1, 0, 0)]
+        self.d = S.DataDir(self.tmp / "data", now=lambda: self.clock[0], today=lambda: dt.date(2026, 11, 10))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def tick(self):
+        self.clock[0] += dt.timedelta(seconds=1)
+
+    def test_diff_and_restore_round_trip(self):
+        self.d.append(["a", "b"])
+        self.tick()
+        name = self.d.backup("import-merge")
+        self.d.append(["c", "d"])
+        self.assertEqual(self.d.backup_diff(name), (["c", "d"], 0))
+        self.tick()
+        r = self.d.restore(name, ["c", "a"])          # 'a' 는 백업에 있어 남는다
+        self.assertEqual((r["removed"], r["added"], r["total"]), (1, 0, 3))
+        self.assertEqual(S.reason_of(r["backup"]), "restore")
+        self.assertEqual(S.split_log(self.d.log_text()), ["a", "b", "d"])
+        self.tick()
+        back = self.d.restore(r["backup"], [])         # 되살리기 전 백업을 되살리면 돌아온다
+        self.assertEqual(back["added"], 1)
+        self.assertEqual(sorted(S.split_log(self.d.log_text())), ["a", "b", "c", "d"])
+
+    def test_restore_checks_inputs(self):
+        self.d.append(["a"])
+        name = self.d.backup("import-merge")
+        with self.assertRaises(FileNotFoundError):
+            self.d.backup_diff("20200101T000000000Z-daily")
+        with self.assertRaises(S.StorageError):
+            self.d.backup_diff("../token")
+        for bad in ("x", ["a\nb"], [1], ["x"] * (S.MAX_LINES + 1)):
+            with self.assertRaises(S.StorageError):
+                self.d.restore(name, bad)
+        self.assertEqual(S.split_log(self.d.log_text()), ["a"], "거부하면 아무것도 바꾸지 않는다")
+        self.assertEqual([b["reason"] for b in self.d.list_backups()], ["import-merge"], "거부하면 restore 백업도 만들지 않는다")
+
+    def test_restore_backup_failure_changes_nothing(self):
+        self.d.append(["a"])
+        name = self.d.backup("import-merge")
+        self.d.append(["b"])
+        orig = S.DataDir._backup_locked
+        S.DataDir._backup_locked = lambda *a, **k: (_ for _ in ()).throw(OSError("disk full"))
+        try:
+            with self.assertRaises(OSError):
+                self.d.restore(name, ["b"])
+        finally:
+            S.DataDir._backup_locked = orig
+        self.assertEqual(S.split_log(self.d.log_text()), ["a", "b"])

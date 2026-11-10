@@ -1,2 +1,2 @@
 /* MyLearner web/config.js — 판 설정(internet). 생성물: python3 scripts/pack_app.py — 손으로 고치지 않는다(config/editions/internet.json 을 고친다) */
-(function (root) { 'use strict'; (root.MyLearner = root.MyLearner || {}).config = {"ai_presets":[],"edition":"internet","export":true,"label":"인터넷판","link_hosts":["*"],"server":{"port":8770},"stats_scope":"이 기기에 모인 기록(이 기기 + 들여온 기록)"}; })(typeof self !== 'undefined' ? self : this);
+(function (root) { 'use strict'; (root.MyLearner = root.MyLearner || {}).config = {"ai_presets":[],"app_version":"0.4.0","edition":"internet","export":true,"label":"인터넷판","link_hosts":["*"],"remind_export_days":0,"server":{"port":8770},"stats_scope":"이 기기에 모인 기록(이 기기 + 들여온 기록)"}; })(typeof self !== 'undefined' ? self : this);

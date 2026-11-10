@@ -142,5 +142,6 @@
     return st;
   }
 
-  return { run: run, applies: applies };
+  // 다시 계산이 아는 사건 종류 — 합치기 미리보기가 '모르는 종류'를 센다(core/merge.js)
+  return { run: run, applies: applies, KNOWN: Object.keys(H).sort() };
 });

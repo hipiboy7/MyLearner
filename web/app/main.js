@@ -8,7 +8,7 @@
   var ns = root.MyLearner = root.MyLearner || {};
   var A = ns.app, ui = ns.ui, esc = ui.esc, V = ns.views, ACT = ns.actions, doc = root.document;
   var NAV = { today: 'today', review: 'review', learn: 'today', lab: 'today', drill: 'today', quiz: 'today', check: 'check', checks: 'check', wrong: 'wrong',
-    stats: 'stats', journal: 'journal', courses: 'courses', map: 'courses', glossary: 'glossary', settings: 'settings', 'import': 'settings' };
+    stats: 'stats', journal: 'journal', courses: 'courses', map: 'courses', glossary: 'glossary', settings: 'settings', 'import': 'settings', restore: 'settings' };
 
   function parts() {
     return root.location.hash.replace(/^#\/?/, '').split('/').map(function (p) { try { return decodeURIComponent(p); } catch (e) { return p; } });
@@ -51,7 +51,7 @@
   }
   // 기록을 만드는 행동 — 읽기 전용 탭(다른 탭이 쓰는 중)에서는 누르기 전에 막는다(독립 점검 S1·S8). 화면 상태만 바꾸는 행동은 둔다
   var WRITES = { grade: 1, hold: 1, lessonDone: 1, labSubmit: 1, drillSave: 1, quizSubmit: 1, checkSubmit: 1, setMain: 1, unhold: 1,
-    journalSubmit: 1, settingsSubmit: 1, retrySave: 1, impRun: 1 };
+    journalSubmit: 1, settingsSubmit: 1, retrySave: 1, impRun: 1, mergeRun: 1, restoreRun: 1 };
   function allowed(name) {
     if (!WRITES[name] || A.canWrite()) return true;
     ui.banner('다른 탭이 기록을 쓰고 있어 이 탭에서는 기록할 수 없습니다 - 위의 [이 탭에서 쓰기]를 누르세요', 'bad');
@@ -105,6 +105,7 @@
   doc.addEventListener('change', function (ev) {
     var t = ev.target;
     if (t && t.id === 'mwl-file' && t.files && t.files[0] && ns.importFile) ns.importFile(t.files[0]);
+    if (t && t.id === 'merge-file' && t.files && t.files[0] && ns.mergeFile) ns.mergeFile(t.files[0]);
   });
 
   function init() {
@@ -119,9 +120,9 @@
     if (eb) eb.textContent = A.cfg.label || '';
     A.boot().then(function () {
       var mb = doc.getElementById('mode-badge');
-      mb.textContent = A.store.kind === 'server' ? '서버 모드' : '브라우저 모드';
+      mb.textContent = A.storeLabel();
       mb.title = '기록 저장 위치: ' + A.where;
-      doc.getElementById('foot-info').textContent = 'MyLearner ' + (A.cfg.label || '') + ' · 과정 ' + A.courses.length + '개 · ' + (A.store.kind === 'server' ? '서버 저장' : '브라우저 저장');
+      doc.getElementById('foot-info').textContent = 'MyLearner ' + (A.cfg.label || '') + ' · 과정 ' + A.courses.length + '개 · ' + A.storeLabel();
       if (A.problems.length) ui.banner('싣지 못한 과정이 ' + A.problems.length + '개 있습니다 - 과정 화면을 보세요', 'bad');
       root.addEventListener('hashchange', route);
       if (!root.location.hash) root.location.hash = '#/today'; else route();

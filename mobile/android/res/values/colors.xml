@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 색은 web/styles.css 와 같다: page 는 page 변수(밝게), brand 는 accent 변수(밝게). 어두운 화면은 values-night -->
+<resources>
+    <color name="page">#F5F6F8</color>
+    <color name="brand">#1F5FBF</color>
+    <color name="brand_ink">#FFFFFF</color>
+</resources>

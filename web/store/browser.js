@@ -1,6 +1,7 @@
 /* MyLearner web/store/browser.js — 브라우저 저장 어댑터(등급 B, 보류 결정 7 잠정): 기록은 localStorage 의 학습일 달별 키,
  * 큰 것(사용자 과정·백업)은 KV(IndexedDB — store/idb.js)에 둔다. 저장소 객체를 주입받아 Node 에서 가짜로 시험한다.
  * 인터페이스는 store/server.js 와 같다(docs/P3_설계서_PC.md 3.2절): init·loadLog·append·loadCourses·saveCourse·backup·listBackups·backupText·usage·seqFloor
+ *   + 되살리기 backupDiff·restore(docs/P4_설계서_Mobile.md 3.6절). store/android.js 가 다리의 파일 KV 를 ls·kv 꼴로 감싸 이것을 그대로 쓴다
  * 입력: {ls(localStorage 꼴), kv(get·put·keys·del 약속 — 없으면 null), now() → Date, random(n) → 바이트,
  *        lock(fn) → 약속(있으면 달 키 읽기-합치기-쓰기를 그 안에서 — 브라우저는 navigator.locks, 독립 점검 S11)}
  * 출력: MyLearner.storeBrowser.create(…) / 트리거: app/state.js(file:// 또는 서버가 없을 때)
@@ -50,6 +51,24 @@
       });
     }
 
+    function backupLines(name) {
+      return Promise.resolve().then(function () { needKv('백업 읽기'); return kv.get('backup_text', name); }).then(function (text) {
+        if (typeof text !== 'string') throw new Error('백업이 없습니다: ' + name);
+        var f = L.readFile(text);
+        if (!f.ok) throw new Error('백업을 읽을 수 없습니다(' + f.error + '): ' + name);
+        return f.lines;
+      });
+    }
+    // 달 키를 결과 줄로 다시 쓴다 — 빈 키는 지운다
+    function rewrite(lines) {
+      var groups = SC.groupByKey(lines);
+      logKeys().forEach(function (k) { if (!groups[k]) ls.removeItem(k); });
+      Object.keys(groups).sort().forEach(function (k) {
+        var text = SC.joinLines(groups[k]);
+        if (ls.getItem(k) !== text) ls.setItem(k, text);
+      });
+    }
+
     var api = {
       kind: 'browser',
       init: function () {
@@ -96,6 +115,21 @@
         });
       },
       backupText: function (name) { return Promise.resolve().then(function () { needKv('백업 읽기'); return kv.get('backup_text', name); }); },
+      backupDiff: function (name) {
+        return backupLines(name).then(function (b) { var d = SC.diffLines(allLines(), b); return { onlyCurrent: d.onlyCurrent, onlyBackup: d.onlyBackup.length }; });
+      },
+      // 지금 기록을 'restore' 로 백업한 뒤 (지금 − remove) ∪ 백업 — 백업이 실패하면 아무것도 바꾸지 않는다
+      restore: function (name, remove) {
+        var b, pre;
+        return backupLines(name).then(function (lines) { b = lines; return backup('restore'); }).then(function (r) {
+          pre = r.name;
+          return lock(function () {
+            var res = SC.restoreLines(allLines(), b, remove || []);
+            rewrite(res.lines);
+            return { removed: res.removed, added: res.added, backup: pre };
+          });
+        });
+      },
       usage: function () {
         var chars = 0, keys = 0;
         for (var i = 0; i < ls.length; i++) {

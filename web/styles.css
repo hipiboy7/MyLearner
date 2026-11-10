@@ -327,6 +327,9 @@ html[data-shell="android"] .mode { display: none; }
 .cmp td.num, .cmp th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .import-steps { padding-left: 1.2rem; } .import-steps li { margin: .3rem 0; }
 .notice { font-size: .875rem; color: var(--ink-2); border-left: 3px solid var(--line-2); padding: .2rem 0 .2rem .7rem; margin: .8rem 0; }
+/* 내보내기 알림 띠(P4 FR-413) — 오늘 맨 위. 글자는 본문색(대비), 테두리·바탕만 경고색 */
+.notice.remind { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; color: var(--ink); border: 1px solid var(--warn); border-left-width: 4px; border-radius: var(--radius); background: var(--warn-soft); padding: .6rem .9rem; margin: 0 0 1rem; }
+.notice.remind p { margin: 0; }
 .err-box { background: var(--bad-soft); color: var(--bad); border-radius: var(--radius); padding: .6rem .9rem; margin: 0 0 1rem; }
 .err-box pre { background: transparent; color: inherit; margin: .4rem 0 0; white-space: pre-wrap; }
 .loading { color: var(--ink-2); }

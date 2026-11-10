@@ -6,5 +6,6 @@
   "link_hosts": ["*"],
   "server": {"port": 8770},
   "stats_scope": "이 기기에 모인 기록(이 기기 + 들여온 기록)",
-  "ai_presets": []
+  "ai_presets": [],
+  "remind_export_days": 0
 }
