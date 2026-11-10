@@ -2,7 +2,7 @@
 
 내가 넣은 자료로 강의·카드·퀴즈를 만들고 매일 복습해 몸에 익히는 **1인용 학습 플랫폼** — 폐쇄망 PC · 내 PC · 안드로이드 폰.
 
-**지금 상태(2026-11-09): Phase 3(PC 에서 배우기) 진행 중 — 브랜치 `impl-phase3`** — 화면(오늘·복습·강의·실습·드릴·퀴즈·점검·통계·과정·설정), 로컬 서버(`python3 -m mylearner serve`), 저장 어댑터(서버 = 파일, 더블클릭 = 브라우저 저장소), MWL 진도 들여오기(병행), Learn 자료 변환, 반입 묶음(`.tgz`)을 만들었다. Phase 2(코어)까지는 `main` 에 있다. 써 보기는 Phase 3 체크리스트(만드는 중), Phase 1·2 는 [`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)·[`docs/P2_체크리스트_Core.md`](docs/P2_체크리스트_Core.md). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다.
+**지금 상태(2026-11-10): Phase 3(PC 에서 배우기)까지 `main` 에 병합 — 다음은 Phase 4(폰에서 배우기 + 합치기)** — 화면(오늘·복습·강의·실습·드릴·퀴즈·점검·통계·과정·설정), 로컬 서버(`python3 -m mylearner serve`), 저장 어댑터(서버 = 파일, 더블클릭 = 브라우저 저장소), MWL 진도 들여오기(병행), Learn 자료 변환, 반입 묶음(`.tgz`)을 만들었다. 독립 점검 둘(저장 어댑터·로컬 서버)의 지적을 반영했다. 써 보기는 [`docs/P3_체크리스트_PC.md`](docs/P3_체크리스트_PC.md)(사용자가 나중에 몰아서), Phase 1·2 는 [`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)·[`docs/P2_체크리스트_Core.md`](docs/P2_체크리스트_Core.md). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다.
 
 ## 0. 빠른 시작 — 앱 써 보기 (Phase 3, 개발 VM)
 
