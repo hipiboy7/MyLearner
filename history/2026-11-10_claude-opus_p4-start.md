@@ -22,7 +22,8 @@
 - P4 인터뷰 결과를 CLAUDE.md 0절(폐쇄망 zip 반입·폰 기종)·보류 결정 3·7·11절, scope 9·11절, Architecture 8절, P3 체크리스트 2·4절(릴리스에서 받기)에 반영했다
 - **저장소 public 전환**(사용자 결정 — "작업 완료될때까지 public으로 작업하고 다시 private으로", 이유 "Actions 분 수 · artifact 한도") → 문답은 [`docs/P4_인터뷰결과서_Mobile.md`](../docs/P4_인터뷰결과서_Mobile.md) 5절. 순서: CLAUDE.md 0·7·11절의 private → public, 보류 결정 9 고침·10(private 로 되돌리기 — 트리거: 작업 완료) 새로, 7절 'GitHub Actions'(Windows 실기·에뮬레이터 시험 규칙), 1절 Phase 4 산출물에 CI, 11절 '커밋 메일'(이 저장소 `user.email` = GitHub noreply — 이 커밋부터) → 전체 검증 → `impl-phase4` push → `gh repo edit … --visibility public`
   - 공개 전 점검: 모든 브랜치 이력에서 RFC 5737·루프백 밖 IPv4 0, 키·토큰 꼴 0, 실제 사내 호스트 0(시험의 `*.corp.example` 등은 가짜 값), 비밀 파일 0. 작성자 메일은 28개 커밋 모두 개인 메일 — 사용자가 이력 그대로 두기로 했다
-  - Actions 기본값(2026-11-10 `gh api`): 워크플로 권한 `read`, PR 리뷰 승인 불가, 액션 `all` 허용. 워크플로 0개
+  - Actions 기본값(2026-11-10 `gh api`): 워크플로 권한 `read`, PR 리뷰 승인 불가, 액션 `all` 허용, 포크 PR 승인 `first_time_contributors`. 워크플로 0개
+  - 결과(2026-11-10): `impl-phase4` push(`38d9718` 까지) → `gh repo edit … --visibility public` → `gh repo view --json visibility` = `PUBLIC`. 로그인 없는 `curl`: 저장소 화면 `200`, Release 파일 주소 `302`(release-assets 로), 다섯 파일을 로그인 없이 받아 `sha256sum -c SHA256SUMS.txt` 넷 다 `OK`. 비밀 스캔·push 보호는 API 상 `disabled`
 
 ## 2. 검증 상태
 
@@ -37,6 +38,8 @@
 5. 에뮬레이터 시스템 이미지는 받기 전에 `df -h /data` 로 잰다
 6. Phase 4 끝 병합 때 CLAUDE.md 7절 '릴리스' 대로 `v0.4.0`(APK + 폐쇄망 zip 포함)
 7. 사람 리뷰(기다리지 않음): [`docs/P3_체크리스트_PC.md`](../docs/P3_체크리스트_PC.md). 보류 결정 8 이 오면 7 을 확정
+8. `v0.3.0` 설명 글의 '비공개 저장소라 로그인하지 않으면 404' 줄은 public 이 된 뒤 맞지 않는다 — 사용자 허락 뒤 `gh release edit v0.3.0 --notes-file` 로 고친다(아니면 `v0.4.0` 부터 새 글)
+9. private 로 되돌릴 때(보류 결정 10): 워크플로를 끄거나 줄이고 CLAUDE.md 0·7·11절을 되돌린다
 
 ## 4. 판단·관찰
 
