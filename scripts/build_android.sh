@@ -80,14 +80,15 @@ fi
 build_once() {
   local W=$1
   rm -rf "$W"; mkdir -p "$W"
+  W=$(cd "$W" && pwd)   # --out 이 절대 경로여도 상대 경로여도 컨테이너에 붙일 수 있게
   python3 scripts/pack_app.py --edition mobile --web-out "$W/src" --courses "${COURSES[@]}"
   python3 mobile/android/tools/pack.py stage "$W/src/web" "$W/stage"
   docker run --rm --network none --user "$UIDGID" -e HOME=/tmp \
-    -v "$PWD:/src:ro" -v "$PWD/$W/stage:/stage:ro" -v "$PWD/$W:/work" \
+    -v "$PWD:/src:ro" -v "$W/stage:/stage:ro" -v "$W:/work" \
     "$ANDROID_IMAGE" sh /src/mobile/android/tools/docker-build.sh compile "$VER" "$CODE" "$DEBUG"
   python3 mobile/android/tools/pack.py add-dex "$W/base.apk" "$W/dex/classes.dex" "$W/unaligned.apk"
   docker run --rm --network none --user "$UIDGID" -e HOME=/tmp \
-    -v "$PWD:/src:ro" -v "$PWD/$W:/work" -v "$KEYDIR:/keys:ro" \
+    -v "$PWD:/src:ro" -v "$W:/work" -v "$KEYDIR:/keys:ro" \
     "$ANDROID_IMAGE" sh /src/mobile/android/tools/docker-build.sh sign
 }
 W=$OUT/build$SUFFIX

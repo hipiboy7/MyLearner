@@ -31,6 +31,7 @@ function ev(dev, seq, day) { return L.make({ dev: dev, seq: seq, t: day + 'T01:0
 test('안드로이드 — 종류·저장 위치, 기기 ID 는 파일에 한 번', async () => {
   const br = fakeBridge(), st = SA.create({ bridge: br, now, random: rand });
   assert.equal(st.kind, 'android');
+  assert.equal(st.singleWriter, true, '앱 안 WebView 하나 — 화면이 탭 임대를 보지 않는다(T-014)');
   const info = await st.init();
   assert.match(info.dev, /^[0-9a-f]{16}$/);
   assert.match(info.where, /앱 저장소/);

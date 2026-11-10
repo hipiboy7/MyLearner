@@ -114,10 +114,10 @@
   // ---------------------------------------------------------------- 쓰는 탭 임대(FR-325)
   function leaseState() {
     var s = ls();
-    if (!s) return 'mine';
+    if (!s || (App.store && App.store.singleWriter)) return 'mine';   // 쓰는 곳이 하나뿐인 저장소(안드로이드 앱)는 임대를 보지 않는다(T-014)
     try { return SC.lease(SC.parseLease(s.getItem(SC.KEYS.writer)), App.tabId, Date.now()); } catch (e) { return 'mine'; }
   }
-  function claim() { var s = ls(); if (s) { try { s.setItem(SC.KEYS.writer, JSON.stringify({ id: App.tabId, at: Date.now() })); } catch (e) { /* 임대를 못 적어도 쓴다 */ } } }
+  function claim() { var s = ls(); if (s && !(App.store && App.store.singleWriter)) { try { s.setItem(SC.KEYS.writer, JSON.stringify({ id: App.tabId, at: Date.now() })); } catch (e) { /* 임대를 못 적어도 쓴다 */ } } }
   function leaseTick() {
     var was = App.writer;
     if (leaseState() === 'mine') {

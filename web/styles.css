@@ -125,6 +125,8 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0 1rem; }
 .btn.g-again { color: var(--bad); } .btn.g-hard { color: var(--warn); }
 .btnrow { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin: 1rem 0; }
 .btnrow.center { justify-content: center; }
+/* 손가락만 있는 화면(폰 — 마우스·키보드 없음)에는 키보드 안내를 숨긴다(P4 — 에뮬레이터 캡처) */
+@media (hover: none) and (pointer: coarse) { .kbd, .keys { display: none; } }
 .kbd { font-family: var(--mono); font-size: .72rem; font-weight: 500; border: 1px solid currentColor; border-bottom-width: 2px; border-radius: 4px; padding: 0 .3rem; opacity: .7; }
 .tag { display: inline-block; font-size: .75rem; font-weight: 600; line-height: 1.5; padding: 0 .5rem; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); vertical-align: 1px; }
 .tag.accent { background: var(--accent-soft); color: var(--accent-soft-ink); }

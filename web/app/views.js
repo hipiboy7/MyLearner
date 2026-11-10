@@ -72,7 +72,7 @@
     }
     if (!p.is_study_day && !p.lesson) html += '<div class="callout warn"><p>비학습일 - 복습만 편성됩니다(설정에서 학습 요일·주말 정책을 바꿀 수 있습니다).</p></div>';
     var steps = [], n = p.reviews.length + p.new_cards.length;
-    steps.push(n ? { kind: '복습', title: '만기 ' + p.reviews.length + '장 + 새 카드 ' + p.new_cards.length + '장', meta: '약 ' + (p.minutes_estimate.review || 0) + '분 · <span class="kbd">Space</span> 답 보기 · <span class="kbd">1</span>~<span class="kbd">4</span> 등급', href: '#/review', label: '복습 시작' }
+    steps.push(n ? { kind: '복습', title: '만기 ' + p.reviews.length + '장 + 새 카드 ' + p.new_cards.length + '장', meta: '약 ' + (p.minutes_estimate.review || 0) + '분<span class="keys"> · <span class="kbd">Space</span> 답 보기 · <span class="kbd">1</span>~<span class="kbd">4</span> 등급</span>', href: '#/review', label: '복습 시작' }
       : (sess && sess.reviewed ? { kind: '복습', title: '오늘 복습을 마쳤습니다 - ' + sess.reviewed + '장', meta: '내일 만기 카드가 다시 들어옵니다' }
         : { kind: '복습', title: '오늘은 복습할 카드가 없습니다', meta: '강의를 마치면 그 강의의 카드가 대기열에 들어옵니다' }));
     if (p.lesson) {
@@ -420,7 +420,7 @@
     A.problems.forEach(function (p) { html += '<div class="err-box"><strong>싣지 못한 과정(' + esc(p.source) + ' · ' + esc(p.id) + ')</strong><pre>' + esc(p.why.join('\n')) + '</pre></div>'; });
     if (!A.courses.length) return html + '<div class="empty"><p>실린 과정이 없습니다.</p></div>';
     var prog = T.progress(A.courses, A.st), cards = T.cardStates;
-    html += '<table><thead><tr><th>과정</th><th>강의</th><th>카드(본 것/전체)</th><th>출처</th><th>주 과정</th></tr></thead><tbody>';
+    html += '<div class="table-wrap"><table><thead><tr><th>과정</th><th>강의</th><th>카드(본 것/전체)</th><th>출처</th><th>주 과정</th></tr></thead><tbody>';   // 폰 폭에서 가로로 넘겨 본다(P4)
     A.courses.forEach(function (c) {
       var cs = cards([c], A.st), seen = Object.keys(A.st.cards[c.id] || {}).filter(function (k) { return own(c.cards, k); }).length;
       var pr = prog[c.id];
@@ -429,7 +429,7 @@
         '<td class="small">' + esc((c.origin && c.origin.ref) || '') + '</td><td>' + (c.kind === 'notes' ? '—' : (main && main.id === c.id ? '<strong>✓ 주 과정</strong>' :
           '<button class="btn small" type="button" data-action="setMain" data-course="' + esc(c.id) + '">주 과정으로</button>')) + '</td></tr>';
     });
-    html += '</tbody></table><p class="small muted">주 과정에서 새 강의를 하루 1과 냅니다. 복습·새 카드는 모든 과정에서 합칩니다.</p>';
+    html += '</tbody></table></div><p class="small muted">주 과정에서 새 강의를 하루 1과 냅니다. 복습·새 카드는 모든 과정에서 합칩니다.</p>';
     return html + '<div class="btnrow"><a class="btn" href="#/import/mwl">MWL 진도 들여오기</a><a class="btn" href="#/stats">통계</a></div>';
   };
   ACT.setMain = function (el) {

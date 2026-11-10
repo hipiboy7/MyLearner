@@ -53,6 +53,9 @@
     var st = SB.create({ ls: ls, kv: kv, now: env.now, random: env.random });
     var init0 = st.init;
     st.kind = 'android';
+    // 앱 안 WebView 는 하나뿐이라 쓰는 곳이 하나다 — 화면은 탭 임대를 보지 않는다. 강제 종료 뒤엔 pagehide 가 없어 임대가 남고,
+    // 다시 켠 앱이 몇 초 동안 읽기 전용이 됐다(2026-11-10 에뮬레이터 캡처 — 트러블슈팅 T-014)
+    st.singleWriter = true;
     st.init = function () {
       return init0().then(function (info) { return { dev: info.dev, where: '이 폰의 앱 저장소(앱을 지우면 함께 지워집니다)' }; });
     };

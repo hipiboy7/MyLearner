@@ -1,0 +1,32 @@
+# 묶음 실기 — Windows 러너에서 폐쇄망판 zip 을 풀어 MyLearner.cmd(py -3)로 켜고 써 본다(P4 FR-470). VM(Linux)에서 못 하는 시험만 여기서.
+# 규칙: CLAUDE.md 7절 'GitHub Actions' — 표준 러너, 권한 읽기만, 액션은 커밋 SHA, 비밀값 없음, 로그에 경로·기록을 찍지 않음.
+# 검사: python3 scripts/check_workflows.py(전체 검증). 문서: docs/P4_설계서_Mobile.md 3.9절
+name: windows-bundle
+on:
+  push:
+    branches: [main, "impl-phase*"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bundle:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: py -3 가 고르는 판
+        shell: cmd
+        env:
+          PY_PYTHON3: ${{ matrix.python }}
+        run: py -3 --version
+      - name: 묶음 실기
+        run: python scripts/ci_windows_bundle.py --python ${{ matrix.python }}

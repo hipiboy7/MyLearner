@@ -52,8 +52,19 @@ def build(argv=None):
     return ap, ap.parse_args(argv)
 
 
+def safe_output() -> None:
+    """파이프·파일로 나갈 때 그 인코딩에 없는 글자(영문 Windows 의 cp1252 에서 한글 등)를 ? 로 — 출력 때문에 서버가 죽지 않게(P4 FR-470, MWL T-036).
+    콘솔 창은 Python 이 유니코드로 쓰므로 그대로다."""
+    for st in (sys.stdout, sys.stderr):
+        try:
+            st.reconfigure(errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main(argv=None, run=None) -> int:
     """run: 시험이 서버를 받아 돌리고 끈다(없으면 serve_forever)."""
+    safe_output()
     ap, args = build(argv)
     if args.cmd == "version":
         print("MyLearner %s" % __version__)

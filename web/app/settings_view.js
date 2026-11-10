@@ -72,13 +72,13 @@
     A.store.listBackups().then(function (list) {
       el.className = '';
       if (!list.length) { el.innerHTML = '<p class="small muted">아직 백업이 없습니다.</p>'; return; }
-      el.innerHTML = '<table><thead><tr><th>시각(UTC)</th><th>까닭</th><th>크기</th><th><span class="small">되살리기</span></th>' + (A.cfg.export === true ? '<th><span class="small">내려받기</span></th>' : '') + '</tr></thead><tbody>' +
+      el.innerHTML = '<div class="table-wrap"><table><thead><tr><th>시각(UTC)</th><th>까닭</th><th>크기</th><th><span class="small">되살리기</span></th>' + (A.cfg.export === true ? '<th><span class="small">내려받기</span></th>' : '') + '</tr></thead><tbody>' +
         list.map(function (b) {
           var imp = /^import-/.test(b.reason || '');
-          return '<tr><td>' + esc(b.at) + '</td><td>' + esc(REASON[b.reason] || b.reason) + '</td><td>' + esc(Math.round((b.bytes || 0) / 1024)) + ' KB</td>' +
+          return '<tr><td>' + esc(String(b.at || '').slice(0, 16).replace('T', ' ')) + '</td><td>' + esc(REASON[b.reason] || b.reason) + '</td><td>' + esc(Math.round((b.bytes || 0) / 1024)) + ' KB</td>' +
             '<td><a class="btn small" href="#/restore/' + encodeURIComponent(b.name) + '">' + (imp ? '이 들여오기 되돌리기' : '이 시점으로 되살리기') + '</a></td>' +
             (A.cfg.export === true ? '<td><button class="btn small" type="button" data-name="' + esc(b.name) + '">' + esc(b.name) + ' 받기</button></td>' : '') + '</tr>';
-        }).join('') + '</tbody></table>';
+        }).join('') + '</tbody></table></div>';   // 좁은 화면(폴드 접은 화면 344px)에서 열이 잘리지 않게 가로로 넘겨 본다
       var bs = el.querySelectorAll('button[data-name]');
       for (var i = 0; i < bs.length; i++) bs[i].addEventListener('click', function (ev) {
         var name = ev.currentTarget.getAttribute('data-name');
