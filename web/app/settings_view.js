@@ -2,7 +2,7 @@
  * 학습 설정은 기기 사이를 따라가는 setting 사건으로, 화면 설정은 이 브라우저에만. 들여오기는 백업 → 덧붙이기 → 메모 과정 저장 → 다시 계산 → N/N.
  * 폐쇄망판(판 설정 export 거짓)에는 내려받기 단추가 없다(FR-327). MWL viewSettings(e55b9c0)의 화면·학습 설정을 옮겼다.
  * 입력: MyLearner.app·mwl_import / 출력: MyLearner.views.settings·import, actions / 트리거: #/settings · #/import/mwl
- * 문서: docs/P3_요구사항정의서_PC.md FR-307·324·327·360~364, docs/P3_설계서_PC.md 3.2·3.5절 */
+ * 문서: docs/P3_요구사항정의서_PC.md FR-307·324·327·360~364, docs/P3_설계서_PC.md 3.2·3.5절, docs/P4_설계서_Mobile.md 3.7절(주고받기·되살리기 입구) */
 (function (root) {
   'use strict';
   var ns = root.MyLearner = root.MyLearner || {};
@@ -10,6 +10,8 @@
   var V = ns.views = ns.views || {}, ACT = ns.actions = ns.actions || {};
 
   function route() { if (ns.route) ns.route(); }
+  var REASON = { daily: '하루 백업', 'import-mwl': 'MWL 들여오기 전', 'import-merge': '합치기 전', restore: '되살리기 전' };
+  ns.backupReason = REASON;
   function go(hash) { root.location.hash = hash; }
 
   // ---------------------------------------------------------------- 설정
@@ -40,16 +42,28 @@
     html += '<button class="btn primary" type="submit">설정 저장</button></form>';
 
     html += '<h2>기록</h2><table><tbody>' +
-      '<tr><th scope="row">저장 위치</th><td>' + esc(A.where) + ' (' + (A.store.kind === 'server' ? '서버 모드' : '브라우저 모드') + ')</td></tr>' +
+      '<tr><th scope="row">저장 위치</th><td>' + esc(A.where) + ' (' + esc(A.storeLabel()) + ')</td></tr>' +
       '<tr><th scope="row">사건</th><td>' + A.events.length + '줄' + (A.raw.length ? ' · 해석하지 못한 줄 ' + A.raw.length + '(지우지 않고 보존)' : '') +
         (A.counts.conflicts ? ' · 같은 순번 다른 줄 ' + A.counts.conflicts : '') + '</td></tr>' +
       '<tr><th scope="row">이 기기</th><td><code>' + esc(A.dev) + '</code></td></tr>' +
       '<tr><th scope="row">저장 못 한 기록</th><td>' + (A.pending.length ? '<span class="bad">' + A.pending.length + '건</span> <button class="btn small" type="button" data-action="retrySave">다시 저장</button>' : '없음') + '</td></tr>' +
       '</tbody></table>';
-    html += '<h3>백업</h3><p class="small muted">들여오기 전(최근 20개)과 하루 첫 저장 때(최근 14일) 기록 전체를 남깁니다. 되살리기는 다음 판(Phase 4)에서 합니다.</p><div id="backup-list" class="loading">백업 목록을 읽는 중…</div>';
+    html += '<h3 id="exchange">다른 기기와 주고받기</h3>';
+    if (A.cfg.export === true) {
+      html += '<p class="small muted">교환 파일(zip) 하나에 이 기기에 모인 모든 기기의 기록과 내 과정이 들어갑니다. 다른 기기의 설정 → 다른 기기 기록 합치기에서 엽니다.</p>' +
+        '<div class="btnrow"><button class="btn" type="button" data-action="exportExchange">교환 파일 ' + (ns.platform && ns.platform.share ? '파일로 저장' : '내려받기') + '</button>' +
+        (ns.platform && ns.platform.share ? '<button class="btn" type="button" data-action="shareExchange">교환 파일 공유</button>' : '') +
+        '<a class="btn" href="#/import/merge">다른 기기 기록 합치기</a></div>';
+    } else {
+      html += '<p class="small muted">이 판은 기록을 밖으로 내보내지 않습니다. 다른 기기의 교환 파일(zip)을 들여오기만 합니다.</p>' +
+        '<div class="btnrow"><a class="btn" href="#/import/merge">다른 기기 기록 합치기</a></div>';
+    }
+    html += '<h3>백업</h3><p class="small muted">들여오기·합치기 전(각 최근 20개), 되살리기 전(최근 10개), 하루 첫 저장 때(최근 14일) 기록 전체를 남깁니다. ' +
+      '되살리면 그 백업의 기록에 이 기기에서 쓴 기록을 더한 상태가 됩니다(그 뒤 들여온 다른 기기 기록만 빠집니다).</p><div id="backup-list" class="loading">백업 목록을 읽는 중…</div>';
     if (A.cfg.export === true) html += '<div class="btnrow"><button class="btn" type="button" data-action="exportLog">기록 파일 내려받기</button></div>';
     html += '<h2>가져오기</h2><div class="btnrow"><a class="btn" href="#/import/mwl">MWL 진도 들여오기</a></div>';
-    html += '<h2>이 앱</h2><p class="small muted">' + esc(A.cfg.label || '') + ' · 과정 ' + A.courses.length + '개 · ' + (A.cfg.export ? '기록 내보내기 있음' : '기록 내보내기 없음(폐쇄망판)') + '</p>';
+    html += '<h2>이 앱</h2><p class="small muted">' + esc(A.cfg.label || '') + (A.cfg.app_version ? ' ' + esc(A.cfg.app_version) : '') + ' · 과정 ' + A.courses.length + '개 · ' +
+      (A.cfg.export ? '기록 내보내기 있음' : '기록 내보내기 없음(폐쇄망판)') + ' · 화면 폭 ' + esc(Math.round(root.innerWidth || 0)) + 'px</p>';
     return html;
   };
   V.settings.post = function (app) {
@@ -58,11 +72,13 @@
     A.store.listBackups().then(function (list) {
       el.className = '';
       if (!list.length) { el.innerHTML = '<p class="small muted">아직 백업이 없습니다.</p>'; return; }
-      el.innerHTML = '<table><thead><tr><th>시각(UTC)</th><th>까닭</th><th>크기</th>' + (A.cfg.export === true ? '<th><span class="small">내려받기</span></th>' : '') + '</tr></thead><tbody>' +
+      el.innerHTML = '<div class="table-wrap"><table><thead><tr><th>시각(UTC)</th><th>까닭</th><th>크기</th><th><span class="small">되살리기</span></th>' + (A.cfg.export === true ? '<th><span class="small">내려받기</span></th>' : '') + '</tr></thead><tbody>' +
         list.map(function (b) {
-          return '<tr><td>' + esc(b.at) + '</td><td>' + esc(b.reason === 'daily' ? '하루 백업' : b.reason === 'import-mwl' ? 'MWL 들여오기 전' : b.reason) + '</td><td>' + esc(Math.round((b.bytes || 0) / 1024)) + ' KB</td>' +
+          var imp = /^import-/.test(b.reason || '');
+          return '<tr><td>' + esc(String(b.at || '').slice(0, 16).replace('T', ' ')) + '</td><td>' + esc(REASON[b.reason] || b.reason) + '</td><td>' + esc(Math.round((b.bytes || 0) / 1024)) + ' KB</td>' +
+            '<td><a class="btn small" href="#/restore/' + encodeURIComponent(b.name) + '">' + (imp ? '이 들여오기 되돌리기' : '이 시점으로 되살리기') + '</a></td>' +
             (A.cfg.export === true ? '<td><button class="btn small" type="button" data-name="' + esc(b.name) + '">' + esc(b.name) + ' 받기</button></td>' : '') + '</tr>';
-        }).join('') + '</tbody></table>';
+        }).join('') + '</tbody></table></div>';   // 좁은 화면(폴드 접은 화면 344px)에서 열이 잘리지 않게 가로로 넘겨 본다
       var bs = el.querySelectorAll('button[data-name]');
       for (var i = 0; i < bs.length; i++) bs[i].addEventListener('click', function (ev) {
         var name = ev.currentTarget.getAttribute('data-name');

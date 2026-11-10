@@ -161,6 +161,22 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(self.req("GET", "/api/backups/20200101T000000000Z-daily")[0], 404)
         self.assertEqual(self.req("GET", "/api/backups/..%2ftoken")[0], 400)
 
+    def test_backup_diff_and_restore_api(self):   # P4 FR-440~443·451 — 폐쇄망판도 되살리기를 쓰고, 백업 글은 내주지 않는다
+        self.req("POST", "/api/log", {"lines": ["a"]})
+        name = json.loads(self.req("POST", "/api/backups", {"reason": "import-merge"})[2])["name"]
+        self.req("POST", "/api/log", {"lines": ["b", "c"]})
+        st, _, body = self.req("GET", "/api/backups/%s/diff" % name)
+        self.assertEqual((st, json.loads(body)), (200, {"only_current": ["b", "c"], "only_backup": 0}))
+        st, _, body = self.req("POST", "/api/backups/%s/restore" % name, {"remove": ["b"]})
+        r = json.loads(body)
+        self.assertEqual((st, r["removed"], r["added"], r["total"]), (200, 1, 0, 2))
+        self.assertEqual(self.req("GET", "/api/log")[2].decode("utf-8"), LOG_HEADER + "\na\nc\n")
+        self.assertEqual(self.req("GET", "/api/backups/" + r["backup"])[0], 404, "폐쇄망판은 백업 글을 내주지 않는다")
+        self.assertEqual(self.req("GET", "/api/backups/20200101T000000000Z-daily/diff")[0], 404)
+        self.assertEqual(self.req("POST", "/api/backups/%s/restore" % name, {"remove": "x"})[0], 400)
+        self.assertEqual(self.req("POST", "/api/backups/%s/restore" % name, {"remove": []}, headers={"Origin": "http://evil.example"})[0], 403)
+        self.assertEqual(self.req("GET", "/api/backups/..%2ftoken/diff")[0], 400)
+
     def test_once_code_and_session_cookie(self):
         code = self.state.new_once()
         st, h, _ = self.req("GET", "/?once=%s" % code, cookie=False)

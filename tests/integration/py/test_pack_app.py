@@ -31,6 +31,7 @@ class PackTest(unittest.TestCase):
         closed, internet = PA.edition("closed"), PA.edition("internet")
         self.assertEqual((closed["export"], closed["link_hosts"], closed["ai_presets"]), (False, [], []))
         self.assertEqual((internet["export"], internet["link_hosts"]), (True, ["*"]))
+        self.assertEqual((closed["remind_export_days"], internet["remind_export_days"]), (0, 0))
         self.assertNotIn("_comment", closed)
         self.assertNotEqual(closed["server"]["port"], 8765, "MWL 기본 포트와 다르다(병행)")
 
@@ -97,6 +98,35 @@ class PackTest(unittest.TestCase):
         self.assertIn("두 판 모두 두 번 만들어 같음", out.getvalue())
         self.assertTrue((self.tmp / "dist" / (PA.top_name("internet") + ".tgz")).exists())
         self.assertTrue((self.tmp / "dist" / (PA.top_name("internet") + ".zip")).exists())
+
+    def test_closed_zip_and_mobile_web_out(self):   # P4 FR-409·450 — 폐쇄망판도 zip(반입 기본), 모바일판은 web 사본만
+        cs = PA.load_courses([str(self.cfile)])
+        files = PA.bundle_files("closed", cs)
+        top = PA.top_name("closed")
+        z = PA.zip_bytes(top, files)
+        self.assertEqual(PA.unpacked(z, top, "zip"), files)
+        self.assertEqual(PA.unpacked(PA.tgz_bytes(top, files), top, "tgz"), files)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(PA.main(["--edition", "closed", "--courses", str(self.cfile), "--out", str(self.tmp / "dist")]), 0)
+            self.assertEqual(PA.main(["--edition", "mobile", "--web-out", str(self.tmp / "stage"), "--courses", str(self.cfile)]), 0)
+        self.assertTrue((self.tmp / "dist" / (top + ".zip")).exists())
+        self.assertTrue((self.tmp / "dist" / (top + ".tgz")).exists())
+        stage = self.tmp / "stage" / "web"
+        cfg = (stage / "config.js").read_text(encoding="utf-8")
+        self.assertIn('"edition":"mobile"', cfg)
+        self.assertIn('"app_version":"%s"' % PA.__version__, cfg)
+        self.assertIn('"remind_export_days":7', cfg)
+        self.assertTrue((stage / "data" / "courses" / "demo.js").exists())
+        self.assertFalse((self.tmp / "stage" / "mylearner").exists(), "APK 사본에 서버 없음")
+        self.assertEqual(PA.mobile_problems(PA.web_files("mobile", cs)), [])
+        mob = PA.edition("mobile")
+        self.assertEqual((mob["ai_presets"], mob["server"], mob["export"]), ([], None, True))
+        with self.assertRaises(SystemExit):
+            PA.main(["--edition", "mobile", "--courses", str(self.cfile)])          # web 사본은 --web-out 과 함께만
+        with self.assertRaises(SystemExit):
+            PA.main(["--edition", "closed", "--web-out", str(self.tmp / "x"), "--courses", str(self.cfile)])
+        self.assertIn("모바일판 web 사본", out.getvalue())
 
     def test_write_web_data_removes_stale(self):
         root = self.tmp / "web"

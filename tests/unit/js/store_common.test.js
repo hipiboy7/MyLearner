@@ -95,3 +95,14 @@ test('독립 점검 반영 — 미래로 멀리 간 임대는 오래된 것(S13)
   assert.equal(SC.utf8Length('\uD800x'), 3 + 1, '짝 없는 대리 글자는 3바이트(U+FFFD)');
   assert.equal(SC.MAX_LINE_BYTES, 65536);
 });
+
+test('되살리기(P4) — 차이, 결과 = (지금 − 뺄 줄) ∪ 백업, 백업 남기기 표', () => {
+  assert.deepEqual(SC.diffLines(['a', 'b', 'c', 'b'], ['a', 'd']), { onlyCurrent: ['b', 'c'], onlyBackup: ['d'] });
+  // 뺄 줄에 백업에 있는 줄('a')이 섞여 와도 백업 줄은 남는다(합집합이 마지막)
+  assert.deepEqual(SC.restoreLines(['a', 'b', 'c'], ['a', 'd'], ['c', 'a']), { lines: ['a', 'b', 'd'], removed: 1, added: 1 });
+  assert.deepEqual(SC.restoreLines(['a'], ['a'], []), { lines: ['a'], removed: 0, added: 0 });
+  assert.deepEqual(SC.KEEP, { 'import-mwl': 20, 'import-merge': 20, restore: 10, daily: 14 });
+  const names = [];
+  for (let i = 0; i < 12; i++) names.push('202611' + String(i + 10) + 'T000000000Z-restore');
+  assert.equal(SC.pruneBackups(names).length, 2, '되살리기 전 백업은 10개');
+});

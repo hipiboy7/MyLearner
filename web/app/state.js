@@ -2,7 +2,7 @@
  * 사건 만들기·저장(쓰는 탭 임대·실패하면 메모리에 남겨 다시 보냄), 날짜 넘김. MWL web/app.js(MiddlewareLearner@e55b9c0)의 App·persist·checkDay 를
  * 사건 기록 꼴로 옮겼다 — 상태는 늘 사건에서 다시 계산한다(docs/P2_설계서_Core.md 1절).
  * 입력: MyLearner.config·manifest·courseData, 저장 어댑터 / 출력: MyLearner.app / 트리거: app/main.js(시작)·화면의 행동
- * 문서: docs/P3_요구사항정의서_PC.md FR-302·303·306·320·325·326, docs/P3_설계서_PC.md 1·3.2·3.5절 */
+ * 문서: docs/P3_요구사항정의서_PC.md FR-302·303·306·320·325·326, docs/P3_설계서_PC.md 1·3.2·3.5절, docs/P4_설계서_Mobile.md 3.3·3.5절(안드로이드 저장소·이 기기) */
 (function (root) {
   'use strict';
   var ns = root.MyLearner = root.MyLearner || {};
@@ -20,7 +20,7 @@
 
   var App = {
     cfg: Object.assign({}, DEFAULT_CFG, ns.config || {}),
-    store: null, dev: null, where: '', events: [], raw: [], counts: {}, st: null, today: '', courses: [], byId: Object.create(null), problems: [],
+    store: null, dev: null, devBase: null, userIds: Object.create(null), where: '', events: [], raw: [], counts: {}, st: null, today: '', courses: [], byId: Object.create(null), problems: [],
     pending: [], saving: 0, writer: 'mine', tabId: hex(8), lastSeq: 0, ready: false, error: null,
     review: null, drill: null, lastQuiz: null, check: null, wrongAll: false, glossaryQuery: '', imp: null, dayAsked: null, reading: false
   };
@@ -43,9 +43,10 @@
     if (own(App.byId, obj.id)) { App.problems.push({ source: source, id: id, why: ['같은 ID 의 과정이 이미 있어 싣지 않았습니다(묶음 과정이 이깁니다)'] }); return; }
     App.byId[obj.id] = obj;
     App.courses.push(obj);
+    if (source === '사용자') App.userIds[obj.id] = true;
   }
   function loadCourses() {
-    App.courses = []; App.byId = Object.create(null); App.problems = [];
+    App.courses = []; App.byId = Object.create(null); App.problems = []; App.userIds = Object.create(null);
     var man = ns.manifest;
     var first = Promise.resolve();
     if (!man || !Array.isArray(man.courses)) App.problems.push({ source: '묶음', id: '-', why: ['과정 자료(data/manifest.js)가 없습니다 - 개발 중이면 python3 scripts/pack_app.py --web-data'] });
@@ -113,10 +114,10 @@
   // ---------------------------------------------------------------- 쓰는 탭 임대(FR-325)
   function leaseState() {
     var s = ls();
-    if (!s) return 'mine';
+    if (!s || (App.store && App.store.singleWriter)) return 'mine';   // 쓰는 곳이 하나뿐인 저장소(안드로이드 앱)는 임대를 보지 않는다(T-014)
     try { return SC.lease(SC.parseLease(s.getItem(SC.KEYS.writer)), App.tabId, Date.now()); } catch (e) { return 'mine'; }
   }
-  function claim() { var s = ls(); if (s) { try { s.setItem(SC.KEYS.writer, JSON.stringify({ id: App.tabId, at: Date.now() })); } catch (e) { /* 임대를 못 적어도 쓴다 */ } } }
+  function claim() { var s = ls(); if (s && !(App.store && App.store.singleWriter)) { try { s.setItem(SC.KEYS.writer, JSON.stringify({ id: App.tabId, at: Date.now() })); } catch (e) { /* 임대를 못 적어도 쓴다 */ } } }
   function leaseTick() {
     var was = App.writer;
     if (leaseState() === 'mine') {
@@ -142,9 +143,11 @@
   }
 
   // ---------------------------------------------------------------- 사건 만들기·저장(FR-326)
+  // 저장소 내용으로 바꿔 읽는다(+ 저장 못 한 줄). 메모리와 합치지 않는다 — 다른 탭이 되살려 저장소에서 빠진 줄이 쓰기를 넘겨받은 탭에서
+  // 되살아나 합치기가 그 줄을 '있음'으로 보고 N/N 을 거짓으로 맞췄다(독립 점검 2026-11-10 F-4. P3 에는 저장소가 늘기만 해 합집합이어도 같았다)
   function reloadLog() {
     return App.store.loadLog().then(function (lines) {
-      setEvents(lines.concat(App.events.map(function (e) { return e.line; }), App.raw));
+      setEvents(lines.concat(App.pending));
       recompute(false);
     });
   }
@@ -166,6 +169,10 @@
     }
     var stamp = L.stamp(new Date(), settings().day_start_hour);
     var seq = nextSeq();
+    if (seq > C.MAX_SEQ) {   // 들여온 줄이 이 기기 순번을 끝까지 썼다 — 만들면 던진다(독립 점검 F-1. 이제 합치기가 그런 파일을 거부한다)
+      ui.banner('이 기기의 기록 순번이 끝에 닿아 기록하지 않았습니다(E-SEQ-END)', 'bad');
+      return Promise.resolve(false);
+    }
     var ev = L.make(Object.assign({ dev: App.dev, seq: seq, t: stamp.t, day: stamp.day, type: type }, fields));
     if (SC.utf8Length(ev.line) > SC.MAX_LINE_BYTES) {   // 서버가 받지 않는 길이 — 만들면 그 뒤 저장이 모두 막힌다(S3)
       ui.banner('기록 하나가 64KB 를 넘어 저장하지 않았습니다 - 적은 글을 줄여 주세요', 'bad');
@@ -206,6 +213,10 @@
 
   // ---------------------------------------------------------------- 시작
   function chooseStore() {
+    // 안드로이드 앱(P4): 셸이 아니라 앱이 심은 다리가 있으면 앱 전용 파일 저장소 — 서버 확인 없이 먼저(docs/P4_설계서_Mobile.md 3.3절)
+    if (root.MyLearnerAndroid && ns.storeAndroid) {
+      return Promise.resolve(ns.storeAndroid.create({ bridge: root.MyLearnerAndroid, random: function (n) { return root.crypto.getRandomValues(new Uint8Array(n)); } }));
+    }
     var proto = root.location.protocol;
     var server = /^https?:$/.test(proto) ? ns.storeServer.probe({ fetch: root.fetch.bind(root) }) : Promise.resolve(null);
     return server.then(function (h) {
@@ -254,6 +265,7 @@
       App.store = store;
       return store.init();
     }).then(function (info) {
+      App.devBase = info.dev;
       App.dev = App.store.kind === 'server' ? info.dev + '-' + browserSuffix() : info.dev;
       App.where = info.where;
       return App.store.loadLog();
@@ -277,7 +289,7 @@
     root.addEventListener('storage', function (ev) {
       if (!App.ready) return;
       if (ev.key === SC.KEYS.writer) leaseTick();
-      else if (SC.isLogKey(ev.key) && App.writer === 'other') reloadLog().then(function () { if (ns.route) ns.route(); });
+      else if (SC.isLogKey(ev.key) && App.writer === 'other') reloadLog().then(function () { if (ns.route) ns.route(); });   // 쓰는 탭이 되살리면 줄이 빠진다 — 합집합이 아니라 바꿔 읽는다
     });
   }
 
@@ -313,6 +325,11 @@
     root.addEventListener('pageshow', function (ev) { if (ev.persisted) checkDay(); });
   }
 
+  // 이 기기가 쓴 줄인가 — 서버 모드는 브라우저마다 꼬리(-xxxxxx)가 붙는다(P3 설계서 3.2절). 되살리기가 이 기기 줄을 남긴다(P4 FR-440)
+  function isOwn(dev) { return !!App.devBase && (dev === App.devBase || String(dev).indexOf(App.devBase + '-') === 0); }
+  function allLines() { return App.events.map(function (e) { return e.line; }).concat(App.raw); }
+  function storeLabel() { return { server: '서버 모드', android: '앱 저장', browser: '브라우저 모드' }[App.store.kind] || App.store.kind; }
+  App.isOwn = isOwn; App.allLines = allLines; App.storeLabel = storeLabel;
   App.boot = boot; App.course = course; App.regular = regular; App.settings = settings; App.plan = plan; App.recompute = recompute;
   App.render = render; App.lessonHref = lessonHref; App.allowLink = allowLink; App.record = record; App.flush = flush; App.takeover = takeover;
   App.reloadLog = reloadLog; App.loadCourses = loadCourses; App.checkDay = checkDay; App.setEvents = setEvents; App.own = own; App.canWrite = canWrite;

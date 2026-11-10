@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 앱 이름 — 보류 결정 3(2026-11-10 사용자 확정): MyLearningPlatform -->
+<resources>
+    <string name="app_name">MyLearningPlatform</string>
+</resources>

@@ -1,0 +1,11 @@
+{
+  "_comment": "모바일판 설정(P4 FR-409, docs/P4_설계서_Mobile.md 3.1절). APK 에 넣는 web 사본의 web/config.js 가 된다(scripts/pack_app.py --edition mobile --web-out). 외부 AI 없음·서버 없음(BRIEF 5.2). 강의 링크는 만들되 누르면 앱이 묻고 폰 브라우저로 넘긴다",
+  "edition": "mobile",
+  "label": "모바일판",
+  "export": true,
+  "link_hosts": ["*"],
+  "server": null,
+  "stats_scope": "이 폰에 모인 기록(이 폰 + 들여온 기록)",
+  "ai_presets": [],
+  "remind_export_days": 7
+}

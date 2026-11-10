@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 앱 아이콘 앞면 — web/index.html 의 .brand-mark SVG(24×24: M 자 선 'M4 18V6l8 6 8-6v12')를 108dp 적응형 아이콘의 안전 영역 가운데에 2배로 놓았다.
+     선 굵기 2(×2 = 4), 끝·이음 둥글게. 테마 아이콘(Android 13+)도 이 모양을 쓴다 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="2"
+        android:scaleY="2"
+        android:translateX="30"
+        android:translateY="30">
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M4,18V6l8,6 8,-6v12" />
+    </group>
+</vector>

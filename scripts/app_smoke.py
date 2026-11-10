@@ -5,11 +5,11 @@
        Learn 변환은 scripts/dev_tools.env LEARN_ROOT 가 있으면), tests/ui/cdp.js·app_check.js·a11y.js, 개발 이미지 PLAYWRIGHT_IMAGE
 출력:  표준 출력 요약. 문제·접근성 위반·스크립트 예외·브라우저 오류(CSP 위반 등)가 하나라도 있으면 종료 코드 1
        --shots DIR 이면 화면마다 1280·390px PNG(테스트결과서 '화면 확인')
-단계:  [file:// · 폐쇄망판 설정] first(전 화면 접근성 + 흐름 + MWL 두 번 들여오기 + 탭 임대) → persist(브라우저를 다시 열어 사건 비교)
-       → (스크린샷) → perf-seed(사건 5,000줄) → perf(첫 화면·복습 한 장 시간)
+단계:  [file:// · 폐쇄망판 설정] first(전 화면 접근성 + 흐름 + MWL 두 번 들여오기 + 합치기·되돌리기(P4) + 탭 임대) → persist(브라우저를 다시 열어 사건 비교)
+       → phone@344·390·690(가로 넘침·누름 44px·접근성 — P4) → (스크린샷: 1280·390, 폴드 344·690) → perf-seed(사건 5,000줄) → perf(첫 화면·복습 한 장 시간)
        [서버 모드 · 인터넷판 설정 + 깨진 과정 하나(FR-303)] first → persist, 끝난 뒤 데이터 폴더의 log.jsonl 에 화면이 만든 줄이 모두 있는지(명령 단위 — 기록 유실 0)
 트리거: scripts/verify.sh '화면 스모크' 단계, 손으로
-문서:  docs/P3_설계서_PC.md 6절, docs/P3_테스트결과서_PC.md
+문서:  docs/P3_설계서_PC.md 6절, docs/P3_테스트결과서_PC.md, docs/P4_설계서_Mobile.md 3.10절
 사용:  python3 scripts/app_smoke.py [--shots DIR] [--keep]
 """
 from __future__ import annotations
@@ -34,8 +34,10 @@ from scripts.import_mwl_fixtures import dev_tools  # noqa: E402
 PORT = 18770
 SHOTS = [("today", "#/today", None), ("review", "#/review", "prep-review"), ("learn", None, None), ("stats", "#/stats", None),
          ("check", "#/check/mwl", None), ("map", "#/map/mwl", None), ("courses", "#/courses", None), ("settings", "#/settings", None),
-         ("import", "#/import/mwl", "prep-import")]
-LIMITS = {"ready_ms": 2000, "review_ms": 400}
+         ("import", "#/import/mwl", "prep-import"), ("merge", "#/import/merge", "prep-merge")]
+FOLD_SHOTS = [("today", "#/today", None), ("review", "#/review", "prep-review"), ("settings", "#/settings", None), ("merge", "#/import/merge", "prep-merge")]
+PHONE_WIDTHS = (344, 390, 690)   # 폴드5 접은 화면·폰·폴드5 펼친 화면(추정 — docs/P4_설계서_Mobile.md 3.7절 ⚠️)
+LIMITS = {"ready_ms": 2000, "review_ms": 400, "preview30k_ms": 3000, "merge30k_ms": 5000}   # NFR-302 · NFR-406(P4)
 
 
 def courses():
@@ -168,6 +170,10 @@ def main(argv=None) -> int:
 
         step("first", "#/today")
         step("persist", "#/today")
+        for w in PHONE_WIDTHS:   # P4 FR-461 — 폰 폭(창 폭을 정해 연다)
+            sc = scenario_file(fw, "phone-%d" % w, dict(base, name="phone", width=w))
+            steps.append({"url": url + "#/today", "timeout": 180000, "ready": shot_ready, "inject": [sc] + inj, "width": w, "height": 860})
+            names.append("phone@%d" % w)
         if args.shots:
             (fw / "shots").mkdir()
             (fw / "shots").chmod(0o777)
@@ -181,6 +187,14 @@ def main(argv=None) -> int:
                 else:
                     steps.append({"url": url + h, "timeout": 60000, "ready": shot_ready, "shots": sh})
                     names.append("shot-" + name)
+            for name, hash_, prep in FOLD_SHOTS:   # 폴드5 두 폭(P4)
+                sh = [{"path": "/o/shots/fold-%s-%d.png" % (name, w), "width": w, "height": 860} for w in (344, 690)]
+                if prep:
+                    step(prep, hash_, ["/w/tests/ui/a11y.js", "/w/tests/ui/app_check.js"], sh)
+                    names[-1] = "shot-fold-" + name
+                else:
+                    steps.append({"url": url + hash_, "timeout": 60000, "ready": shot_ready, "shots": sh})
+                    names.append("shot-fold-" + name)
         step("perf-seed", "#/today")
         step("perf", "#/today")
         outs = run_container(image, fw, {"profile": "/tmp/prof", "steps": steps})
@@ -226,7 +240,8 @@ def main(argv=None) -> int:
         else:
             shutil.rmtree(tmp, ignore_errors=True)
     print(json.dumps(report, ensure_ascii=False, sort_keys=True, indent=1))
-    print("화면 스모크 %.1f초: 과정 %s · file://(폐쇄망판) %d단계 · 서버 모드(인터넷판) 2단계 · 문제 %d" % (time.monotonic() - t0, ",".join(ids), len(names), len(problems)))
+    print("화면 스모크 %.1f초: 과정 %s · file://(폐쇄망판) %d단계(폰 폭 %s) · 서버 모드(인터넷판) 2단계 · 문제 %d" % (
+        time.monotonic() - t0, ",".join(ids), len(names), "·".join(str(w) for w in PHONE_WIDTHS), len(problems)))
     for p in problems[:60]:
         print("  " + p)
     return 1 if problems else 0

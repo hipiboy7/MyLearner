@@ -177,3 +177,41 @@ test('브라우저 — 달 키 쓰기는 주입한 lock 안에서(S11)', async (
   assert.equal((await st.append([ev(dev, 1, '2026-11-09')], null)).added, 1);
   assert.deepEqual(calls, ['in', 'out']);
 });
+
+test('브라우저 — 백업 차이와 되살리기(P4): 지금 기록을 restore 백업한 뒤 (지금 − 뺄 줄) ∪ 백업, 그 백업을 되살리면 돌아온다', async () => {
+  const ls = fakeLs(), kv = fakeKv(), st = SB.create({ ls, kv, now, random: rand });
+  const { dev } = await st.init();
+  const a = ev(dev, 1, '2026-10-01'), b = ev('ffff000000000009', 1, '2026-11-02'), c = ev(dev, 2, '2026-11-03');
+  await st.append([a], null);
+  clock += 1000;
+  const { name } = await st.backup('import-merge');
+  await st.append([b, c, 'junk'], null);
+  const d = await st.backupDiff(name);
+  assert.deepEqual(d.onlyCurrent.sort(), [b, c, 'junk'].sort());
+  assert.equal(d.onlyBackup, 0);
+  clock += 1000;
+  const r = await st.restore(name, [b, 'junk']);
+  assert.equal(r.removed, 2);
+  assert.equal(r.added, 0);
+  assert.equal(SC.reasonOf(r.backup), 'restore');
+  assert.deepEqual((await st.loadLog()).sort(), [a, c].sort());
+  assert.equal(ls.getItem('mylearner.log.raw'), null, '빈 달 키는 지운다');
+  clock += 1000;
+  const back = await st.restore(r.backup, []);
+  assert.equal(back.added, 2);
+  assert.deepEqual((await st.loadLog()).sort(), [a, b, c, 'junk'].sort());
+  await assert.rejects(st.backupDiff('20200101T000000000Z-daily'), /백업이 없습니다/);
+  await assert.rejects(st.restore('20200101T000000000Z-daily', []), /백업이 없습니다/);
+});
+
+test('서버 — 백업 차이·되살리기(P4) API 를 부른다', async () => {
+  const f = fakeFetch({
+    'GET /api/backups/n1/diff': () => resp(200, '{"only_current":["x","y"],"only_backup":3}'),
+    'POST /api/backups/n1/restore': (o) => resp(200, JSON.stringify({ ok: true, removed: JSON.parse(o.body).remove.length, added: 3, backup: 'n2', total: 9 }))
+  });
+  const st = SS.create({ fetch: f });
+  assert.deepEqual(await st.backupDiff('n1'), { onlyCurrent: ['x', 'y'], onlyBackup: 3 });
+  assert.deepEqual(await st.restore('n1', ['x']), { removed: 1, added: 3, backup: 'n2' });
+  const post = f.calls.find(([u]) => u === '/api/backups/n1/restore');
+  assert.equal(post[1].headers['Content-Type'], 'application/json');
+});

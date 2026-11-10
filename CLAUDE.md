@@ -6,7 +6,7 @@
 - **어떻게**: [`docs/설계서_Architecture.md`](docs/설계서_Architecture.md)
 - **어떤 규칙으로**: 이 문서. 다른 문서와 부딪히면 이 문서가 이긴다
 
-<!-- 정정 이력(HTML 주석이라 세션마다 컨텍스트에 실리지 않는다): 2026-10-14 착수 세션이 임시본을 만들었다 — 사용자가 준 '사용자와 말하는 방식'과 Learn 루트 규칙 가져오기(사용자 지시). / 2026-10-15 착수 인터뷰(docs/P1_인터뷰결과서_Scope.md)를 반영해 agentic-sdlc 골격 0·0-1·1~13절로 채웠다. / 2026-10-15 Phase 1 에서 만든 것(Architecture·check_env·verify·verify_docs·dev_tools.env)을 '만든다'에서 현재형으로 고쳤다. / 2026-10-15 0절 디스크 여유를 다시 쟀다(`/` 20G→17G·`/data` 66G→61G — Learn 루트 7절과 함께, 사용자 지시). / 2026-10-15 Python 3.14 시험 이미지를 0·7·11절에 적었다(사용자 승인). / 2026-10-15 11절 effort 에 환경 변수가 이긴다는 것을 더했다(세션 화면으로 확인). / 2026-10-15 1절 8단계에 '체크리스트를 알릴 때 브랜치 push 여부를 함께 묻는다'를 더했다(사용자가 GitHub main 에서 체크리스트를 찾지 못함). / 2026-10-15 11절에 '비용 보고'(누적 $ 기록·보고, refresh 때만 0)를 더했다(사용자 지시). / 2026-10-15 폐쇄망 점검과 체크리스트는 사용자가 나중에 몰아서 한다(사용자 결정): Phase 1 끝나는 조건에서 폐쇄망 결과 코드를 빼 보류 결정 8 로 옮기고, 보류 결정 7 트리거를 Phase 2 → Phase 3 시작으로, 1절 8단계를 '위치만 알리고 피드백을 기다리지 않는다'로 고쳤다. / 2026-10-15 Phase 2: 0절 MWL 기준 커밋 e053470 → e55b9c0(엔진·골든 벡터·렌더러·content 는 같다), Node 이미지 판 고정, 핵심 상수가 생겼다, 1절 Phase 2 산출물에 MWL 과정 변환기(Phase 3 에서 당김 — P2 인터뷰결과서 3절). / 2026-11-09 0절 메모리·디스크를 다시 쟀다(15Gi→11Gi, `/` 17G→11G, `/data` 61G→56G). -->
+<!-- 정정 이력(HTML 주석이라 세션마다 컨텍스트에 실리지 않는다): 2026-10-14 착수 세션이 임시본을 만들었다 — 사용자가 준 '사용자와 말하는 방식'과 Learn 루트 규칙 가져오기(사용자 지시). / 2026-10-15 착수 인터뷰(docs/P1_인터뷰결과서_Scope.md)를 반영해 agentic-sdlc 골격 0·0-1·1~13절로 채웠다. / 2026-10-15 Phase 1 에서 만든 것(Architecture·check_env·verify·verify_docs·dev_tools.env)을 '만든다'에서 현재형으로 고쳤다. / 2026-10-15 0절 디스크 여유를 다시 쟀다(`/` 20G→17G·`/data` 66G→61G — Learn 루트 7절과 함께, 사용자 지시). / 2026-10-15 Python 3.14 시험 이미지를 0·7·11절에 적었다(사용자 승인). / 2026-10-15 11절 effort 에 환경 변수가 이긴다는 것을 더했다(세션 화면으로 확인). / 2026-10-15 1절 8단계에 '체크리스트를 알릴 때 브랜치 push 여부를 함께 묻는다'를 더했다(사용자가 GitHub main 에서 체크리스트를 찾지 못함). / 2026-10-15 11절에 '비용 보고'(누적 $ 기록·보고, refresh 때만 0)를 더했다(사용자 지시). / 2026-10-15 폐쇄망 점검과 체크리스트는 사용자가 나중에 몰아서 한다(사용자 결정): Phase 1 끝나는 조건에서 폐쇄망 결과 코드를 빼 보류 결정 8 로 옮기고, 보류 결정 7 트리거를 Phase 2 → Phase 3 시작으로, 1절 8단계를 '위치만 알리고 피드백을 기다리지 않는다'로 고쳤다. / 2026-10-15 Phase 2: 0절 MWL 기준 커밋 e053470 → e55b9c0(엔진·골든 벡터·렌더러·content 는 같다), Node 이미지 판 고정, 핵심 상수가 생겼다, 1절 Phase 2 산출물에 MWL 과정 변환기(Phase 3 에서 당김 — P2 인터뷰결과서 3절). / 2026-11-09 0절 메모리·디스크를 다시 쟀다(15Gi→11Gi, `/` 17G→11G, `/data` 61G→56G). / 2026-11-10 7절에 '릴리스 — 폰의 GitHub 앱에서 받기' 절차, 보류 결정 9(받는 곳), 11절 사람 확인에 Release 올리기를 더했다(사용자 지시). 처음에는 '비공개 Release 는 GitHub 앱에서 받히지 않는다'고 추정해 공개 받는 곳을 물었으나, 사용자 뜻은 이 저장소 Release 에 올려 앱(내 계정)에서 받는 것이었다 — 받는 곳을 이 저장소로 고치고 보류 결정 9 를 닫았다(같은 날). / 2026-11-10 P4 인터뷰(docs/P4_인터뷰결과서_Mobile.md): 0절 폐쇄망 반입 `.tgz` → zip·폰 기종, 보류 결정 3 에 서명 키 결론과 패키지 이름 제안(재확인 대기), 7절 폐쇄망 ZIP, 11절 에뮬레이터 이미지 허락. / 2026-11-10 저장소를 public 으로 바꿨다 — 작업 완료까지, 그 뒤 private 로 되돌린다(사용자 결정 — GitHub Actions 분·artifact 한도). 0·7·11절의 private, 보류 결정 9·10(되돌리기), 7절 'GitHub Actions'(Windows 실기·에뮬레이터 시험 — Phase 4), 1절 Phase 4 산출물에 CI, 11절 커밋 메일을 GitHub noreply 로(그 전 커밋은 그대로). / 2026-11-10 P4 재확인: 보류 결정 3 닫음(패키지 이름 확정 — 0절 핵심 상수), 7절 폐쇄망 ZIP 에 `.tgz` 함께, 11절 비밀값 스캔·push 보호 켬(사용자). / 2026-11-10 Phase 4 구현: 0절 디스크 여유를 다시 쟀다(`/` 8.2G→14G·`/data` 43G→29G, 에뮬레이터 이미지 볼륨). / 2026-11-10 7절 'GitHub Actions' 의 KVM ⚠️ 를 첫 실행 결과로 닫았다. -->
 
 **Learn 워크스페이스 공통 규칙**: 이 폴더는 Learn 워크스페이스 밖이지만 그 루트 공통 규칙을 따른다(사용자 결정, BRIEF 7절). 그 2절 경계 규칙은 이 프로젝트가 완화할 수 없다. 나머지 절이 이 파일과 부딪히면 이 파일을 따른다. 아래 줄이 그 파일을 가져온다 — 작업 폴더 밖이라 Claude Code 가 처음 한 번 승인을 묻고, 거절하면 꺼진 채 다시 묻지 않는다(공식 문서 2026-10-14). 내용이 보이지 않으면 그 파일을 직접 읽는다.
 
@@ -14,13 +14,13 @@
 
 ## 0. 프로젝트 요약 (작업 전 필수 확인)
 - **목적**: 사용자 본인(1인, 여러 기기)이 과목 제한 없이 자기 자료로 배우고 복습한다. 학습이 우선이고 통계 화면이 있어야 한다
-- **완성의 정의**: scope-definition 2절 S1~S7. 한 줄로 — 사용자가 `.tgz` 를 풀거나 APK 를 설치만 하고(S4) '오늘 학습'을 열면 미들웨어 과정·Learn 자료·내 자료로 만든 과정을 배우고 복습하며, 세 기기의 기록이 사라지지 않고 합쳐지고(S3) 통계로 보인다(S7)
+- **완성의 정의**: scope-definition 2절 S1~S7. 한 줄로 — 사용자가 묶음(zip)을 풀거나 APK 를 설치만 하고(S4) '오늘 학습'을 열면 미들웨어 과정·Learn 자료·내 자료로 만든 과정을 배우고 복습하며, 세 기기의 기록이 사라지지 않고 합쳐지고(S3) 통계로 보인다(S7)
 - **핵심 도메인 사실**: 간격 반복은 MWL 의 SM-2(골든 벡터는 MWL `tests/fixtures/srs_vectors.json`·`scheduler_cases.json`). 기록 = 기기별 사건 목록(기기, 순번, 시각, 학습일). 폐쇄망은 들여오기만 — 안의 기록·과정은 반출 불가. 사내 AI 문맥은 128k~256k 로 작다. MWL 과정 = 강의 135·카드 1,350·실습 91·드릴 24·퀴즈 55·용어 350·진단 35, MWL `web/data/bundle.js` 5,470,752 B. MWL 코드를 복사할 때 기준 커밋을 적는다(2026-10-15 현재 `e55b9c0` — `mylearner/constants.py` 의 `MWL_COMMIT`, 골든 벡터 복사본 `tests/fixtures/mwl/`)
-- **개발 환경**: 이 VM — RHEL 9.6, 4코어, 메모리 11Gi(2026-11-09 `free -h` — 10-15 의 15Gi 에서 줄었다), 디스크 여유 `/` 8.2G·`/data` 43G(2026-11-10 `df -h` — 11-09 의 11G·56G 에서 줄었다. 여러 계정이 같이 쓴다 — 쓰기 전에 잰다. 개발 이미지가 지워진 일이 있다 — 트러블슈팅 T-007). Python 3.9.21(`python3`)·3.11.9(`/usr/bin/python3.11`), Docker 29.6.1(Python 3.12·3.14 시험은 이미지로 — `scripts/dev_tools.env`), Node 없음 → JS 시험은 Docker `node:22.23.3-alpine`(2026-10-15 받음 — `bash scripts/run_js_tests.sh`)
-- **운영 환경**: 폐쇄망 PC — Windows, Python 3.14(3.12·3.9 도 있음), Chrome 150.0.7871.125, 사내 AI API, `.tgz` 반입(2026-10-15 사용자). 내 PC — 폐쇄망 PC 와 같은 범위(Windows · Python 3.9 이상 · Chrome, 2026-11-09 사용자 — 다르면 체크리스트 피드백으로). 폰 — 안드로이드 APK, 인터넷 권한 0. 그래서 코드는 **Python 3.9 이상 표준 라이브러리**, 브라우저는 **Chrome(Chromium·WebView)** 기준이다
-- **네트워크·인증**: 밖으로는 사내 프록시를 거친다(`HTTPS_PROXY`·`NO_PROXY` 설정됨). `origin` = `https://github.com/hipiboy7/MyLearner.git`(private). 시스템 git 설정이 `https://github.com/` 를 SSH 로 바꾸는데 이 계정의 SSH 는 `Permission denied (publickey)` 다 → 이 저장소에만 `url.https://github.com/hipiboy7/.insteadOf`(HTTPS 로 남김)와 `credential.helper '!gh auth git-credential'` 을 두었다. `gh` 는 저장소 주인 계정으로 로그인돼 있다(관리자 권한 — 다른 계정에 넘기지 않는다). 확인: `git ls-remote origin`(2026-10-15 성공)
-- **외부 서비스**: GitHub(push, 전체) · Docker 이미지 받기(P1 `python:3.14-slim`, P2 `node:22-alpine`, P3 Playwright, P4 `ghcr.io/cirruslabs/android-sdk:36`) · 사내 AI(P6 — 개발 에이전트는 닿지 못한다. 사용자가 점검 결과 코드를 말로 전한다) · 외부 AI(P6, 유료 — 보류 결정 5)
-- **핵심 상수**: 과정 파일 `mylearner-course` v1·기록 파일 `mylearner-log` v1·사건 판 1(머리 `{format, version, min_reader}`), 과정 ID `^[a-z0-9][a-z0-9-]{0,39}$`·항목 ID `^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$`, MWL 과정 `mwl`·내 메모 `mwl-notes`, 학습일 경계 0시. 한 곳: `web/core/constants.js` `SHARED` = `mylearner/constants.py` `SHARED`(시험이 같은지 본다). 규칙은 `docs/P2_설계서_Core.md` 3절
+- **개발 환경**: 이 VM — RHEL 9.6, 4코어, 메모리 11Gi(2026-11-09 `free -h` — 10-15 의 15Gi 에서 줄었다), 디스크 여유 `/` 14G·`/data` 29G(2026-11-10 16:24 `df -h` — 같은 날 아침 8.2G·43G. 에뮬레이터 시스템 이미지 2.05 GB 는 Docker 볼륨 `mylearner-android-<uid>`(`/data`). 여러 계정이 같이 쓴다 — 쓰기 전에 잰다. 개발 이미지가 지워진 일이 있다 — 트러블슈팅 T-007). Python 3.9.21(`python3`)·3.11.9(`/usr/bin/python3.11`), Docker 29.6.1(Python 3.12·3.14 시험은 이미지로 — `scripts/dev_tools.env`), Node 없음 → JS 시험은 Docker `node:22.23.3-alpine`(2026-10-15 받음 — `bash scripts/run_js_tests.sh`)
+- **운영 환경**: 폐쇄망 PC — Windows, Python 3.14(3.12·3.9 도 있음), Chrome 150.0.7871.125, 사내 AI API, **zip 반입**(2026-11-10 사용자 — 10-15 에는 `.tgz`). 내 PC — 폐쇄망 PC 와 같은 범위(Windows · Python 3.9 이상 · Chrome, 2026-11-09 사용자 — 다르면 체크리스트 피드백으로). 폰 — 안드로이드(갤럭시 Z 폴드5 · 갤럭시 S22 울트라, 2026-11-10 사용자) APK, 인터넷 권한 0, GitHub 앱으로 받는다(7절 '릴리스'). 그래서 코드는 **Python 3.9 이상 표준 라이브러리**, 브라우저는 **Chrome(Chromium·WebView)** 기준이다
+- **네트워크·인증**: 밖으로는 사내 프록시를 거친다(`HTTPS_PROXY`·`NO_PROXY` 설정됨). `origin` = `https://github.com/hipiboy7/MyLearner.git` — **public**(2026-11-10 부터 작업 완료까지, 그 뒤 private 로 되돌린다: 보류 결정 10). 시스템 git 설정이 `https://github.com/` 를 SSH 로 바꾸는데 이 계정의 SSH 는 `Permission denied (publickey)` 다 → 이 저장소에만 `url.https://github.com/hipiboy7/.insteadOf`(HTTPS 로 남김)와 `credential.helper '!gh auth git-credential'` 을 두었다. `gh` 는 저장소 주인 계정으로 로그인돼 있다(관리자 권한 — 다른 계정에 넘기지 않는다). 확인: `git ls-remote origin`(2026-10-15 성공)
+- **외부 서비스**: GitHub(push·Release, 전체 — Release 는 7절 '릴리스') · GitHub Actions(Phase 4 부터 public 동안 — 7절 'GitHub Actions') · Docker 이미지 받기(P1 `python:3.14-slim`, P2 `node:22-alpine`, P3 Playwright, P4 `ghcr.io/cirruslabs/android-sdk:36`) · 사내 AI(P6 — 개발 에이전트는 닿지 못한다. 사용자가 점검 결과 코드를 말로 전한다) · 외부 AI(P6, 유료 — 보류 결정 5)
+- **핵심 상수**: 과정 파일 `mylearner-course` v1·기록 파일 `mylearner-log` v1·사건 판 1(머리 `{format, version, min_reader}`), 과정 ID `^[a-z0-9][a-z0-9-]{0,39}$`·항목 ID `^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$`, MWL 과정 `mwl`·내 메모 `mwl-notes`, 학습일 경계 0시, 안드로이드 패키지 `io.github.hipiboy7.mylearningplatform`·앱 이름 `MyLearningPlatform`(바꾸지 않는다 — 보류 결정 3). 한 곳: `web/core/constants.js` `SHARED` = `mylearner/constants.py` `SHARED`(시험이 같은지 본다). 규칙은 `docs/P2_설계서_Core.md` 3절
 
 ## 0-1. 세션을 시작하면 읽는 순서
 1. `history/` 의 가장 최근 파일 — 마지막 상태와 다음 단계
@@ -36,7 +36,7 @@
 | 1 | 착수 — 범위·검증 체계·폐쇄망 점검 | 인터뷰결과서, scope-definition, 설계서_Architecture, 점검 도구 2종(`tools/ai_probe.py`·`tools/browser_probe.html`)과 시험, 전체 검증 명령, 체크리스트 | 검증 통과. 폐쇄망 실행·결과 코드는 보류 결정 8(사용자 결정 2026-10-15) |
 | 2 | 코어(화면 없음) | 과정·기록 파일 형식, 사건 기록·늦은 복습 규칙·합치기 법칙(속성 시험), SM-2(MWL 골든 벡터 통과), 렌더러(XSS 시험·135과 대조), MWL 진도 변환, MWL 과정 변환기(Phase 3 에서 당김) | 시험 통과 — 다음 Phase 의 바탕 |
 | 3 | PC 에서 배우기 | 화면(오늘·복습·강의·퀴즈·점검·통계), 로컬 서버, 저장 어댑터, `.tgz` 묶음, 미들웨어 과정·Learn 자료 가져오기, MWL 진도 들여오기 | 폐쇄망 PC·내 PC 에서 미들웨어 과정을 이어서 공부하고 통계를 본다 |
-| 4 | 폰에서 배우기 + 합치기 | APK(새 패키지 이름·서명 키), 합치기 화면(미리보기·백업·되돌리기), 폐쇄망 들여오기 | 폰 복습이 집 PC 와 합쳐지고 폐쇄망으로 들어간다 |
+| 4 | 폰에서 배우기 + 합치기 | APK(새 패키지 이름·서명 키), 합치기 화면(미리보기·백업·되돌리기), 폐쇄망 들여오기, CI(GitHub Actions — Windows 실기·에뮬레이터 시험) | 폰 복습이 집 PC 와 합쳐지고 폐쇄망으로 들어간다 |
 | 5 | 내 자료로 — AI 없이 | 편집기, 파일 가져오기, 프롬프트 복사 | 사내 AI 채팅으로 만든 과정을 붙여 넣어 그날 배운다 |
 | 6 | 내 자료로 — AI | 서버×모델 프로필, 긴 자료 처리, 근거 대조, 현장 비교 화면, 외부 AI | S1·S2 |
 | 7 | 다듬기·실사용 — 통합 검증·배포 | 피드백 반영, `docs/guide/` 가이드 3종, 배포 묶음, 릴리스 태그, agentic-sdlc 교훈(9절) | 설치 및 실행 가이드만 보고 설치부터 첫 사용까지 막힘없이 간다 |
@@ -53,19 +53,21 @@
 6. 자체 점검 — 완료 기준 대비 누락·위험을 본다. 결과는 테스트결과서·보류 결정 표·트러블슈팅에 남긴다. 다른 에이전트의 독립 점검은 위험이 큰 곳만 한다(12절)
 7. 사람용 문서 갱신 — README 빠른 시작, `docs/트러블슈팅.md`, **써 보기 체크리스트** `docs/P{N}_체크리스트_<Topic>.md`(9절). 학습가이드는 만들지 않는다(사용자 결정 2026-10-15). 마지막 Phase 에서는 `docs/guide/` 가이드 3종을 쓴다
 8. 사람 리뷰 — 체크리스트 위치를 알린다. 사용자는 체크리스트를 나중에 몰아서 써 보므로 피드백을 기다리지 않고 병합 요청을 받는다(사용자 결정 2026-10-15). 피드백이 오면 그 Phase 테스트결과서나 다음 Phase 인터뷰결과서로 옮긴다. 사용자는 체크리스트를 GitHub 에서 읽으므로, 그 Phase 브랜치를 아직 올리지 않았으면 push 할지 함께 묻는다(2026-10-15 — 올리지 않은 채 알려 사용자가 찾지 못했다). 화면을 바꾼 Phase 는 스크린샷도 보인다. 지적을 반영할 때는 4절 "판단 변경은 grep 으로"를 따른다. **전체 재독은 하지 않는다**(사용자 결정 2026-10-15 — agentic-sdlc 의 "Phase 1 부터 전체 재독"과 다르다)
-9. 종료 루틴 — 사용자가 병합을 요청하면: 전체 검증(종료 코드 0 일 때만 다음으로. `<검증> > 로그 && git commit` 처럼 쓰고 파이프로 자르지 않는다) → history → 브랜치에 커밋 → `merge --no-ff` → push(11절) → 브랜치 보존 → `/clear` 권장과 이어 할 프롬프트(11절)
+9. 종료 루틴 — 사용자가 병합을 요청하면: 전체 검증(종료 코드 0 일 때만 다음으로. `<검증> > 로그 && git commit` 처럼 쓰고 파이프로 자르지 않는다) → history → 브랜치에 커밋 → `merge --no-ff` → push(11절) → 릴리스(7절 '릴리스' — 그 Phase 의 묶음·APK 를 `main` 병합 커밋에) → 브랜치 보존 → `/clear` 권장과 이어 할 프롬프트(11절)
 
 ### 보류 결정
 | # | 열린 결정 | 트리거 | 확인 방법 | 이정표 문서 |
 |---|---|---|---|---|
 | 1 | ~~통계 화면에 꼭 있어야 할 것과 우선순위~~ → BRIEF 5.4 전부, ①학습량·연속·7일 예정 → ②복습량·정답률 추이 → ③카드 상태·정착률 → ④진도·숙련도 → ⑤틀림 많은 것 → ⑥점검 전·후, AI 확인 비율은 Phase 6 (2026-11-09) | — | — | `docs/P3_인터뷰결과서_PC.md` |
 | 2 | ~~MWL 이관 시점과 MWL 동결 여부~~ → 한동안 병행, 들여오기는 여러 번(매번 백업), 동결 시점은 정하지 않음 (2026-11-09) | — | — | `docs/P3_인터뷰결과서_PC.md` |
-| 3 | 안드로이드 패키지 이름과 서명 키 보관·백업(BRIEF 4.1) | Phase 4 시작 | P4 인터뷰결과서에 이름과 보관 위치가 있다(키 값은 적지 않는다) | `docs/P4_인터뷰결과서_*.md` |
+| 3 | ~~안드로이드 패키지 이름과 서명 키 보관·백업(BRIEF 4.1)~~ → 패키지 `io.github.hipiboy7.mylearningplatform`·앱 이름 `MyLearningPlatform`, 서명 키는 새로(이 계정 `~/.config/mylearner/` + `/data` 개인 폴더 사본 + VM 밖 한 부는 사용자, 키 값은 적지 않는다) (2026-11-10 사용자 재확인) | — | — | `docs/P4_인터뷰결과서_Mobile.md` |
 | 4 | 사내 자료 형식(PDF·HWP·DOCX·PPTX)과 텍스트 뽑기 범위(BRIEF 5.6) | Phase 6 시작 | P6 인터뷰결과서에 형식별 처리 표가 있다 | `docs/P6_인터뷰결과서_*.md` |
 | 5 | 인터넷판 외부 AI 제공자와 비용 상한(유료 — 사용자 결정) | Phase 6 시작 | P6 인터뷰결과서에 제공자·상한 금액이 있다 | 같음 |
 | 6 | 개발 중 AI 시험 경로(이 VM 에서 닿는 AI. 비용·자격 증명 주인의 허락) | Phase 6 시작 | P6 인터뷰결과서에 경로와 허락 기록이 있다 | 같음 |
 | 7 | 브라우저 저장 방식과 한도 — **잠정**(2026-11-09 사용자): 서버 모드 = 파일, `file://` = localStorage 월별 키(기록) + IndexedDB(큰 것), 저장 어댑터 뒤 | 보류 결정 8 의 결과가 올 때 | 폐쇄망 결과 코드의 `l`·`i`·`r` 로 확정하거나 바꾸고 P3 인터뷰결과서에 덧붙인다 | `docs/P3_인터뷰결과서_PC.md`, `docs/P1_테스트결과서_*.md` |
 | 8 | 폐쇄망 점검 실행 — P1 체크리스트대로 두 도구를 돌려 결과 코드(`e`·`s…`·`s…m…`·`b` 두 줄)와 피드백을 전한다 | 사용자가 정할 때(2026-11-09 — Phase 3 은 기다리지 않고 진행, 사용자 지시). 결과가 오면 보류 결정 7 을 확정 | P1 테스트결과서 10절에 폐쇄망 결과 코드가 있고 `--decode` 검사합이 맞다 | `docs/P1_테스트결과서_*.md` |
+| 9 | ~~묶음·APK 를 받는 곳~~ → 이 저장소의 GitHub Release(공개 범위는 보류 결정 10), 폰의 GitHub 앱(내 계정)에서 저장소 → MyLearner → 릴리스. 받는 곳용 저장소는 따로 두지 않음 (2026-11-10 사용자) | — | — | CLAUDE.md 7절 '릴리스' |
+| 10 | 저장소를 private 로 되돌리기 — 2026-11-10 부터 public(GitHub Actions 분·artifact 한도 때문, 사용자 결정). 공개된 동안 퍼진 사본(clone·fork·받은 Release 파일)은 되돌려도 회수되지 않는다 | 작업 완료(사용자가 정한다) | 되돌리기 전에 워크플로를 끄거나 줄이고(private 는 분·저장 한도 — 7절 'GitHub Actions'), `gh repo view hipiboy7/MyLearner --json visibility` 가 `PRIVATE`. 0·7·11절을 private 로 되돌린다 | `docs/P4_인터뷰결과서_Mobile.md` 5절 |
 
 결정을 각주로만 남기지 않는다. 보류하는 순간 트리거·확인 방법·이정표 문서를 이 표에 함께 올린다. 끝난 항목은 `~~내용~~ → 결론 (날짜)` 한 줄로 남기고 상세는 이정표 문서에 둔다. 다른 프로젝트·세션이 전해 온 결정은 출처 원문을 확인한 뒤 잠정 적용으로 올리고 "사용자 재확인"을 트리거로 둔다.
 
@@ -123,7 +125,37 @@
 - 1차 실행 경로: Chrome + Python 로컬 서버(127.0.0.1, `py -3 -m mylearner serve` — 묶음의 `MyLearner.cmd`, Phase 3). Python 이 없으면 HTML 더블클릭(`file://`). 폰은 APK(WebView)
 - 의존성: 런타임은 Python 3.9 이상 표준 라이브러리와 외부 라이브러리 0 인 JS 다. 개발 전용 도구(Docker 이미지·시험 도구)는 버전을 고정해 `scripts/dev_tools.env` 한 곳에 적는다
 - 개발·운영 환경 차이: 개발 VM(RHEL, Python 3.9·3.11, Docker 로 3.12·3.14) ↔ 폐쇄망 PC(Windows, Python 3.14·3.12·3.9, Chrome 150) ↔ 폰. OS 패키지에 의존하지 않는다. 한국어 Windows 콘솔에서 깨지지 않는 글자만 출력한다(BRIEF 5.8)
-- 배포·반입 묶음: 폐쇄망 `.tgz`, 인터넷판 ZIP·`.tgz`(Phase 3), APK(Phase 4). 스크립트는 그 Phase 에서 `scripts/` 에 만든다
+- 배포·반입 묶음: 폐쇄망 `.tgz`·인터넷판 ZIP·`.tgz`(Phase 3), 폐쇄망 ZIP(Phase 4 — 폐쇄망 반입은 zip 이 기본이고 `.tgz` 도 함께 낸다, 2026-11-10 사용자), APK(Phase 4). 스크립트는 그 Phase 에서 `scripts/` 에 만든다
+
+### 릴리스 — 폰의 GitHub 앱에서 받기 (사용자 지시 2026-11-10)
+사용자는 폰의 GitHub 앱에 자기 계정으로 로그인한 채 **저장소 → MyLearner → 릴리스**에서 묶음·APK 를 받는다. 받는 곳은 **이 저장소(`hipiboy7/MyLearner`)의 GitHub Release** 다 — 받는 곳용 저장소를 따로 두지 않는다(사용자 2026-11-10). 2026-11-10 부터 public 이라(보류 결정 10) Release 파일은 누구나 받는다. Phase 끝 병합 때마다, 그리고 사용자가 요청할 때 이 순서로 낸다.
+
+| 단계 | 할 일 | 통과 조건 |
+|---|---|---|
+| 1 만들기 | README 빠른 시작의 명령 그대로 과정 파일 → 묶음(`scripts/pack_app.py --edition closed`·`--edition internet`, `scripts/pack_probe.py`, Phase 4 부터 APK). 묶음 입력이 태그를 달 커밋과 같아야 한다 | `git diff --stat <태그 커밋> HEAD -- web mylearner config scripts tools mobile` 가 비고, 전체 검증 통과 |
+| 2 사람 확인 | Release 올리기는 push 와 같다(11절). Phase 끝 병합 요청이면 함께 허락받은 것으로 보고, 그 밖에는 사용자가 요청할 때만 낸다 | — |
+| 3 올리기 | `SHA256SUMS.txt`(`sha256sum <파일들>`)를 만들고 `gh release create v<판> <파일들> SHA256SUMS.txt --target <태그 커밋> --title <제목> --notes-file <설명 글> --latest` — **정식 릴리스**(pre-release 로 두지 않는다 — REST `releases/latest` 는 pre-release 를 고르지 않는다). 같은 판의 파일을 바꿀 때는 `gh release upload v<판> <파일> --clobber` 후 `SHA256SUMS.txt` 도 다시 올린다 | `gh release view v<판> --json assets` 의 모든 `state` 가 `uploaded` |
+| 4 받아 보기 | `gh release download v<판> -D <임시 폴더>` → 그 폴더에서 `sha256sum -c SHA256SUMS.txt` | 모두 `OK` |
+| 5 설명 글 | 맨 위에 받는 길(GitHub 앱 → 저장소 → MyLearner → 릴리스 → 최신 → Assets → 파일), 그 아래 파일 표(이름·바이트·SHA-256·어디에 쓰나), 빌드한 커밋, 받은 뒤 할 일(그 Phase 의 `docs/P{N}_체크리스트_*.md` 에서 시작할 절) | — |
+| 6 알리기 | 결과 보고에 태그·파일·SHA-256 과 받은 뒤 점검 목록 | — |
+
+- 올리는 것: 폐쇄망 반입 묶음·인터넷판 묶음·점검 묶음·APK·`SHA256SUMS.txt`. 올리지 않는 것: 기록·사용자 과정·서명 키·비밀값·폐쇄망 안에서 만든 것(11절 커밋 금지와 같다)
+- public 인 동안 파일 주소는 로그인 없이 받아진다(전환 직후 `curl` 로 확인 — `history/2026-11-10_claude-opus_p4-start.md`). private 로 되돌리면 로그인하지 않은 브라우저에서 `404` 다(2026-11-10 private 일 때 `curl` 로 확인) — 그때 폰 Chrome 으로 받으려면 github.com 에 로그인한다. GitHub 앱에서 Release 파일이 받아지는지는 첫 릴리스 `v0.3.0` 에서 사용자가 확인한다 ⚠️
+- APK 덮어 설치는 같은 패키지 이름·같은 서명 키·더 큰 versionCode 일 때만 된다 — 하나라도 어긋나면 폰에서 지우고 다시 깔아야 해 앱 안 기록이 사라진다(보류 결정 3)
+
+### GitHub Actions — public 동안 (사용자 결정 2026-11-10)
+이 VM 에서 할 수 없는 시험만 Actions 로 돌린다. 기준 검증은 여전히 VM 의 `bash scripts/verify.sh` 이고 Actions 는 그 위에 보탠다. 항목은 Phase 4 요구사항정의서에 FR 로 둔다.
+
+| 규칙 | 이유 |
+|---|---|
+| 돌리는 것: Windows 러너의 묶음 실기(`MyLearner.cmd`·`py -3` — Phase 3 에서 넘어온 'Windows 실기' 위험), Linux 러너의 안드로이드 에뮬레이터 시험(설치·누르기·강제 종료 뒤 기록 남음). 러너의 KVM 은 첫 실행에서 됐다(2026-11-10 `ubuntu-24.04` — `docs/P4_테스트결과서_Mobile.md` 1.6절) | VM 은 Linux 라 Windows 를 못 돌리고, 에뮬레이터 이미지는 VM 디스크를 쓴다 |
+| 표준 GitHub 러너만 쓴다(큰 러너는 public 이어도 유료) | public 의 표준 러너는 무료(GitHub 문서 2026-11-10) |
+| 서명 키·비밀값을 Actions secret 에 넣지 않는다. APK 서명은 VM 에서만(보류 결정 3). Actions 는 서명 없는 빌드나 실행 때 만든 시험용 키로만 | 키가 GitHub 에도 있게 된다 |
+| 워크플로 `permissions: contents: read`(저장소 기본값도 `read` — 2026-11-10 `gh api repos/hipiboy7/MyLearner/actions/permissions/workflow`). `pull_request_target` 은 쓰지 않는다. 처음 기여하는 사람의 PR 은 승인해야 도는 기본값을 둔다 | public 이면 남이 PR 로 워크플로를 돌릴 수 있다 |
+| 로그·artifact 는 누구나 본다 — 경로·환경 값·기록을 찍지 않는다. 배포는 Release 로 하고 artifact 는 시험 증거만 짧게(`retention-days`) | 11절 커밋 금지와 같은 범위 |
+| MWL 저장소(private)·Learn 자료(이 VM 의 `/data/projects/Learn`)는 Actions 에서 읽지 못한다 — 그 단계는 VM 에서만. Actions 시험은 저장소 안 자료(`tests/fixtures/`)로 | 실데이터 대조·Learn 변환을 Actions 로 옮기지 않는다 |
+| 판 고정: Linux 는 `scripts/dev_tools.env` 의 Docker 이미지 안에서, Windows 는 Python 판(3.9·3.14)을 고정, 액션은 커밋 SHA 로 고정 | 러너 이미지는 GitHub 이 바꾼다 |
+| private 로 되돌리기 전에 워크플로를 끄거나 줄인다(보류 결정 10) | private 는 무료 플랜 기준 월 $12 상당 실행 시간·artifact 500 MB(GitHub 문서 2026-11-10, 플랜 미확인 ⚠️) |
 
 ## 8. 외부 서비스 연동
 - 작업 전에 기동을 확인한다(1절 0단계). 내려간 채 테스트하지 않는다
@@ -153,8 +185,10 @@
 - PR 은 쓰지 않는다(사용자 결정 2026-10-15). 리뷰는 체크리스트와 피드백으로 한다(1절 8단계)
 - 세션마다 `history/<날짜>_<작업자>_<주제>.md` 에 종료 상태와 다음 단계를 남긴다. 작업자 칸에는 사람 이름·계정 대신 `claude-opus` 처럼 에이전트를 적는다
 - 커밋 금지: 비밀 파일·토큰·키, 실운영 로그·데이터(마스킹 여부와 무관), 사내 서버 주소·IP·계정, 폐쇄망 안에서 만든 과정·기록, 사람의 메일
-- 사람 확인이 필요한 일: push, 저장소 공개 범위, 이력 재작성·강제 push·삭제, 비용이 드는 외부 호출, 공용 서버 설정 변경(Learn 루트 2절). 허락받은 것: 개발용 Docker 이미지 `node:22-alpine`(Phase 2)·Playwright(Phase 3)·`python:3.14-slim`(Phase 1) 받기(2026-10-15)·안드로이드 빌드 이미지 `ghcr.io/cirruslabs/android-sdk:36`(Phase 4, 2026-11-09 — 압축 백업은 이 계정의 `/data` 개인 폴더)
-- **push**: Phase 끝에 사용자가 병합을 요청하면 전체 검증 통과 뒤 push 까지 허락한 것으로 본다(사용자 결정 2026-10-15). 그 밖의 push 는 따로 묻는다. push 전에 `git log --oneline origin/main..HEAD` 로 올라갈 커밋을 확인한다. 공개 범위는 private 그대로 둔다
+- 사람 확인이 필요한 일: push, GitHub Release 올리기(7절 '릴리스'), 저장소 공개 범위, 이력 재작성·강제 push·삭제, 비용이 드는 외부 호출, 공용 서버 설정 변경(Learn 루트 2절). 허락받은 것: 개발용 Docker 이미지 `node:22-alpine`(Phase 2)·Playwright(Phase 3)·`python:3.14-slim`(Phase 1) 받기(2026-10-15)·안드로이드 빌드 이미지 `ghcr.io/cirruslabs/android-sdk:36`(Phase 4, 2026-11-09 — 압축 백업은 이 계정의 `/data` 개인 폴더)·안드로이드 에뮬레이터 시스템 이미지(Phase 4, 2026-11-10 — `/data`, 받기 전에 디스크를 잰다)·저장소 public 전환(2026-11-10 — 작업 완료까지, 보류 결정 10)
+- **push**: Phase 끝에 사용자가 병합을 요청하면 전체 검증 통과 뒤 push 까지 허락한 것으로 본다(사용자 결정 2026-10-15). 그 밖의 push 는 따로 묻는다. push 전에 `git log --oneline origin/main..HEAD` 로 올라갈 커밋을 확인한다. 공개 범위는 2026-11-10 부터 public 이고 작업 완료 뒤 private 로 되돌린다(보류 결정 10 — 사용자 결정). public 이라 push 한 커밋·브랜치·태그·Release 는 누구나 받고 되돌려도 회수되지 않는다 — push 전에 `git log -p origin/<브랜치>..HEAD` 로 커밋 금지 목록을 한 번 더 본다
+- **커밋 메일**: 이 저장소 설정 `user.email` 은 GitHub noreply 주소(이름 칸 `<ID>+hipiboy7`, 도메인 `users.noreply.github.com` — ID 는 `gh api users/hipiboy7 --jq .id`. 메일 꼴로 적으면 공개 전 점검이 막는다) — 2026-11-10 부터(사용자 결정). 그 전 커밋의 메일은 이력 재작성하지 않고 둔다. 새 사본을 만들면 `git config user.email` 부터 맞춘다
+- **비밀값 스캔·push 보호**: 켰다(2026-11-10 사용자 — public 이라 무료. 켠 직후 알림 0). push 가 비밀값으로 막히면 진짜 값은 커밋에서 빼고, 시험용 가짜 값은 파일에 두지 않고 시험이 실행 때 만든다(Phase 5·6 비밀값 가리기 시험). private 로 되돌리면 유료 기능이라 꺼질 수 있다 ⚠️(보류 결정 10 때 확인)
 
 ### 사용자와 말하는 방식
 

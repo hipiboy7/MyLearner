@@ -107,7 +107,14 @@
     try { root.localStorage.setItem(UI_KEY, JSON.stringify(keep)); } catch (e) { /* 저장 못 해도 이번 화면에는 적용된다 */ }
     applyUi(keep);
   }
+  // 글 또는 바이트(Uint8Array)를 파일로. 안드로이드 앱이면 셸이 심은 MyLearner.platform.save(시스템 저장 창 — P4 설계서 3.2절)로,
+  // 아니면 blob 내려받기. 약속(Promise)은 저장을 시작했으면 참으로 풀린다(앱은 저장 창에서 고른 뒤)
   function download(name, text, type) {
+    var pf = ns.platform;
+    if (pf && typeof pf.save === 'function') {
+      var bytes = typeof text === 'string' ? new root.TextEncoder().encode(text) : text;
+      return pf.save(name, bytes, type || 'text/plain');
+    }
     var blob = new root.Blob([text], { type: type || 'text/plain;charset=utf-8' });
     var a = doc.createElement('a');
     a.href = root.URL.createObjectURL(blob);
@@ -116,6 +123,7 @@
     a.click();
     doc.body.removeChild(a);
     root.setTimeout(function () { root.URL.revokeObjectURL(a.href); }, 1000);
+    return Promise.resolve(true);
   }
 
   ns.ui = { esc: esc, $: $, banner: banner, pct: pct, bar: bar, applyPct: applyPct, statTile: statTile, textHtml: textHtml, fmtAns: fmtAns, pctText: pctText,

@@ -3,10 +3,10 @@
 MWL mwl/web/server.py(MiddlewareLearner@e55b9c0)의 정적 파일·형식 표·토큰 쿠키를 옮겨 고쳤다. 더한 것: Host 검사(DNS 리바인딩),
 쓰기 요청의 Content-Type·Origin 검사, 모든 응답의 CSP·no-referrer·nosniff·no-store, 한도, 소켓 시한, 이번에 켠 동안만 쓰는 쿠키·한 번짜리 여는 주소
 (독립 점검 V1~V8 — docs/P3_테스트결과서_PC.md 5.2절). 127.0.0.1 에만 묶는다.
-API: GET /api/health · /api/device · /api/log · /api/courses · /api/backups[/<이름>](판 설정 export 일 때만)
-     POST /api/log {"lines": [...]} · /api/backups {"reason": "..."}   PUT /api/courses/<id>
+API: GET /api/health · /api/device · /api/log · /api/courses · /api/backups[/<이름>](판 설정 export 일 때만) · /api/backups/<이름>/diff(P4)
+     POST /api/log {"lines": [...]} · /api/backups {"reason": "..."} · /api/backups/<이름>/restore {"remove": [...]}(P4)   PUT /api/courses/<id>
 입력: AppState(웹 폴더·DataDir·판 설정·토큰) / 출력: ThreadingHTTPServer / 트리거: python -m mylearner serve(mylearner/__main__.py)
-문서: docs/P3_요구사항정의서_PC.md FR-330~335, docs/P3_설계서_PC.md 3.3·4절
+문서: docs/P3_요구사항정의서_PC.md FR-330~335, docs/P3_설계서_PC.md 3.3·4절, docs/P4_설계서_Mobile.md 3.6절(되살리기 API)
 """
 from __future__ import annotations
 
@@ -255,6 +255,9 @@ def make_handler(state: AppState):
                     return self._json(200, {"courses": state.data.courses()})
                 if path == "/api/backups":
                     return self._json(200, {"backups": state.data.list_backups()})
+                if path.startswith("/api/backups/") and path.endswith("/diff"):   # 되살리기 미리보기 — 백업 글은 내주지 않는다(두 판 모두, P4 FR-451)
+                    only_current, only_backup = state.data.backup_diff(unquote(path[len("/api/backups/"):-len("/diff")]))
+                    return self._json(200, {"only_current": only_current, "only_backup": only_backup})
                 if path.startswith("/api/backups/"):
                     if state.edition.get("export") is not True:
                         return self._json(404, {"error": "이 판에서는 백업을 내려받지 않습니다"})
@@ -285,6 +288,12 @@ def make_handler(state: AppState):
                     body = self._read_json()
                     reason = body.get("reason") if isinstance(body, dict) else None
                     return self._json(200, {"ok": True, "name": state.data.backup(reason if isinstance(reason, str) else "")})
+                if method == "POST" and path.startswith("/api/backups/") and path.endswith("/restore"):
+                    body = self._read_json()
+                    if not isinstance(body, dict):
+                        raise StorageError("본문은 {\"remove\": [...]} 이다")
+                    r = state.data.restore(unquote(path[len("/api/backups/"):-len("/restore")]), body.get("remove"))
+                    return self._json(200, dict(r, ok=True))
                 if method == "PUT" and path.startswith("/api/courses/"):
                     state.data.save_course(unquote(path[len("/api/courses/"):]), self._read_json())
                     return self._json(200, {"ok": True})

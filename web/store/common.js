@@ -1,7 +1,7 @@
 /* MyLearner web/store/common.js — 저장 어댑터의 순수 부분(등급 A): 달 키, 글 ↔ 줄, 줄 합집합, 쓰는 탭 임대, 백업 이름·남길 것.
  * 브라우저 어댑터(browser.js)와 화면(app/state.js)이 같이 쓴다. 서버 쪽 같은 규칙은 mylearner/storage.py(백업 남기기 20·14).
  * 입력: 기록 줄·임대 기록·시각 / 출력: MyLearner.storeCommon / 트리거: store/browser.js·app/state.js
- * 문서: docs/P3_요구사항정의서_PC.md FR-322·324·325, docs/P3_설계서_PC.md 3.2절 */
+ * 문서: docs/P3_요구사항정의서_PC.md FR-322·324·325, docs/P3_설계서_PC.md 3.2절, docs/P4_설계서_Mobile.md 3.6절(되살리기·백업 남기기) */
 (function (root, factory) {
   var node = typeof module === 'object' && module.exports;
   var ns = node ? null : (root.MyLearner = root.MyLearner || {});
@@ -16,7 +16,7 @@
     browser: 'mylearner.browser', pending: 'mylearner.pending.' };
   var MAX_LINE_BYTES = 65536;   // 서버(storage.py MAX_LINE_BYTES)와 같다 — 이보다 긴 사건은 만들지 않는다(독립 점검 S3)
   var LEASE_TTL = 6000, LEASE_BEAT = 2000;
-  var KEEP = { 'import-mwl': 20, daily: 14 };
+  var KEEP = { 'import-mwl': 20, 'import-merge': 20, restore: 10, daily: 14 };   // mylearner/storage.py KEEP 와 같다(시험이 본다)
   var REASON = /^[a-z][a-z0-9-]{0,31}$/, NAME = /^(\d{8}T\d{9}Z)-([a-z][a-z0-9-]{0,31})$/;
 
   function keyOf(line) {
@@ -32,6 +32,22 @@
     have.forEach(function (l) { if (seen[l] !== true) { seen[l] = true; out.push(l); } });
     add.forEach(function (l) { if (seen[l] !== true) { seen[l] = true; out.push(l); added += 1; } });
     return { lines: out, added: added };
+  }
+  // 되살리기(P4 FR-440~443): 지금·백업 줄의 차이(글 그대로). 결과 = (지금 − 뺄 줄) ∪ 백업 — 백업에 있는 줄은 뺄 줄에 섞여 와도 남는다
+  function diffLines(current, backup) {
+    var inB = Object.create(null), inC = Object.create(null), onlyC = [], onlyB = [];
+    backup.forEach(function (l) { inB[l] = true; });
+    current.forEach(function (l) { if (inC[l] !== true) { inC[l] = true; if (inB[l] !== true) onlyC.push(l); } });
+    Object.keys(inB).forEach(function (l) { if (inC[l] !== true) onlyB.push(l); });
+    return { onlyCurrent: onlyC, onlyBackup: onlyB };
+  }
+  function restoreLines(current, backup, remove) {
+    var inB = Object.create(null), rm = Object.create(null), removed = 0;
+    backup.forEach(function (l) { inB[l] = true; });
+    remove.forEach(function (l) { if (inB[l] !== true) rm[l] = true; });
+    var kept = current.filter(function (l) { if (rm[l] === true) { removed += 1; return false; } return true; });
+    var u = union(kept, backup);
+    return { lines: u.lines, removed: removed, added: u.added };
   }
   function groupByKey(lines) {
     var g = Object.create(null);
@@ -82,6 +98,6 @@
   }
 
   return { PREFIX: PREFIX, LOG_PREFIX: LOG_PREFIX, RAW_KEY: RAW_KEY, KEYS: KEYS, LEASE_TTL: LEASE_TTL, LEASE_BEAT: LEASE_BEAT, KEEP: KEEP, MAX_LINE_BYTES: MAX_LINE_BYTES, utf8Length: utf8Length,
-    keyOf: keyOf, isLogKey: isLogKey, splitText: splitText, joinLines: joinLines, union: union, groupByKey: groupByKey, maxSeq: maxSeq,
+    keyOf: keyOf, isLogKey: isLogKey, splitText: splitText, joinLines: joinLines, union: union, groupByKey: groupByKey, diffLines: diffLines, restoreLines: restoreLines, maxSeq: maxSeq,
     parseLease: parseLease, lease: lease, backupName: backupName, reasonOf: reasonOf, pruneBackups: pruneBackups };
 });
