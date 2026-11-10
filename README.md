@@ -2,7 +2,7 @@
 
 내가 넣은 자료로 강의·카드·퀴즈를 만들고 매일 복습해 몸에 익히는 **1인용 학습 플랫폼** — 폐쇄망 PC · 내 PC · 안드로이드 폰.
 
-**지금 상태(2026-11-10): Phase 4(폰에서 배우기 + 합치기) 진행 중 — 브랜치 `impl-phase4`** — 안드로이드 앱 `MyLearningPlatform`(APK, 권한 0, 앱 전용 파일에 기록), 교환 파일(zip) 내보내기·합치기·되살리기(세 판), 폐쇄망판 zip 묶음, 에뮬레이터 시험·GitHub Actions 2종을 만들었다. 남은 것: Actions 실행·독립 점검(사용자 확인 대기). 써 보기는 [`docs/P4_체크리스트_Mobile.md`](docs/P4_체크리스트_Mobile.md), 앞 Phase 는 [`docs/P3_체크리스트_PC.md`](docs/P3_체크리스트_PC.md)·[`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)·[`docs/P2_체크리스트_Core.md`](docs/P2_체크리스트_Core.md). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다.
+**지금 상태(2026-11-10): Phase 4(폰에서 배우기 + 합치기) 끝 — `main` 병합, 릴리스 `v0.4.0`** — 안드로이드 앱 `MyLearningPlatform`(APK, 권한 0, 앱 전용 파일에 기록), 교환 파일(zip) 내보내기·합치기·되살리기(세 판), 폐쇄망판 zip 묶음, 에뮬레이터 시험·GitHub Actions 2종(Windows 묶음 실기·Linux 에뮬레이터 — 통과). 다음은 Phase 5(내 자료로 — AI 없이). 받는 곳은 이 저장소의 Release(GitHub 앱 → 저장소 → MyLearner → 릴리스). 써 보기는 [`docs/P4_체크리스트_Mobile.md`](docs/P4_체크리스트_Mobile.md), 앞 Phase 는 [`docs/P3_체크리스트_PC.md`](docs/P3_체크리스트_PC.md)·[`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)·[`docs/P2_체크리스트_Core.md`](docs/P2_체크리스트_Core.md). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다.
 
 ## 0. 빠른 시작 — 앱 써 보기 (Phase 3·4, 개발 VM)
 

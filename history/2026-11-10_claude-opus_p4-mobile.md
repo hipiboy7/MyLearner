@@ -22,16 +22,16 @@
 ## 2. 검증 상태
 
 - `bash scripts/verify.sh`(23단계) — 이 커밋 직전에 돌려 통과한 뒤 커밋한다. JS 187건·Python 275건·자바 150건·에뮬레이터 24건(따로)·묶음 실기 13건
-- Actions: `e73737b` 에서 `windows-bundle`(3.9·3.14)·`android-emulator` 통과(테스트결과서 1.6절). 독립 점검 반영 커밋도 push 해 Actions 가 다시 돈다 — 결과는 `gh run list --repo hipiboy7/MyLearner --limit 4`
+- Actions: `e73737b`·`f653dd9`(독립 점검 반영)에서 `windows-bundle`(3.9·3.14)·`android-emulator` 모두 통과(테스트결과서 1.6절)
+- 사용자 답(2026-11-10): "1 병합하고 릴리스 해, 2 키는 보관할게" — 서명 키의 VM 밖 사본은 사용자가 보관한다. Phase 4 종료 루틴(CLAUDE.md 1절 9단계) — 5절
 
 ## 3. 다음 단계
 
-1. 독립 점검 반영 커밋의 Actions 2종 결과 확인(`gh run list --repo hipiboy7/MyLearner --limit 4`) — 실패하면 고치고 테스트결과서 1.6절에
-2. 사용자: 서명 키 두 파일의 VM 밖 사본(체크리스트 1절)
-3. Phase 4 병합 요청이 오면: 전체 검증 → history → 병합 → push → 릴리스 `v0.4.0`(APK·폐쇄망 zip·`.tgz`·인터넷판·점검 묶음 — CLAUDE.md 7절. APK 는 태그 커밋에서 `bash scripts/build_android.sh` 로 다시)
-4. 체크리스트 피드백 — 폴드5·S22 의 실제 화면 폭(설정 → 이 앱)이 오면 `scripts/app_smoke.py` `PHONE_WIDTHS` 와 설계서 3.7절을 고친다. GitHub 앱에서 Release 가 받아지면 CLAUDE.md 7절 ⚠️ 를 지운다
-5. 보류 결정 8(폐쇄망 점검)이 오면 보류 결정 7 확정(변함없음)
-6. private 로 되돌릴 때(보류 결정 10): 워크플로를 끄거나 줄이고 CLAUDE.md 0·7·11절을 되돌린다
+1. **Phase 5(내 자료로 — AI 없이: 편집기·파일 가져오기·프롬프트 복사)** 시작 — 새 대화에서 CLAUDE.md 0-1절 순서(이 파일 → 보류 결정 → `bash scripts/verify.sh`) → `bash scripts/check_env.sh` → 요구사항 도출(BRIEF·scope 8절 Phase 5 를 먼저 읽고, 모자라면 묶어서 한 번에 묻는다 — `docs/P5_인터뷰결과서_*.md`) → 브랜치 `impl-phase5`(`main` 에서)
+2. 릴리스 `v0.4.0` 결과는 5절. 다음 릴리스도 CLAUDE.md 7절 '릴리스' 그대로
+3. 체크리스트 피드백 — 폴드5·S22 의 실제 화면 폭(설정 → 이 앱)이 오면 `scripts/app_smoke.py` `PHONE_WIDTHS` 와 설계서 3.7절을 고친다. GitHub 앱에서 Release 가 받아지면 CLAUDE.md 7절 ⚠️ 를 지운다
+4. 보류 결정 8(폐쇄망 점검)이 오면 보류 결정 7 확정(변함없음)
+5. private 로 되돌릴 때(보류 결정 10): 워크플로를 끄거나 줄이고 CLAUDE.md 0·7·11절을 되돌린다
 
 ## 4. 판단·관찰
 
@@ -40,3 +40,8 @@
 - 다른 프로젝트의 시제품을 옮길 때 실행 옵션의 주석(MWL 의 `swangle_indirect` 이유)까지 읽었으면 세그폴트 진단 30분을 아꼈다
 - TDD: 등급 A 를 '시험 먼저'로만 지키고 실패 확인·리팩터를 빠뜨렸다 — 사용자가 물어 대화 기록으로 대조했다. 변이 시험이 경계 시험 셋의 빈칸을 찾았다(테스트결과서 7.1절). 독립 점검 반영은 시험 → 실패 확인 → 고침 → 리팩터 순서로 했다
 - 비용: `python3 scripts/usage_cost.py --record` — 기준점 뒤 누적 $196.88(이 세션 추정 $29.94, 16:24)
+
+## 5. Phase 4 병합·릴리스 (2026-11-10, 사용자 요청)
+
+- 순서: 전체 검증 → 이 history 커밋(`impl-phase4`) → `main` 에 `merge --no-ff` → push(`main`·`impl-phase4` — 브랜치는 지우지 않는다) → 병합 커밋에서 README 명령으로 과정 3개·묶음·APK(릴리스 키) → `v0.4.0` Release → 받아 검사합 확인
+- 결과(태그·파일·SHA-256)는 릴리스 뒤 이 절 아래에 덧붙인다(문서만 바뀌는 두 번째 병합)
