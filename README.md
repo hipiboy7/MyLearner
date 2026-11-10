@@ -72,7 +72,7 @@ Claude Code 의 대화와 메모리는 **VM 계정 × 폴더** 마다 저장된�
 
 ## 3. GitHub
 
-`https://github.com/hipiboy7/MyLearner` (private). 이 VM 계정의 `gh` 로그인(저장소 주인)으로 HTTPS push 가 된다. 이 서버의 시스템 git 설정이 `https://github.com/` 를 SSH 로 바꾸므로, 이 저장소에만 더 긴 접두사의 규칙을 두어 HTTPS 로 남긴다(2026-10-14 이 방법으로 첫 커밋을 push 했다).
+`https://github.com/hipiboy7/MyLearner` — public(2026-11-10 부터 작업 완료까지, 그 뒤 private 로 되돌린다 — CLAUDE.md 보류 결정 10). 이 VM 계정의 `gh` 로그인(저장소 주인)으로 HTTPS push 가 된다. 이 서버의 시스템 git 설정이 `https://github.com/` 를 SSH 로 바꾸므로, 이 저장소에만 더 긴 접두사의 규칙을 두어 HTTPS 로 남긴다(2026-10-14 이 방법으로 첫 커밋을 push 했다).
 
 ```bash
 # 이 폴더에는 이미 되어 있다 — 새로 받은 사본에서만(같은 VM 계정)

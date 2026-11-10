@@ -2,6 +2,7 @@
 
 - 작성 2026-10-15 / 대상: 사용자(폐쇄망 PC) / 대응: [`P1_요구사항정의서_Probe.md`](P1_요구사항정의서_Probe.md) 6절 완료 기준 7, [`P1_테스트결과서_Probe.md`](P1_테스트결과서_Probe.md)
 - 정정 이력: 2026-10-15 17시 — 0절에 '나. GitHub 에서 세 파일'을 더했다(사용자가 GitHub 에서 받을 곳을 물음)
+- 정정 이력: 2026-11-10 — 저장소가 public 이 되어(CLAUDE.md 보류 결정 10) '나' 첫 칸의 로그인 조건을 고쳤다
 - 확인한 범위: 아래 명령은 이 VM(Linux)에서 `python3`·`tar` 로 같은 순서를 실행해 확인했다(2026-10-15). **Windows·Chrome 150 에서는 아직 실행하지 않았다** — 이 체크리스트가 그 첫 실행이다. 막히면 그 단계와 화면의 글을 피드백 칸에 적는다
 - 걸리는 시간: AI 점검은 모델마다 몇 분(모델 5개면 10~30분 안팎으로 본다 ⚠️ 실측 전), 브라우저 점검 10분
 
@@ -22,7 +23,7 @@
 
 **나. GitHub 에서 세 파일 — VM 에서 받을 수 없을 때**
 
-- [ ] 저장소 주인 계정으로 로그인한 브라우저(private 저장소)에서 <https://github.com/hipiboy7/MyLearner/tree/impl-phase1/tools> 를 연다 → 파일 목록에 `ai_probe.py`·`browser_probe.html`·`README_KO.txt` 가 보인다(다른 파일은 받지 않는다)
+- [ ] 브라우저에서 <https://github.com/hipiboy7/MyLearner/tree/impl-phase1/tools> 를 연다(2026-11-10 부터 public 이라 로그인 없이 열린다. private 로 되돌린 뒤에는 저장소 주인 계정으로 로그인) → 파일 목록에 `ai_probe.py`·`browser_probe.html`·`README_KO.txt` 가 보인다(다른 파일은 받지 않는다)
 - [ ] 세 파일을 하나씩 열어 오른쪽 위 `Download raw file`(아래 화살표)을 누른다 → 다운로드 폴더에 세 파일
 - [ ] 세 파일을 폴더 `mylearner-probe-v1` 하나에 넣어 반입 절차로 폐쇄망 PC 에 넣는다. 1절에서는 `tar` 를 건너뛰고 그 폴더에서 명령 프롬프트를 연다
 - [ ] (선택) 폐쇄망 PC 의 그 폴더에서 받은 파일이 맞는지 본다 ⚠️ Windows 명령이라 VM 에서는 실행해 보지 못했다

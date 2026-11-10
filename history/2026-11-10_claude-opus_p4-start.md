@@ -20,6 +20,9 @@
 
   - 확인: `gh release view` 다섯 파일 `uploaded` · pre-release 아님 · `gh release download` 뒤 `sha256sum -c SHA256SUMS.txt` 넷 다 `OK` · 로그인 없는 `curl` → `404`(비공개 — 예상대로)
 - P4 인터뷰 결과를 CLAUDE.md 0절(폐쇄망 zip 반입·폰 기종)·보류 결정 3·7·11절, scope 9·11절, Architecture 8절, P3 체크리스트 2·4절(릴리스에서 받기)에 반영했다
+- **저장소 public 전환**(사용자 결정 — "작업 완료될때까지 public으로 작업하고 다시 private으로", 이유 "Actions 분 수 · artifact 한도") → 문답은 [`docs/P4_인터뷰결과서_Mobile.md`](../docs/P4_인터뷰결과서_Mobile.md) 5절. 순서: CLAUDE.md 0·7·11절의 private → public, 보류 결정 9 고침·10(private 로 되돌리기 — 트리거: 작업 완료) 새로, 7절 'GitHub Actions'(Windows 실기·에뮬레이터 시험 규칙), 1절 Phase 4 산출물에 CI, 11절 '커밋 메일'(이 저장소 `user.email` = GitHub noreply — 이 커밋부터) → 전체 검증 → `impl-phase4` push → `gh repo edit … --visibility public`
+  - 공개 전 점검: 모든 브랜치 이력에서 RFC 5737·루프백 밖 IPv4 0, 키·토큰 꼴 0, 실제 사내 호스트 0(시험의 `*.corp.example` 등은 가짜 값), 비밀 파일 0. 작성자 메일은 28개 커밋 모두 개인 메일 — 사용자가 이력 그대로 두기로 했다
+  - Actions 기본값(2026-11-10 `gh api`): 워크플로 권한 `read`, PR 리뷰 승인 불가, 액션 `all` 허용. 워크플로 0개
 
 ## 2. 검증 상태
 
@@ -29,7 +32,7 @@
 
 1. **사용자 재확인 3가지**(P4 인터뷰결과서 4절): ① 패키지 이름 꼴 `io.github.hipiboy7.mylearningplatform` + 앱 이름 `MyLearningPlatform` ② 폐쇄망판 `.tgz` 도 계속 낼지(제안: zip 기본 + `.tgz` 함께) ③ '폰에서 MWL' = MyLearner 폰 앱에서 미들웨어 과정 + MWL 진도 들여오기(MWL 저장소 앱은 안 고침)
 2. 사용자가 GitHub 앱에서 `v0.3.0` 파일이 받아지는지 알려 주면 CLAUDE.md 7절 '릴리스' 의 ⚠️ 를 지운다(안 되면 막힌 화면 문구로 다시 정한다)
-3. 재확인 뒤: `docs/P4_요구사항정의서_Mobile.md`(FR-401~ — APK 껍데기·안드로이드 저장 어댑터·교환 파일·합치기 화면(미리보기·백업·되돌리기)·폐쇄망 zip 반입 파일·폐쇄망판 zip 묶음·폰 MWL 들여오기·폴드5 두 화면) → 설계서 → 코드·시험 → 테스트결과서 → 체크리스트(폰 점검 순서는 MWL `docs/checklist/android-app.md` 14칸을 본떠 MyLearner 화면에 맞춘다)
+3. 재확인 뒤: `docs/P4_요구사항정의서_Mobile.md`(FR-401~ — APK 껍데기·안드로이드 저장 어댑터·교환 파일·합치기 화면(미리보기·백업·되돌리기)·폐쇄망 zip 반입 파일·폐쇄망판 zip 묶음·폰 MWL 들여오기·폴드5 두 화면·**CI 2종**(GitHub Actions — Windows 러너 묶음 실기, Linux 러너 에뮬레이터 시험. 러너 KVM 지원 확인 ⚠️ — CLAUDE.md 7절 'GitHub Actions')) → 설계서 → 코드·시험 → 테스트결과서 → 체크리스트(폰 점검 순서는 MWL `docs/checklist/android-app.md` 14칸을 본떠 MyLearner 화면에 맞춘다)
 4. 서명 키 만들기(재확인 뒤 첫 빌드 때): `~/.config/mylearner/` + `/data` 개인 폴더 사본, VM 밖 한 부는 사용자에게 알린다
 5. 에뮬레이터 시스템 이미지는 받기 전에 `df -h /data` 로 잰다
 6. Phase 4 끝 병합 때 CLAUDE.md 7절 '릴리스' 대로 `v0.4.0`(APK + 폐쇄망 zip 포함)
