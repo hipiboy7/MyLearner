@@ -137,3 +137,17 @@ test('자리표 글자를 원문에 넣어도 태그가 생기지 않는다', ()
   assert.equal(md('a\uE0000\uE001b'), '<p>a\uFFFD0\uFFFDb</p>');
   assert.equal(md('[x](https://x.example) \uE0000\uE001'), '<p><a href="https://x.example">x</a> \uFFFD0\uFFFD</p>');
 });
+
+test('링크 행선지 제한(판 설정, P3 FR-312) — allowLink 가 거짓이면 글만, 안전 검사는 그대로 먼저', () => {
+  const M2 = core('markdown');
+  const seen = [];
+  const allow = (href) => { seen.push(href); return href.charAt(0) === '#'; };
+  assert.equal(M2.render('[문서](https://example.com/a?b=1&amp;c) [안](#/learn/x/y)', { allowLink: allow }),
+    '<p>문서 <a href="#/learn/x/y">안</a></p>');
+  assert.deepEqual(seen, ['https://example.com/a?b=1&amp;c', '#/learn/x/y'], '이스케이프를 푼 주소를 받는다');
+  seen.length = 0;
+  assert.equal(M2.render('[x](javascript:alert(1))', { allowLink: () => true }), '<p>x)</p>', '안전하지 않은 주소는 allowLink 를 부르지 않고 막는다');
+  assert.deepEqual(seen, []);
+  assert.equal(M2.render('[x](https://a.example/)'), '<p><a href="https://a.example/">x</a></p>', '없으면 전처럼');
+  assert.equal(M2.render('`A1-1`', { lessonRef: () => 'https://evil.example/', allowLink: () => false }), '<p><code>A1-1</code></p>', '강의 참조 주소도 같은 제한');
+});

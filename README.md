@@ -2,14 +2,29 @@
 
 내가 넣은 자료로 강의·카드·퀴즈를 만들고 매일 복습해 몸에 익히는 **1인용 학습 플랫폼** — 폐쇄망 PC · 내 PC · 안드로이드 폰.
 
-**지금 상태(2026-11-09): Phase 2(코어, 화면 없음)까지 `main` 에 병합 — 다음은 Phase 3(PC 에서 배우기)** — 과정·기록 파일 형식, 기록 합치기(합집합)·늦은 복습 규칙, SM-2·하루 계획·숙련도·통계(MWL 골든 벡터 통과), 렌더러(MWL 135과와 같은 HTML·XSS 대책·입력 길이에 선형), 실습 정규식 선형 엔진, MWL 과정 변환기·진도 변환을 만들었다. 독립 점검 둘(기록 합치기·렌더러)의 지적을 반영했다. 써 보기는 [`docs/P2_체크리스트_Core.md`](docs/P2_체크리스트_Core.md)(사용자가 나중에 몰아서). Phase 1(폐쇄망 점검 도구 2종)도 `main` 에 있고, 폐쇄망에서 돌리는 것은 사용자가 나중에 한다([`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md), CLAUDE.md 보류 결정 8). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다.
+**지금 상태(2026-11-10): Phase 3(PC 에서 배우기)까지 `main` 에 병합 — 다음은 Phase 4(폰에서 배우기 + 합치기)** — 화면(오늘·복습·강의·실습·드릴·퀴즈·점검·통계·과정·설정), 로컬 서버(`python3 -m mylearner serve`), 저장 어댑터(서버 = 파일, 더블클릭 = 브라우저 저장소), MWL 진도 들여오기(병행), Learn 자료 변환, 반입 묶음(`.tgz`)을 만들었다. 독립 점검 둘(저장 어댑터·로컬 서버)의 지적을 반영했다. 써 보기는 [`docs/P3_체크리스트_PC.md`](docs/P3_체크리스트_PC.md)(사용자가 나중에 몰아서), Phase 1·2 는 [`docs/P1_체크리스트_Probe.md`](docs/P1_체크리스트_Probe.md)·[`docs/P2_체크리스트_Core.md`](docs/P2_체크리스트_Core.md). 규칙은 [`CLAUDE.md`](CLAUDE.md), 범위는 [`docs/scope-definition.md`](docs/scope-definition.md), 진행 기록은 `history/` 에 있다.
 
-## 0. 빠른 시작 — 개발 VM (Phase 1·2)
+## 0. 빠른 시작 — 앱 써 보기 (Phase 3, 개발 VM)
+
+```bash
+cd /data/projects/MyLearner
+python3 scripts/check_mwl_real.py --out dist/courses/mwl.course.json                              # 미들웨어 과정(MWL) → 과정 파일
+python3 -m mylearner.convert.learn /data/projects/Learn/mwm-app --out dist/courses/mwm-app.course.json   # Learn 자료 → 과정 파일(area: kids 는 거부)
+python3 scripts/pack_app.py --web-data           # web/data(과정 자료)·web/config.js 를 만든다(커밋하지 않음)
+python3 -m mylearner serve --no-browser          # 서버 모드 — 찍힌 http://127.0.0.1:8770/?token=… 를 브라우저로. 끄기 Ctrl+C
+python3 scripts/pack_app.py --edition closed     # 폐쇄망 반입 묶음 dist/mylearner-closed-v0.3.0.tgz(인터넷판은 --edition internet, .zip 도)
+python3 scripts/app_smoke.py                     # 화면 스모크(Chromium — file://·서버 모드·접근성). --shots docs/screenshots/P3 면 스크린샷
+```
+
+- 묶음을 푼 PC 에서는 `MyLearner.cmd`(Windows) 또는 `py -3 -m mylearner serve`, Python 이 없으면 `web/index.html` 을 Chrome 으로 연다 — 묶음 안 `README_KO.txt`
+- 서버 모드의 기록은 `data/log.jsonl`, 백업은 `data/backups/`. 더블클릭은 그 브라우저 안(localStorage·IndexedDB)에 쌓인다 — 서로 다른 기기로 센다
+
+## 0-1. 빠른 시작 — 개발 VM (Phase 1·2)
 
 ```bash
 cd /data/projects/MyLearner
 bash scripts/check_env.sh        # 마지막 줄 READY
-bash scripts/verify.sh           # 전체 검증 18단계(약 2분). 느린 Docker 단계를 빼려면 --quick
+bash scripts/verify.sh           # 전체 검증 20단계(약 3분). 느린 Docker 단계를 빼려면 --quick
 bash scripts/run_js_tests.sh     # JS 시험만(Docker Node 22) — 파일을 주면 그것만
 python3 scripts/check_mwl_real.py --out dist/courses/mwl.course.json   # MWL 미들웨어 과정 → 과정 파일 + 135과 렌더 대조
 python3 scripts/pack_probe.py    # 폐쇄망 점검 묶음 dist/mylearner-probe-v1.tgz

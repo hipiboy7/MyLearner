@@ -8,7 +8,7 @@ const path = require('path');
 const vm = require('vm');
 const { ROOT } = require('./helpers');
 
-const ORDER = ['constants', 'dates', 'hash', 'srs', 'regex', 'grade', 'course', 'log', 'replay', 'plan', 'mastery', 'stats', 'markdown', 'mwl_import'];
+const ORDER = ['constants', 'dates', 'hash', 'srs', 'regex', 'grade', 'course', 'log', 'replay', 'plan', 'mastery', 'stats', 'markdown', 'mwl_import', 'checkup'];
 function load(names) {
   const ctx = { console: console };
   ctx.self = ctx;

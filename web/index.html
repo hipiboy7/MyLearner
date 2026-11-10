@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!-- MyLearner web/index.html — 화면 껍데기(FR-301·304). MWL web/index.html(MiddlewareLearner@e55b9c0)을 옮겨 고쳤다.
+     인라인 스크립트·인라인 style 을 쓰지 않는다(CSP 'self'). 스크립트 싣는 순서는 docs/P3_설계서_PC.md 2절. -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<title>MyLearner — 오늘 학습</title>
+<link rel="stylesheet" href="styles.css">
+<script src="boot.js"></script>
+</head>
+<body>
+<a class="skip" href="#app">본문으로</a>
+<div class="shell">
+<aside class="side">
+  <a class="brand" href="#/today" aria-label="MyLearner 오늘로">
+    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 18V6l8 6 8-6v12"/></svg></span>
+    <span class="brand-text"><b>MyLearner</b><small>내 자료로 매일 배우기</small></span>
+  </a>
+  <span class="edition" id="edition-badge"></span>
+  <nav class="nav" aria-label="주 메뉴">
+    <p class="nav-h">학습</p>
+    <a href="#/today" data-route="today"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4M9 14.5l2 2 4-4"/></svg>오늘</a>
+    <a href="#/review" data-route="review"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="12.5" height="13.5" rx="2"/><path d="M8 3.5h10a2 2 0 0 1 2 2V16"/></svg>복습<span class="count" id="nav-due" title="오늘 복습할 카드"></span></a>
+    <a href="#/check" data-route="check"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.3 2.3 4.7-4.8"/></svg>점검</a>
+    <a href="#/wrong" data-route="wrong"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5L18.5 7.5v13H6z"/><path d="M9.5 11.5l5 5M14.5 11.5l-5 5"/></svg>오답노트<span class="count" id="nav-wrong" title="아직 못 고친 오답"></span></a>
+    <p class="nav-h">기록</p>
+    <a href="#/stats" data-route="stats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M7.5 16v-5M12 16V7M16.5 16v-8"/></svg>통계</a>
+    <a href="#/journal" data-route="journal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5h4l10-10-4-4-10 10z"/><path d="M13 7l4 4"/></svg>회고</a>
+    <a href="#/courses" data-route="courses"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z"/><path d="M9 4v14M15 6v14"/></svg>과정</a>
+    <p class="nav-h">참고</p>
+    <a href="#/glossary" data-route="glossary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5a2 2 0 0 1 2-2h11v14H7a2 2 0 0 0-2 2z"/><path d="M5 19.5a2 2 0 0 0 2 1h11v-3"/></svg>용어</a>
+    <a href="#/settings" data-route="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>설정</a>
+  </nav>
+  <div class="side-foot"><span class="mode" id="mode-badge" title="저장 위치">…</span><button class="theme-btn" id="theme-btn" type="button" title="화면 밝기 — 누를 때마다 자동 → 밝게 → 어둡게">◐ 자동</button></div>
+</aside>
+<div class="main">
+<div id="banner" class="banner" role="status" hidden></div>
+<main id="app" class="app" tabindex="-1"><p class="loading">불러오는 중…</p></main>
+<footer class="foot"><span id="foot-info"></span> · <a href="#/settings">설정</a></footer>
+</div>
+</div>
+<script src="config.js"></script>
+<script src="core/constants.js"></script>
+<script src="core/dates.js"></script>
+<script src="core/hash.js"></script>
+<script src="core/srs.js"></script>
+<script src="core/regex.js"></script>
+<script src="core/grade.js"></script>
+<script src="core/course.js"></script>
+<script src="core/log.js"></script>
+<script src="core/replay.js"></script>
+<script src="core/plan.js"></script>
+<script src="core/mastery.js"></script>
+<script src="core/stats.js"></script>
+<script src="core/markdown.js"></script>
+<script src="core/mwl_import.js"></script>
+<script src="core/checkup.js"></script>
+<script src="store/common.js"></script>
+<script src="store/idb.js"></script>
+<script src="store/browser.js"></script>
+<script src="store/server.js"></script>
+<script src="data/manifest.js"></script>
+<script src="app/util.js"></script>
+<script src="app/state.js"></script>
+<script src="app/views.js"></script>
+<script src="app/stats_view.js"></script>
+<script src="app/settings_view.js"></script>
+<script src="app/main.js"></script>
+</body>
+</html>

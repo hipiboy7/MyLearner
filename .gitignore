@@ -17,6 +17,8 @@ coverage/
 logs/
 *.log
 dist/
+# 과정 자료(생성물 — python3 scripts/pack_app.py --web-data)
+web/data/
 build/
 tmp/
 

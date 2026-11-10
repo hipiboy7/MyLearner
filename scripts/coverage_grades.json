@@ -55,13 +55,23 @@
     "tools/ai_probe.py::combine_*",
     "tools/ai_probe.py::_schema_ok",
     "tools/ai_probe.py::chat_body",
-    "mylearner/constants.py"
+    "mylearner/constants.py",
+    "mylearner/storage.py::backup_name",
+    "mylearner/storage.py::reason_of",
+    "mylearner/storage.py::prune",
+    "mylearner/storage.py::check_line",
+    "mylearner/storage.py::union",
+    "mylearner/storage.py::split_log"
   ],
   "B": [
     "tools/ai_probe.py",
     "mylearner/convert/mwl.py",
     "mylearner/__init__.py",
-    "mylearner/convert/__init__.py"
+    "mylearner/convert/__init__.py",
+    "mylearner/storage.py",
+    "mylearner/server.py",
+    "mylearner/__main__.py",
+    "mylearner/convert/learn.py"
   ],
   "exclude": [],
   "thresholds": {

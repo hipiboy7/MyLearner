@@ -24,7 +24,7 @@ from scripts.import_mwl_fixtures import dev_tools  # noqa: E402
 
 PARITY = ('<h1>제목</h1>\n<ul>\n<li><a class="ref" href="#/learn/mwl/A1-1"><code>A1-1</code></a> <strong>굵게</strong> 한*글*</li>\n</ul>\n'
           '<ol>\n<li>전각</li>\n</ol>')
-CORE_FILES = 14
+CORE_FILES = 15
 FUZZ_N = 5000   # tests/ui/render_check.html 의 FUZZ_N 과 같다
 
 

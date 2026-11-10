@@ -27,7 +27,8 @@
     "QUIZ_ITEM_TYPES": ["mcq", "multi", "short", "order"],
     "LAB_CHECK_TYPES": ["choice", "text", "regex"],
     "MWL_COURSE_ID": "mwl",
-    "MWL_NOTES_ID": "mwl-notes"
+    "MWL_NOTES_ID": "mwl-notes",
+    "DEVICE_RE": "^[a-z0-9][a-z0-9-]{0,31}$"
   } /* SHARED-END */;
 
   // SM-2 (MWL engine.js 와 같다 — 골든 벡터 tests/fixtures/mwl/srs_vectors.json)
@@ -47,7 +48,7 @@
   // 사건(docs/P2_설계서_Core.md 3.3절)
   var EVENT_TYPES = ['review', 'card.state', 'card.hold', 'lesson', 'lab', 'drill', 'quiz', 'check', 'session', 'journal', 'setting'];
   var EVENT_RANK = { 'card.state': 1 };   // 그날의 다른 사건 뒤에 온다. 나머지는 0
-  var DEVICE_RE = '^[a-z0-9][a-z0-9-]{0,31}$';
+  var DEVICE_RE = SHARED.DEVICE_RE;   // 서버(mylearner/storage.py)도 같은 규칙으로 기기 ID 를 본다
   var TIME_RE = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
   var DAY_RE = '^\\d{4}-\\d{2}-\\d{2}$';
   var TYPE_RE = '^[a-z][a-z0-9.]{0,31}$';
