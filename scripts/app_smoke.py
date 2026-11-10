@@ -37,7 +37,7 @@ SHOTS = [("today", "#/today", None), ("review", "#/review", "prep-review"), ("le
          ("import", "#/import/mwl", "prep-import"), ("merge", "#/import/merge", "prep-merge")]
 FOLD_SHOTS = [("today", "#/today", None), ("review", "#/review", "prep-review"), ("settings", "#/settings", None), ("merge", "#/import/merge", "prep-merge")]
 PHONE_WIDTHS = (344, 390, 690)   # 폴드5 접은 화면·폰·폴드5 펼친 화면(추정 — docs/P4_설계서_Mobile.md 3.7절 ⚠️)
-LIMITS = {"ready_ms": 2000, "review_ms": 400}
+LIMITS = {"ready_ms": 2000, "review_ms": 400, "preview30k_ms": 3000, "merge30k_ms": 5000}   # NFR-302 · NFR-406(P4)
 
 
 def courses():
@@ -171,7 +171,7 @@ def main(argv=None) -> int:
         step("first", "#/today")
         step("persist", "#/today")
         for w in PHONE_WIDTHS:   # P4 FR-461 — 폰 폭(창 폭을 정해 연다)
-            sc = scenario_file(fw, "phone-%d" % w, dict(base, name="phone"))
+            sc = scenario_file(fw, "phone-%d" % w, dict(base, name="phone", width=w))
             steps.append({"url": url + "#/today", "timeout": 180000, "ready": shot_ready, "inject": [sc] + inj, "width": w, "height": 860})
             names.append("phone@%d" % w)
         if args.shots:

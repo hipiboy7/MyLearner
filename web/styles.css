@@ -285,6 +285,12 @@ details summary { cursor: pointer; margin: .6rem 0; font-weight: 600; }
   .toc strong { flex: none; margin: 0 .2rem 0 0; }
   .toc a { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 .85rem; border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); white-space: nowrap; }
 }
+/* 폴드5 펼친 화면·작은 태블릿(40~60rem)도 메뉴를 한 줄 가로 스크롤 뒤에 숨기지 않는다 — 690px 에서 회고·과정·용어·설정이 화면 밖이었다(P4 스크린샷) */
+@media (min-width: 40.0625rem) and (max-width: 60rem) {
+  .side { flex-wrap: wrap; row-gap: .3rem; }
+  .side-foot { margin-left: auto; }
+  .nav { order: 3; flex: 1 0 100%; flex-wrap: wrap; overflow: visible; gap: .15rem .25rem; }
+}
 @media (max-width: 40rem) {
   /* 메뉴는 한 줄 가로 스크롤에 숨기지 않고 여러 줄로 다 보인다. 위에 붙여 두지 않는다 — 읽을 자리를 가리지 않고, 화면을 옮기면 맨 위로 간다 */
   .side { position: static; flex-wrap: wrap; row-gap: .3rem; padding: .45rem .6rem .5rem; }

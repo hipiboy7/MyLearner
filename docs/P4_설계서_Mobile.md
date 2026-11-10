@@ -2,7 +2,8 @@
 
 - 작성 2026-11-10 / 대응 요구사항: [`P4_요구사항정의서_Mobile.md`](P4_요구사항정의서_Mobile.md) FR-401~481, NFR-401~408 / 상위 문서: [`설계서_Architecture.md`](설계서_Architecture.md), [`P3_설계서_PC.md`](P3_설계서_PC.md), [`P2_설계서_Core.md`](P2_설계서_Core.md)
 - 코드: `web/core/`(zip·exchange·merge), `web/store/`(android·더하기), `web/app/`(merge_view·더하기), `mylearner/`(storage·server 더하기), `config/editions/mobile.json`, `mobile/android/`, `scripts/`(build_android.sh·pack_app.py·ci_windows_bundle.py·check_workflows.py), `.github/workflows/` / 시험: `tests/unit/js/`, `tests/integration/py/`, `tests/ui/`, `mobile/android/test/`, `mobile/android/e2e/`
-- 옮겨 온 코드의 출처: MWL `e55b9c0` 의 `mobile/android/`(`MainActivity`·`Policy`·`ShareProvider`·`Mirror` 의 원자적 쓰기·셸 스크립트·`tools/pack.py`·`tools/docker-build.sh`·`e2e/emulator_test.py`), `scripts/build_android.sh`
+- 정정 이력: 2026-11-10 — 구현하며 바꾼 것: 3.2절 가상 주소 경로(`/web/` 없이 — MWL 과 같게), 3.3절 `singleWriter`(T-014), 3.9절 에뮬레이터 옵션(T-012)·시스템 이미지, 3.10절 폰 폭 검사 방법·교환 파일 속성 시험 파일, 3.7절 메뉴 줄바꿈 폭(40~60rem)
+- 옮겨 온 코드의 출처: MWL `e55b9c0` 의 `mobile/android/`(`MainActivity`·`Policy`·`ShareProvider`·`Mirror` 의 원자적 쓰기·셸 스크립트·`mobile/android/tools/pack.py`·`mobile/android/tools/docker-build.sh`·`mobile/android/e2e/emulator_test.py` — MWL 쪽 같은 이름), `scripts/build_android.sh`
 
 ## 1. 데이터 흐름
 
@@ -11,8 +12,8 @@
            mobile/android/tools/pack.py stage ─▶ index.html 사본에 셸 스크립트 한 줄
            build_android.sh(ANDROID_IMAGE, --network none): 규칙 시험(JVM) → aapt2 → javac → d8 → zipalign → apksigner → 점검(권한 0)
                                                            ─▶ dist/android/MyLearningPlatform-v<판>.apk
-[폰]  MainActivity ─ WebView ─ https://appassets.androidplatform.net/web/index.html#/today
-        화면(PC 와 같은 web/) ─ 저장소 = store/android.js ─ 다리 kv* ─▶ Kv.java ─▶ files/kv/<이름>(원자적 교체)
+[폰]  MainActivity ─ WebView ─ https://appassets.androidplatform.net/index.html#/today
+        화면(PC 와 같은 web/) ─ 저장소 = store/android.js(singleWriter) ─ 다리 kv* ─▶ Kv.java ─▶ files/kv/<이름>(원자적 교체)
         교환 파일 내보내기 ─ 다리 save·share ─▶ 시스템 저장 창(ACTION_CREATE_DOCUMENT) · 공유 시트(ACTION_SEND)
         파일 고르기(<input type=file>) ─▶ ACTION_OPEN_DOCUMENT ─▶ 합치기·MWL 들여오기 화면
 [세 판 공통]  교환 파일(zip) ─ exchange.open ─▶ merge.preview ─(확인)─▶ store.backup('import-merge') ─▶ store.append ─▶ saveCourse ─▶ 다시 읽기 ─▶ N/N
@@ -70,8 +71,8 @@
 | 항목 | 정한 것 |
 |---|---|
 | 매니페스트 | `package` `io.github.hipiboy7.mylearningplatform`, `uses-permission` 없음, `android:allowBackup="false"`, `android:usesCleartextTraffic="false"`, 액티비티 하나(`exported=true` — 런처), `ShareProvider`(`exported=false`, `grantUriPermissions=true`), `configChanges="orientation\|screenSize\|smallestScreenSize\|screenLayout\|keyboard\|keyboardHidden\|density\|uiMode"` 중 `uiMode` 는 빼서 밝기 모드가 바뀌면 새로 그린다(MWL 과 같음) |
-| 가상 주소 | `https://appassets.androidplatform.net/web/<경로>` → `assets/web/<경로>`. 그 밖 403 · 없는 파일 404 · GET 만 · 경로에 `..`·`\`·`%2e`·`%2f` 거부(`Policy.assetPath`). HTML 에 CSP 헤더(`Policy.CSP` — `web/index.html` 메타와 같은 글 + `frame-ancestors 'none'`, 같은지는 Python 시험이 본다) |
-| 첫 화면 | `…/web/index.html#/today`(해시를 붙여 열어 화면 기록이 한 번 더 쌓이지 않게) |
+| 가상 주소 | `https://appassets.androidplatform.net/<경로>` → `assets/web/<경로>`(MWL 과 같다). 그 밖 403 · 없는 파일 404 · GET 만 · 경로에 `..`·`\`·`%2e`·`%2f` 거부(`Policy.assetPath`). HTML 에 CSP 헤더(`Policy.CSP` — `web/index.html` 메타와 같은 글 + `frame-ancestors 'none'`, 같은지는 Python 시험이 본다) |
+| 첫 화면 | `…/index.html#/today`(해시를 붙여 열어 화면 기록이 한 번 더 쌓이지 않게) |
 | WebView 설정 | JS 켬, DOM 저장소 켬, `allowFileAccess`·`allowContentAccess` 끔, `setSupportMultipleWindows(false)`, `javaScriptCanOpenWindowsAutomatically(false)`, Safe Browsing·사용 통계 끔, 디버그 빌드에서만 `setWebContentsDebuggingEnabled(true)` |
 | 다리 `MyLearnerAndroid` | 지금 화면 주소가 `https://appassets.androidplatform.net/` 로 시작할 때만 일한다(아니면 빈 값). 메서드는 아래 표 |
 | 파일 고르기 | `<input type=file>` → `onShowFileChooser` → `ACTION_OPEN_DOCUMENT`(`*/*` — 카톡이 저장한 파일의 형식이 제각각). 돌아온 주소는 `content:` 만(`Policy.pickedOk`) |
@@ -119,7 +120,7 @@
 | `kv.get(store, key)`·`put`·`del`·`keys(store)` | `kv.<store>.<key>`(예 `kv.backups.20261110T…Z-daily`) | 값은 JSON 글. 약속(Promise)으로 돌려준다 |
 
 - 기록은 브라우저 모드와 같은 달별 키(`mylearner.log.YYYY-MM`)라 덧붙이기 한 번에 다시 쓰는 양은 그달 것뿐이다. 하루 백업·순번 하한(`mylearner.seq`)·기기 ID 도 같은 규칙으로 파일에 남는다
-- 앱 안 WebView 는 하나라 쓰는 탭 임대는 늘 '내 것'이다. 임대·저장 못 한 줄(`mylearner.pending.*`)·화면 설정은 WebView localStorage 에 둔다(잃어도 기록은 파일에 있다)
+- 앱 안 WebView 는 하나라 쓰는 곳이 하나다 — 어댑터가 `singleWriter: true` 를 알리고 화면(`state.js leaseState`·`claim`)은 그 저장소에서 탭 임대를 보지도 적지도 않는다. 처음에는 임대를 그대로 썼다가 강제 종료 뒤 다시 켠 앱이 몇 초 동안 읽기 전용이 됐다(트러블슈팅 T-014). 저장 못 한 줄(`mylearner.pending.*`)·화면 설정은 WebView localStorage 에 둔다(잃어도 기록은 파일에 있다)
 - `state.js chooseStore`: `root.MyLearnerAndroid` 와 `ns.storeAndroid` 가 있으면 안드로이드 어댑터를 먼저 고른다(서버 확인 없이)
 
 ### 3.4 교환 파일 (FR-420~424)
@@ -214,6 +215,7 @@ store.restore(name, remove) → Promise<{removed, added, backup}>        지금 
 | 오늘 위 띠 | `merge.reminderDays` 가 값이면 '마지막 내보내기 N일 전 — 앱을 지우면 기록도 지워집니다 [내보내기]' | 아니오 |
 
 - 마지막 내보내기 시각은 `localStorage['mylearner.exported']`(ISO)에 둔다 — 알림용이라 잃어도 기록과 상관없다
+- 좁은 화면: 60rem 이하에서는 메뉴가 한 줄 가로 스크롤 뒤에 숨지 않고 여러 줄로 다 보인다(40rem 이하 규칙을 40~60rem 에도 — 폴드5 펼친 화면 690px 에서 찾음), 넓은 표(백업·과정)는 `.table-wrap` 안에서 옆으로 넘긴다. 손가락만 있는 화면(`hover: none`·`pointer: coarse`)에서는 키보드 안내를 숨긴다
 - 폰 폭(FR-461): 화면 확인 폭 — 폰 390(Phase 3), **폴드5 접은 화면 344**, **펼친 화면 690**. 값은 기기 사양(덮개 904×2316 px·402 ppi, 본 화면 1812×2176 px·374 ppi — 삼성 사양표)을 흔한 밀도(420 dpi = 2.625배)로 나눈 추정이다 ⚠️ — 실제 폭은 설정 → 이 앱의 '화면 폭' 을 체크리스트 피드백으로 받아 고친다. S22 울트라(기본 1080 px 폭)는 390 근처라 390 으로 본다 ⚠️
 
 ### 3.8 묶음·빌드 (FR-408·450·452)
@@ -249,7 +251,7 @@ store.restore(name, remove) → Promise<{removed, added, backup}>        지금 
 
 1. checkout → KVM 켜기(GitHub changelog 2024-04-02 의 udev 규칙: `KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"` → `udevadm control --reload-rules` → `udevadm trigger --name-match=kvm`)
 2. `bash scripts/build_android.sh --courses tests/fixtures/courses/sample.course.json --test-key --debuggable`
-3. `python3 mobile/android/e2e/emulator_test.py dist/android/MyLearningPlatform-v<판>-test.apk <캡처 폴더> --fetch` — 시스템 이미지(`system-images;android-36;google_apis;x86_64`)를 컨테이너 안 `sdkmanager` 로 받는 단계만 네트워크를 쓰고, 에뮬레이터는 `--network none` + `--device /dev/kvm`
+3. `python3 mobile/android/e2e/emulator_test.py dist/android/MyLearningPlatform-v<판>-test.apk <캡처 폴더> --fetch` — 시스템 이미지(`system-images;android-36;default;x86_64` — AOSP, 시스템 저장 창 있음)를 컨테이너 안 `sdkmanager` 로 Docker 볼륨 `mylearner-android-<uid>` 에 받는 단계만 네트워크를 쓰고, 에뮬레이터는 `--network none` + `--device /dev/kvm` + `-gpu swangle_indirect -feature -ModemSimulator -change-locale ko-KR`(트러블슈팅 T-012). 누르기는 디버그 빌드의 WebView DevTools(CDP — 표준 라이브러리 웹소켓)로, 시스템 저장 창만 uiautomator 로
 4. 캡처·보고서를 artifact(7일). 기록 내용·토큰은 싣지 않는다
 
 KVM 근거: GitHub changelog 2024-04-02 "2-vCPU GitHub-hosted Linux runners will be able to make use of hardware acceleration for Android testing" — 리눅스는 러너 사용자가 KVM 을 쓰게 해야 한다(위 udev 규칙). 실제로 되는지는 첫 실행으로 확인한다 ⚠️
@@ -261,15 +263,15 @@ KVM 근거: GitHub changelog 2024-04-02 "2-vCPU GitHub-hosted Linux runners will
 | 무엇 | 어떻게 |
 |---|---|
 | zip·교환 파일·합치기(A) | `zip.test.js`(CRC 기대값·쓰기→읽기·deflate 항목(Node zlib 로 만든 zip)·거부 사례 12가지), `exchange.test.js`(같은 입력 = 같은 바이트·해시 깨짐·모르는 판·MWL 진도·기록 파일), `merge.test.js`(미리보기 칸마다·멱등·되살리기 계획·알림 날 수) — 시험 먼저 |
-| 기록 유실 0(속성, NFR-402) | `property.test.js` 에 기기 셋 무작위 시나리오 — 각 기기는 브라우저 어댑터(가짜 저장소), 주고받기는 `exchange.build` → 바이트 → `exchange.open` → `merge.preview` → `append`. 되살리기를 섞은 경우는 '뺀 줄이 직전 백업에 있다'를 본다 |
+| 기록 유실 0(속성, NFR-402) | `exchange_property.test.js` — 기기 셋 무작위 시나리오 — 각 기기는 브라우저 어댑터(가짜 저장소), 주고받기는 `exchange.build` → 바이트 → `exchange.open` → `merge.preview` → `append`. 되살리기를 섞은 경우는 '뺀 줄이 직전 백업에 있다'를 본다 |
 | 명령 단위(NFR-402) | `scripts/check_log_roundtrip.js` 를 교환 파일(zip)로 — 실제 파일을 쓰고 읽는다 + 실제 로컬 서버에 `restore`·`diff` 를 부르는 통합 시험(`test_server.py`) |
 | 안드로이드 어댑터(B) | `store_android.test.js` — 가짜 다리(메모리 파일 KV, 오류 글 주입)로 Phase 3 어댑터 시험과 같은 약속 |
 | 서버·저장(B) | `test_storage.py`(`backup_diff`·`restore`·`KEEP` 표 JS 와 같음), `test_server.py`(두 API·폐쇄망판 백업 내려받기 404 그대로) |
 | 자바(A) | `PolicyTest`(주소·뒤로·고른 주소·파일 이름·CSP), `KvTest`(이름·원자적 쓰기·남은 임시 파일·목록) — 빌드마다 먼저 |
-| 화면(C) | `app_check.js` 에 합치기(내보낸 교환 파일 → 다른 프로필에 들여오기 → N/N → 같은 파일 다시 → 새 줄 0 → 되돌리기)·되살리기·내보내기 알림 띠, 폰 폭 344·390·690 넘침·누름 44px, 접근성. 셸 스크립트는 가짜 다리를 심어 저장·공유·바깥 링크 |
+| 화면(C) | `app_check.js` 에 합치기(다른 기기 교환 파일 → N/N → 같은 파일 다시 → 새 줄 0 → 되돌리기 → 되살리기 전으로 다시)·내보내기(플랫폼 훅으로 받은 zip 을 다시 열기)·내보내기 알림 띠, 폰 폭 344·390·690 — **정한 폭과** 비교한 넘침(모바일 에뮬레이션은 넓은 내용에 맞춰 레이아웃 폭을 늘린다)·메뉴가 가로 스크롤 뒤에 숨는가·스크롤 상자 밖으로 잘린 단추·누름 44px·접근성, 3만 줄 교환 파일 미리보기·합친 뒤 다시 계산 시간(NFR-406). 셸 스크립트·바깥 링크는 에뮬레이터에서 |
 | 날짜 넘김 | 화면 스모크가 페이지 시계를 23:58 → 다음 날로 옮겨 `checkDay` 가 새로 읽는지(P3 테스트결과서 8절에서 넘어옴) |
 | APK | `build_android.sh` 의 점검(권한 0·exported 1·디버그 표시), `--repro` |
-| 에뮬레이터(C) | `emulator_test.py` — 설치·판·권한 0, 비행기 모드 첫 화면, 강의 마침·복습, 채점 0.1초 뒤 강제 종료 → 다시 켜도 그 사건(디버그 빌드의 `run-as` 로 `files/kv/` 를 읽어 확인), 뒤로 가기(오늘에서 닫힘), 회전, 교환 파일 '파일로 저장' → 다운로드 폴더 파일의 머리·줄 수 |
+| 에뮬레이터(C) | `emulator_test.py` — 설치·판·권한 0, 비행기 모드 첫 화면·읽기 전용 띠 없음, 강의 마침·복습, 채점 0.1초 뒤 강제 종료 → 다시 켜도 그 사건(CDP 로 사건 목록, 디버그 빌드의 `run-as` 로 `files/kv/`), 회전(같은 JS 문맥), 교환 파일 '파일로 저장' → 다운로드 폴더 파일의 머리·줄 수, 뒤로 가기(오늘에서 닫힘), 크래시·스크립트 오류 0 |
 
 ## 4. 오류 처리
 

@@ -81,6 +81,23 @@
     const t1 = performance.now(); await go('#/stats'); timings.stats_ms = Math.round(performance.now() - t1);
     await go('#/review');
     const t2 = performance.now(); await act('[data-action=reveal]', '답 보기'); await act('[data-action=grade][data-g=good]', 'good'); timings.review_ms = Math.round(performance.now() - t2);
+    // NFR-406 — 기록 30,000줄 교환 파일: 열기 + 미리보기, 그리고 합친 기록을 다시 계산하기(저장소 쓰기는 브라우저 저장소 한도 때문에 재지 않는다 — 테스트결과서 1.4)
+    const L = ML.log, ids = Object.keys(A.course('mwl').cards), big = [];
+    for (let i = 0; i < 30000; i++) {
+      const day = ML.dates.addDays(A.today, -1 - (i % 300));
+      big.push(L.make({ dev: 'perf-phone-000001', seq: i + 1, t: day + 'T10:00:00.000Z', day: day, type: 'review', course: 'mwl', card: ids[i % ids.length], grade: ['again', 'hard', 'good', 'easy'][i % 4] }).line);
+    }
+    const ex = ML.exchange.build({ lines: big, raw: [], courses: [], app: { version: '0.4.0', edition: 'mobile', label: '모바일판' }, dev: 'perf-phone-000001', now: new Date(), dayStartHour: 0 });
+    const t3 = performance.now();
+    const op = await ML.exchange.open(ex.bytes, { inflateRaw: ML.inflateRaw });
+    const pv = ML.merge.preview({ have: A.allLines(), file: op.lines, today: A.today, isOwn: A.isOwn, known: ML.replay.KNOWN });
+    timings.preview30k_ms = Math.round(performance.now() - t3);
+    const t4 = performance.now();
+    const merged = L.merge([A.allLines(), pv.freshLines]);
+    ML.replay.run(merged.events, { today: A.today });
+    timings.merge30k_ms = Math.round(performance.now() - t4);
+    counts.exchange30k = { bytes: ex.bytes.length, fresh: pv.fresh, events: merged.events.length };
+    check(pv.fresh === 30000, '3만 줄 미리보기 새 줄 ' + pv.fresh);
     return { problems, counts, timings };
   }
   // P4 — 다른 기기(폰)의 교환 파일: mwl 카드 12장 복습 + 강의 하나 + 사용자 과정 하나
@@ -96,7 +113,8 @@
     return { lines: lines, ex: ex };
   }
   function overflowAndTargets(tag) {
-    const w = window.innerWidth, sw = document.documentElement.scrollWidth;
+    // 모바일 에뮬레이션은 내용이 넓으면 레이아웃 폭(innerWidth)을 내용에 맞춰 늘린다(344 → 411 — 테스트결과서 7절). 그래서 정한 폭과 비교한다
+    const w = S.width || window.innerWidth, sw = Math.max(document.documentElement.scrollWidth, window.innerWidth);
     check(sw <= w + 1, tag + ': 가로로 넘친다(' + sw + ' > ' + w + 'px)');
     const small = [];
     document.querySelectorAll('.btn, button, .nav a, select, input[type=text], input[type=number]').forEach((el) => {
@@ -106,17 +124,34 @@
       if (r.height < 43.5 || r.width < 43.5) small.push((el.textContent || el.name || el.tagName).trim().slice(0, 20) + ' ' + Math.round(r.width) + '×' + Math.round(r.height));
     });
     check(small.length === 0, tag + ': 44px 보다 작은 누르는 곳 ' + small.length + ' — ' + small.slice(0, 4).join(' / '));
+    const nav = document.querySelector('.nav');
+    check(!nav || nav.scrollWidth <= nav.clientWidth + 1, tag + ': 메뉴가 가로 스크롤 뒤에 숨는다(' + (nav && nav.scrollWidth) + ' > ' + (nav && nav.clientWidth) + ')');
+    // 잘린 단추 — 가로 스크롤 상자 밖에서 화면 오른쪽을 넘는 것(폴드 344px 의 백업 표가 이랬다 — 테스트결과서 7절)
+    const clipped = [];
+    document.querySelectorAll('#app .btn, #app button').forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (!r.width || r.right <= w + 1) return;
+      for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) { const ox = getComputedStyle(p).overflowX; if (ox === 'auto' || ox === 'scroll') return; }
+      clipped.push((el.textContent || '').trim().slice(0, 20) + ' 오른쪽 ' + Math.round(r.right));
+    });
+    check(clipped.length === 0, tag + ': 화면 밖으로 잘린 단추 ' + clipped.length + ' — ' + clipped.slice(0, 3).join(' / '));
   }
   if (S.name === 'phone') {
     await waitFor(() => A.writer === 'mine', 9000, '쓰는 탭 임대');
     const lesson0 = Object.keys(A.course('mwl').lessons).sort()[0];
     for (const r of ['#/today', '#/review', '#/learn/mwl/' + lesson0, '#/stats', '#/courses', '#/map/mwl', '#/settings', '#/import/merge', '#/import/mwl', '#/check/mwl']) {
       await go(r);
+      if (r === '#/settings') {
+        await waitFor(() => !document.querySelector('#backup-list.loading'), 8000, '백업 목록');
+        const t = document.querySelector('#backup-list table');
+        counts['backups@' + S.width] = { rows: document.querySelectorAll('#backup-list tbody tr').length, table_right: t ? Math.round(t.getBoundingClientRect().right) : null };
+      }
       check(!errBox(), r + ': 오류 상자');
-      overflowAndTargets(r + ' @' + window.innerWidth);
-      audit(r + ' @' + window.innerWidth);
+      overflowAndTargets(r + ' @' + S.width);
+      audit(r + ' @' + S.width);
     }
     counts.width = window.innerWidth;
+    check(window.innerWidth === S.width, '레이아웃 폭 ' + window.innerWidth + 'px 가 정한 폭 ' + S.width + 'px 와 다르다(내용이 넓어 늘어났다)');
     return { problems, a11y, counts };
   }
   if (S.name === 'prep-merge') {

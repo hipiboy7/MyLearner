@@ -4,6 +4,7 @@
 - 계속 고치는 문서다. Phase 마다 정한 것을 해당 절에 더하고, 아직 정하지 않은 것은 "Phase N 에서 정한다"로 남긴다
 - 정정 이력: 2026-10-15 — 7절 시험(Python)에 3.14(`python:3.14.8-slim`)를 더했다(사용자 승인)
 - 정정 이력: 2026-10-15 — 6절 '비밀'에 AI 키를 보내는 조건을 더했다(P1 독립 점검 — Phase 6 의 AI 대리 호출도 따른다)
+- 정정 이력: 2026-11-10 — Phase 4 에서 정한 것: 3절 core(zip·exchange·merge)·저장 어댑터(안드로이드·되살리기)·`mobile/android/`·CI 행, 7절 안드로이드 빌드·에뮬레이터·GitHub Actions, 8절 APK·폐쇄망 zip, 11절 디렉토리, 12절 추적성
 - 정정 이력: 2026-11-10 — 8절에 받는 길(이 저장소 GitHub Release → 폰의 GitHub 앱, CLAUDE.md 7절 '릴리스')을 더했다(사용자 지시)
 - 정정 이력: 2026-11-09 — Phase 3 에서 정한 것: 2절 판 설정 경로, 3절 화면·저장 어댑터·서버·Learn 변환기 행, 7절 접근성 검사·안드로이드 빌드 이미지, 8절 앱 묶음, 11절 디렉토리, 12절 추적성, 13절 접근성 검사 방법
 - 정정 이력: 2026-10-15 — Phase 2 에서 정한 것: 3절(MWL 변환기는 Phase 2), 5절 형식 값, 6절 JS 파일 꼴·상수 위치 확정, 7·9절 JS 시험(Node 22.23.3·내장 커버리지), 11절 디렉토리, 12절 추적성
@@ -42,14 +43,16 @@
 |---|---|---|---|---|
 | `tools/ai_probe.py` | Python | 폐쇄망 AI 점검·`--serve-test`·`--decode` | A(판정·코드)·B(흐름) | 1 |
 | `tools/browser_probe.html` | HTML+JS | 폐쇄망 Chrome 점검 | C | 1 |
-| `web/core/` | JS | SM-2·하루 계획·숙련도, 사건 기록·늦은 복습 규칙·합치기, 렌더러 이스케이프, 과정 검사, 통계 계산, 채점, MWL 진도 변환 — 파일 14개와 싣는 순서는 `docs/P2_설계서_Core.md` 2절 | A | 2 |
+| `web/core/` | JS | SM-2·하루 계획·숙련도, 사건 기록·늦은 복습 규칙·합치기, 렌더러 이스케이프, 과정 검사, 통계 계산, 채점, MWL 진도 변환 — 파일 14개와 싣는 순서는 `docs/P2_설계서_Core.md` 2절. + 점검(Phase 3), 교환 파일 zip·exchange·합치기 미리보기·되살리기 계획 merge(Phase 4 — `docs/P4_설계서_Mobile.md` 3.4·3.5절) | A | 2·3·4 |
 | `web/index.html`·`boot.js`·`config.js`·`styles.css`·`app/*.js` | JS·CSS | 화면(오늘·복습·강의·실습·드릴·퀴즈·점검·통계·과정·설정·MWL 들여오기) — MWL 골격 이식, 파일과 싣는 순서는 `docs/P3_설계서_PC.md` 2절 | C | 3 |
-| `web/store/` | JS | 저장 어댑터 — `common.js`(순수, A)·`browser.js`(localStorage 달별 키 + IndexedDB)·`server.js`(로컬 서버)·`idb.js`, 안드로이드는 Phase 4. 같은 인터페이스(DIP, `docs/P3_설계서_PC.md` 3.2절) | A·B | 3·4 |
+| `web/store/` | JS | 저장 어댑터 — `common.js`(순수, A)·`browser.js`(localStorage 달별 키 + IndexedDB)·`server.js`(로컬 서버)·`idb.js`·`android.js`(다리의 파일 KV 를 감싸 브라우저 어댑터를 그대로 — `singleWriter`). 같은 인터페이스(DIP, `docs/P3_설계서_PC.md` 3.2절) + 되살리기 `backupDiff`·`restore`(`docs/P4_설계서_Mobile.md` 3.3·3.6절) | A·B | 3·4 |
 | `mylearner/` | Python | 로컬 서버(`server.py` — 정적 파일·기록·과정·백업 API, 토큰, 보안 헤더), 데이터 폴더(`storage.py`), CLI `python -m mylearner serve`(`__main__.py`). AI 대리 호출은 Phase 6 | B(순수 함수 A) | 3 |
 | `mylearner/convert/` | Python | MWL 과정(`mwl.py`, Phase 2)·Learn 자료(`learn.py`, Phase 3) → 과정 파일 변환 | B | 2·3 |
 | `mylearner/extract/` | Python | DOCX·HWPX·PPTX 텍스트 뽑기 | A | 6 |
 | `mylearner/ai/` | Python | 서버×모델 프로필, 긴 자료 처리 단계 | B | 6 |
-| `mobile/android/` | Java | APK 껍데기(인터넷 권한 0) | B | 4 |
+| `mobile/android/` | Java·JS | APK 껍데기(권한 0 — 인터넷 포함): `MainActivity`(WebView·가로채기·다리·저장·공유)·`Policy`(규칙)·`Kv`(파일 KV — 원자적 교체)·`ShareProvider`·셸 스크립트, 조립 `tools/`, 에뮬레이터 시험 `e2e/` — `docs/P4_설계서_Mobile.md` 3.2·3.3절 | A(Policy·Kv — JVM 시험)·B·C | 4 |
+| `scripts/build_android.sh` | Bash·Python | APK 빌드 명령 하나(빌드 이미지 안 `--network none`, 재현, 권한 0 점검, 서명 키) | B | 4 |
+| `.github/workflows/` + `scripts/check_workflows.py`·`ci_windows_bundle.py` | YAML·Python | GitHub Actions 2종(Windows 묶음 실기·Linux 에뮬레이터 — public 동안)과 정적 검사·묶음 실기 스크립트 | B·C | 4 |
 | `scripts/pack_app.py` | Python | 과정 자료 JS 감싸기·판 설정·반입 묶음(.tgz·.zip, 재현·판별 검사) | B(측정 폴더 밖 — 시험만) | 3 |
 | `scripts/app_smoke.py` + `tests/ui/app_check.js`·`a11y.js` | Python·JS | 화면 스모크(Chromium, `file://`·서버 모드)·접근성·스크린샷 | C | 3 |
 
@@ -91,10 +94,11 @@
 |---|---|---|
 | 런타임 서버·도구 | Python 표준 라이브러리 | 3.9 이상(폐쇄망 PC 3.14·3.12·3.9) |
 | 런타임 화면 | 바닐라 JS + 토큰 CSS, 외부 라이브러리 0 | Chrome 150 기준 |
-| 안드로이드 | WebView 껍데기(MWL 시제품 이식) | Phase 4. 빌드 이미지 `ghcr.io/cirruslabs/android-sdk:36`(digest `f9b3ea9ed2b5…`, 2026-11-09 받음) — JDK 21.0.9·build-tools 36.0.0·android-36, Gradle 없음. 이 이미지로 WebView 최소 APK 빌드·서명을 `--network none` 에서 확인(권한 0) |
+| 안드로이드 | WebView 껍데기(MWL 시제품 이식) | `bash scripts/build_android.sh`(Phase 4 — 패키지 `io.github.hipiboy7.mylearningplatform`, minSdk 26·targetSdk 36). 에뮬레이터 시험은 같은 이미지(에뮬레이터 36.3.10) + 시스템 이미지 `system-images;android-36;default;x86_64`(Docker 볼륨 `mylearner-android-<uid>`, 2.05 GB, 2026-11-10 받음), `-gpu swangle_indirect`(트러블슈팅 T-012). 빌드 이미지 `ghcr.io/cirruslabs/android-sdk:36`(digest `f9b3ea9ed2b5…`, 2026-11-09 받음) — JDK 21.0.9·build-tools 36.0.0·android-36, Gradle 없음. 이 이미지로 WebView 최소 APK 빌드·서명을 `--network none` 에서 확인(권한 0) |
 | 시험(Python) | `unittest` + `scripts/coverage_lite.py` | 개발 VM 3.9.21·3.11.9, Playwright 이미지의 3.12.3, `python:3.14.8-slim` 의 3.14.8(2026-10-15 받음 — DeprecationWarning 은 실패) |
 | 시험(JS) | Node 내장 시험 실행기 + 내장 커버리지(`--experimental-test-coverage`, `web/core` 줄 90%·분기 80% — `scripts/run_js_tests.sh`) | `node:22.23.3-alpine`(2026-10-15 받음, digest `0a7108bf6c7b…`) |
 | 화면 확인 | Playwright 이미지의 Chromium(헤드리스) | `mcr.microsoft.com/playwright:v1.63.0-noble` — Chromium 153.0.8010.12, 이 VM 에 이미 있다(2026-10-15). 접근성은 `tests/ui/a11y.js` 를 DevTools 평가로 넣어 본다(npm 받지 않음 — Phase 3) |
+| CI(Phase 4 — public 동안) | GitHub Actions 표준 러너 `windows-2025`(Python 3.9·3.14)·`ubuntu-24.04`(KVM — udev 규칙) | 액션은 커밋 SHA 로 고정(`docs/P4_설계서_Mobile.md` 3.9절), Linux 단계는 위 Docker 이미지 안 |
 
 개발 전용 도구의 판은 `scripts/dev_tools.env` 한 곳에 적고 스크립트가 거기서 읽는다(CLAUDE.md 7절).
 
@@ -104,7 +108,7 @@
 |---|---|---|---|
 | 점검 묶음 `dist/mylearner-probe-v<판>.tgz` | `ai_probe.py`·`browser_probe.html`·`README_KO.txt` | `python3 scripts/pack_probe.py` | 1 |
 | 폐쇄망 `dist/mylearner-closed-v<판>.tgz` / 인터넷판 `dist/mylearner-internet-v<판>.tgz`·`.zip` | 앱 전체(웹·서버·과정 자료 — 같은 묶음, 판 설정만 다름) | `python3 scripts/pack_app.py --edition closed\|internet` | 3 — 폐쇄망 `.zip` 은 4(폐쇄망 반입은 zip 이 기본, `.tgz` 도 함께 — P4 인터뷰 3번·4절 재확인) |
-| APK | 새 패키지 이름·서명 키 | Phase 4 | 4 |
+| APK `dist/android/MyLearningPlatform-v<판>.apk` | 모바일판 web 사본(과정 셋) + 껍데기. 패키지 `io.github.hipiboy7.mylearningplatform`, 서명 키 `~/.config/mylearner/`(+ `/data` 개인 폴더 사본 · VM 밖 한 부) | `bash scripts/build_android.sh` | 4 |
 
 모든 묶음과 APK 는 이 저장소의 GitHub Release(`v<판>`)로 내고, 사용자는 폰의 GitHub 앱(내 계정)에서 받는다 — 절차는 CLAUDE.md 7절 '릴리스'(첫 릴리스 `v0.3.0`, 2026-11-10).
 
@@ -158,7 +162,8 @@ MyLearner/
 ├── docs/                   scope·Architecture·P{N} 문서·트러블슈팅 (+ screenshots/P{N}/)
 ├── history/                세션 기록
 ├── dist/                   생성물(커밋하지 않음 — 바꾼 MWL 과정 파일도)
-│   (Phase 4~) mobile/
+├── mobile/android/         APK 껍데기(Phase 4): AndroidManifest.xml · res/ · src/…/mylearningplatform/(MainActivity·Policy·Kv·ShareProvider) · test/(JVM) · shell/android-shell.js · tools/(pack.py·docker-build.sh) · e2e/emulator_test.py
+├── .github/workflows/      GitHub Actions 2종(Phase 4 — public 동안)
 ```
 
 ## 12. 문서 간 추적성
@@ -168,6 +173,7 @@ MyLearner/
 | Phase 1 Probe | [`P1_요구사항정의서_Probe.md`](P1_요구사항정의서_Probe.md) FR-101~169 | [`P1_설계서_Probe.md`](P1_설계서_Probe.md) 6절 표 | `tools/`, `scripts/` | [`P1_테스트결과서_Probe.md`](P1_테스트결과서_Probe.md) 4절 |
 | Phase 2 Core | [`P2_요구사항정의서_Core.md`](P2_요구사항정의서_Core.md) FR-201~263 | [`P2_설계서_Core.md`](P2_설계서_Core.md) 6절 표 | `web/core/`, `mylearner/`, `scripts/` | [`P2_테스트결과서_Core.md`](P2_테스트결과서_Core.md) 4절 |
 | Phase 3 PC | [`P3_요구사항정의서_PC.md`](P3_요구사항정의서_PC.md) FR-301~364 | [`P3_설계서_PC.md`](P3_설계서_PC.md) 6절 표 | `web/`, `mylearner/`, `config/`, `scripts/` | [`P3_테스트결과서_PC.md`](P3_테스트결과서_PC.md) 4절 |
+| Phase 4 Mobile | [`P4_요구사항정의서_Mobile.md`](P4_요구사항정의서_Mobile.md) FR-401~481 | [`P4_설계서_Mobile.md`](P4_설계서_Mobile.md) 5절 표 | `web/`, `mylearner/`, `mobile/android/`, `scripts/`, `.github/workflows/` | [`P4_테스트결과서_Mobile.md`](P4_테스트결과서_Mobile.md) 4절 |
 
 코드 머리 주석이 요구사항·설계서 경로를 가리키고, 설계서 6절이 FR → 코드·시험을 가리킨다.
 
