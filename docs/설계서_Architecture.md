@@ -103,7 +103,7 @@
 | 묶음 | 내용 | 만드는 것 | Phase |
 |---|---|---|---|
 | 점검 묶음 `dist/mylearner-probe-v<판>.tgz` | `ai_probe.py`·`browser_probe.html`·`README_KO.txt` | `python3 scripts/pack_probe.py` | 1 |
-| 폐쇄망 `dist/mylearner-closed-v<판>.tgz` / 인터넷판 `dist/mylearner-internet-v<판>.tgz`·`.zip` | 앱 전체(웹·서버·과정 자료 — 같은 묶음, 판 설정만 다름) | `python3 scripts/pack_app.py --edition closed\|internet` | 3 — 폐쇄망 `.zip` 은 4(폐쇄망 반입은 zip, P4 인터뷰 3번) |
+| 폐쇄망 `dist/mylearner-closed-v<판>.tgz` / 인터넷판 `dist/mylearner-internet-v<판>.tgz`·`.zip` | 앱 전체(웹·서버·과정 자료 — 같은 묶음, 판 설정만 다름) | `python3 scripts/pack_app.py --edition closed\|internet` | 3 — 폐쇄망 `.zip` 은 4(폐쇄망 반입은 zip 이 기본, `.tgz` 도 함께 — P4 인터뷰 3번·4절 재확인) |
 | APK | 새 패키지 이름·서명 키 | Phase 4 | 4 |
 
 모든 묶음과 APK 는 이 저장소의 GitHub Release(`v<판>`)로 내고, 사용자는 폰의 GitHub 앱(내 계정)에서 받는다 — 절차는 CLAUDE.md 7절 '릴리스'(첫 릴리스 `v0.3.0`, 2026-11-10).

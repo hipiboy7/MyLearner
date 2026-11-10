@@ -31,14 +31,14 @@
 
 ## 3. 다음 단계
 
-1. **사용자 재확인 3가지**(P4 인터뷰결과서 4절): ① 패키지 이름 꼴 `io.github.hipiboy7.mylearningplatform` + 앱 이름 `MyLearningPlatform` ② 폐쇄망판 `.tgz` 도 계속 낼지(제안: zip 기본 + `.tgz` 함께) ③ '폰에서 MWL' = MyLearner 폰 앱에서 미들웨어 과정 + MWL 진도 들여오기(MWL 저장소 앱은 안 고침)
+1. ~~사용자 재확인 3가지~~ → 셋 다 확정(2026-11-10 — P4 인터뷰결과서 4절): 패키지 `io.github.hipiboy7.mylearningplatform`·앱 이름 `MyLearningPlatform`(보류 결정 3 닫음), 폐쇄망판 zip 기본 + `.tgz` 함께, 폰 앱에 미들웨어 과정 + MWL 진도 들여오기(MWL 앱은 안 고침)
 2. 사용자가 GitHub 앱에서 `v0.3.0` 파일이 받아지는지 알려 주면 CLAUDE.md 7절 '릴리스' 의 ⚠️ 를 지운다(안 되면 막힌 화면 문구로 다시 정한다)
-3. 재확인 뒤: `docs/P4_요구사항정의서_Mobile.md`(FR-401~ — APK 껍데기·안드로이드 저장 어댑터·교환 파일·합치기 화면(미리보기·백업·되돌리기)·폐쇄망 zip 반입 파일·폐쇄망판 zip 묶음·폰 MWL 들여오기·폴드5 두 화면·**CI 2종**(GitHub Actions — Windows 러너 묶음 실기, Linux 러너 에뮬레이터 시험. 러너 KVM 지원 확인 ⚠️ — CLAUDE.md 7절 'GitHub Actions')) → 설계서 → 코드·시험 → 테스트결과서 → 체크리스트(폰 점검 순서는 MWL `docs/checklist/android-app.md` 14칸을 본떠 MyLearner 화면에 맞춘다)
-4. 서명 키 만들기(재확인 뒤 첫 빌드 때): `~/.config/mylearner/` + `/data` 개인 폴더 사본, VM 밖 한 부는 사용자에게 알린다
+3. **다음 할 일**: `docs/P4_요구사항정의서_Mobile.md`(FR-401~ — APK 껍데기·안드로이드 저장 어댑터·교환 파일·합치기 화면(미리보기·백업·되돌리기)·폐쇄망 zip 반입 파일·폐쇄망판 zip 묶음·폰 MWL 들여오기·폴드5 두 화면·**CI 2종**(GitHub Actions — Windows 러너 묶음 실기, Linux 러너 에뮬레이터 시험. 러너 KVM 지원 확인 ⚠️ — CLAUDE.md 7절 'GitHub Actions')) → 설계서 → 코드·시험 → 테스트결과서 → 체크리스트(폰 점검 순서는 MWL `docs/checklist/android-app.md` 14칸을 본떠 MyLearner 화면에 맞춘다)
+4. 서명 키 만들기(첫 빌드 때): `~/.config/mylearner/` + `/data` 개인 폴더 사본, VM 밖 한 부는 사용자에게 알린다
 5. 에뮬레이터 시스템 이미지는 받기 전에 `df -h /data` 로 잰다
 6. Phase 4 끝 병합 때 CLAUDE.md 7절 '릴리스' 대로 `v0.4.0`(APK + 폐쇄망 zip 포함)
 7. 사람 리뷰(기다리지 않음): [`docs/P3_체크리스트_PC.md`](../docs/P3_체크리스트_PC.md). 보류 결정 8 이 오면 7 을 확정
-8. `v0.3.0` 설명 글의 '비공개 저장소라 로그인하지 않으면 404' 줄은 public 이 된 뒤 맞지 않는다 — 사용자 허락 뒤 `gh release edit v0.3.0 --notes-file` 로 고친다(아니면 `v0.4.0` 부터 새 글)
+8. ~~`v0.3.0` 설명 글 고치기~~ → 고침(2026-11-10). 비밀값 스캔·push 보호 켬(CLAUDE.md 11절)
 9. private 로 되돌릴 때(보류 결정 10): 워크플로를 끄거나 줄이고 CLAUDE.md 0·7·11절을 되돌린다
 
 ## 4. 판단·관찰
