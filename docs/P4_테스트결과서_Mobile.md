@@ -1,8 +1,9 @@
 # P4 테스트결과서 — 폰에서 배우기 + 합치기
 
+- 정정 2026-11-10: 7절 11 을 바로잡고(Policy.java 도 구현이 먼저, zip.js 는 구현 초안 뒤에 실패를 봄, 리팩터 단계 없음) 7.1절 TDD 사후 점검(변이 시험·시험 3건 보탬·리팩터)을 더했다 — 사용자 질문 "red·green·blue 다 했어?"
 - 작성 2026-11-10 / 대응: [`P4_요구사항정의서_Mobile.md`](P4_요구사항정의서_Mobile.md) FR-401~481·NFR-401~408, [`P4_설계서_Mobile.md`](P4_설계서_Mobile.md) / 써 보기: [`P4_체크리스트_Mobile.md`](P4_체크리스트_Mobile.md)
 - 실행 환경: 개발 VM(RHEL 9.6, 메모리 11Gi), Python 3.9.21·3.11.9·3.12.3(Playwright 이미지)·3.14.8, Node 22.23.3, 헤드리스 Chromium 153, 안드로이드 빌드 이미지 `ghcr.io/cirruslabs/android-sdk:36`(JDK 21.0.9 · build-tools 36.0.0 · android-36 · 에뮬레이터 36.3.10), 에뮬레이터 시스템 이미지 `system-images;android-36;default;x86_64`(Android 16 · WebView — Docker 볼륨 2.05 GB, 2026-11-10 받음). 과정 자료: MWL `e55b9c0`(135과), Learn `mwm-app`(45과)·`llm-chat-agent`(9과)
-- 아직 없는 것: GitHub Actions 실행 결과(push 가 필요 — 사용자 확인 대기, 8절), 독립 점검(5.2절 — 사용자 확인 대기)
+- 아직 없는 것: Windows 묶음 실기의 Actions 통과(첫 실행은 시험 도구 결함으로 실패 — 1.6절, T-015), 독립 점검 결과(5.2절 — 2026-11-10 사용자 허락, 진행 중)
 
 ## 1. 실행 증거
 
@@ -74,13 +75,22 @@
 
 ### 1.5 묶음 실기(Linux) — `python3 scripts/ci_windows_bundle.py` (2026-11-10)
 
-폐쇄망판 zip 만들기 → 풀기 → 켜기(`PYTHONIOENCODING=cp949`) → 첫 줄 cp949 엄격히 풀림 → `/api/health` 폐쇄망판 → `?token=` 쿠키(HttpOnly·SameSite=Strict) → 한 줄 덧붙이기 → 백업 → 백업 내려받기 404 → 되살리기 차이 API → 끄고 다시 켜도 그 줄 → 데이터 폴더 — **13건 통과**. Windows(`MyLearner.cmd`·`py -3`·`chcp 949`)는 Actions(8절)
+폐쇄망판 zip 만들기 → 풀기 → 켜기(`PYTHONIOENCODING=cp949`) → 첫 줄 cp949 엄격히 풀림 → `/api/health` 폐쇄망판 → `?token=` 쿠키(HttpOnly·SameSite=Strict) → 한 줄 덧붙이기 → 백업 → 백업 내려받기 404 → 되살리기 차이 API → 끄고 다시 켜도 그 줄 → 데이터 폴더 — **13건 통과**. Windows(`MyLearner.cmd`·`py -3`·`chcp 949`)는 Actions(1.6절). 전체 검증 21단계는 2026-11-10 부터 `PYTHONIOENCODING=cp1252`(러너 콘솔처럼)로 돌린다(T-015)
+
+### 1.6 GitHub Actions — `impl-phase4` push(2026-11-10, 사용자 허락)
+
+| 워크플로 | 러너 | 커밋 | 결과 |
+|---|---|---|---|
+| `android-emulator` | `ubuntu-24.04`(이미지 20261101.360) | `f085b86` | **통과** 2분 53초 — `/dev/kvm` 켜짐(udev 규칙), 빌드 이미지 안에서 `PolicyTest` 95·`KvTest` 55 통과, 시험 키 APK, 에뮬레이터 시험 **24건 통과·실패 0**(VM 결과 1.2 와 같은 24항목), 캡처 artifact `emulator-shots`(보존 7일). 시스템 이미지 받기 단계만 네트워크 |
+| `windows-bundle` (3.9 · 3.14) | `windows-2025` | `f085b86` | **실패** — 둘 다 앱을 켜기 전, 시험 도구 첫 `print` 에서 `UnicodeEncodeError: 'charmap' codec can't encode characters in position 3-4`(러너 콘솔 cp1252). `actions/setup-python` 은 3.9.13·3.14.10 을 깔았고 `py -3 가 고르는 판` 단계는 통과. 고침: T-015 |
+
+공개 로그에 이 저장소의 경로·토큰·기록은 없었다(러너의 표준 경로 `/home/runner/work/…`·`D:\a\…` 만 — 2026-11-10 로그 내려받아 검색).
 
 ## 2. 테스트 구성
 
 | 종류 | 파일 | 수 |
 |---|---|---|
-| JS 단위(A) | `zip.test.js`·`exchange.test.js`·`merge.test.js`, `store_common.test.js`(되살리기 1건 더함) | 11 · 9 · 10 · +1 |
+| JS 단위(A) | `zip.test.js`·`exchange.test.js`·`merge.test.js`, `store_common.test.js`(되살리기 1건 더함) | 11 · 11 · 11 · +1 (경계 3건은 7.1절 사후 보강) |
 | JS 단위(B) | `store_android.test.js`(가짜 다리), `store_adapters.test.js`(브라우저·서버 되살리기 2건 더함) | 5 · +2 |
 | Python 단위(A·B) | `test_storage.py`(`KEEP` 표 JS 와 같음 1 · 되살리기 3) | +4 |
 | Python 통합(B) | `test_server.py`(되살리기 API 1)·`test_pack_app.py`(폐쇄망 zip·모바일판 사본 1)·`test_verify_tools_p4.py`(워크플로 검사 음성 시험·APK 점검·자바 CSP·다리 이름 10) | +12 |
@@ -89,7 +99,7 @@
 | 에뮬레이터(C) | `mobile/android/e2e/emulator_test.py` | 24 |
 | 묶음 실기(B) | `scripts/ci_windows_bundle.py` | 13 |
 
-JS 시험 179건(단위 177·통합 2 — 교환 파일 속성 시험 8 포함), Python 시험 275건, 자바 JVM 시험 150건, 에뮬레이터 24건, 묶음 실기 13건 — 모두 통과(2026-11-10).
+JS 시험 182건(단위 180·통합 2 — 교환 파일 속성 시험 8 · 7.1절 경계 3 포함), Python 시험 275건, 자바 JVM 시험 150건, 에뮬레이터 24건, 묶음 실기 13건 — 모두 통과(2026-11-10).
 
 ## 3. 커버리지
 
@@ -97,14 +107,14 @@ JS 시험 179건(단위 177·통합 2 — 교환 파일 속성 시험 8 포함),
 
 | 파일 | 등급 | 줄 | 분기 | 함수 |
 |---|---|---|---|---|
-| `web/core/zip.js` | A | 100.00 | 89.91 | 100.00 |
-| `web/core/exchange.js` | A | 100.00 | 82.76 | 93.55 |
-| `web/core/merge.js` | A | 100.00 | 84.91 | 100.00 |
+| `web/core/zip.js` | A | 100.00 | 90.09 | 100.00 |
+| `web/core/exchange.js` | A | 100.00 | 83.76 | 93.75 |
+| `web/core/merge.js` | A | 100.00 | 85.58 | 100.00 |
 | `web/store/common.js` | A | 100.00 | 92.13 | 100.00 |
 | `web/store/android.js` | B | 100.00 | 76.74 | 88.89 |
 | `web/store/browser.js` | B | 100.00 | 88.76 | 98.04 |
 | `web/store/server.js` | B | 100.00 | 80.70 | 100.00 |
-| 전체 | — | 100.00 | 87.38 | 99.02 |
+| 전체 | — | 100.00 | 87.46 | 99.03 |
 
 ### 3.2 Python — `python3 scripts/coverage_lite.py --enforce`
 
@@ -138,7 +148,7 @@ JS 시험 179건(단위 177·통합 2 — 교환 파일 속성 시험 8 포함),
 | 440~443 | `merge.test.js`(계획), `store_common.test.js`·`store_adapters.test.js`·`store_android.test.js`, `test_storage.py`(되살리기 왕복·입력 거부·백업 실패 시 그대로·`KEEP` 표), `test_server.py`(diff·restore API·폐쇄망판 백업 글 404), 스모크(되돌리기·다시) |
 | 450~452 | `test_pack_app.py`(zip·tgz 를 풀면 검사한 파일과 같다), 전체 검증 18단계(두 판 × 두 꼴 두 번 같은 바이트, 폐쇄망판 외부 URL 0), `README_KO.txt` |
 | 460~462 | 스모크 폰 폭 셋, 에뮬레이터 캡처(과정 3개·상태 표시줄) |
-| 470~473 | `scripts/ci_windows_bundle.py`(Linux 13건), `check_workflows.py`(위반 0)·음성 시험 13가지 — Actions 실행은 8절 |
+| 470~473 | `scripts/ci_windows_bundle.py`(Linux 13건), `check_workflows.py`(위반 0)·음성 시험 13가지 — Actions 실행은 1.6절 |
 | 480·481 | Phase 4 병합 때(CLAUDE.md 7절 '릴리스') |
 | NFR-401 | 1.3 명령 단위(빌드한 APK 를 `aapt2 dump` 로) |
 | NFR-402 | `exchange_property.test.js` — 기기 셋(폰·PC·폐쇄망)이 교환 파일(zip)로 무작위 25회씩 오가는 8개 시드: 어느 기기도 줄이 줄지 않음·마지막 왕복 뒤 폰 = PC·폐쇄망 = PC ∪ 폐쇄망 줄·폐쇄망 줄은 밖에 없음·같은 입력 = 같은 zip 바이트. 스모크 합치기 N/N, 전체 검증 15단계(기록 왕복 — 기록 파일) |
@@ -185,15 +195,48 @@ README 0절의 Phase 4 명령(폐쇄망 zip·APK 빌드·에뮬레이터 시험)
 | 8 | 화면 스모크 `#/restore/bad-name` 오류 상자 2건 | 일부러 보이는 오류 상태를 시험이 오류로 셈 | 그 주소는 오류 상자가 있어야 통과 |
 | 9 | 웹 JS 정적 검사 — 보이지 않는 글자 U+FEFF 3곳 | 파일 쓰기 도구가 `﻿` 를 글자로(T-013) | 이스케이프로 |
 | 10 | `test_verify_tools_p2.py` core 파일 수 15 | core 에 셋을 더함 | 18 로, 렌더러 스모크는 폴더에서 센다 |
-| 11 | `exchange.js` 는 시험을 먼저 썼지만 구현 전 실패를 따로 돌려 보지 않았다. `Kv.java` 는 구현을 먼저 썼다(등급 A — 3절 TDD 규칙과 다르다) | 순서를 지키지 않음 | 다음부터 시험 → 실패 확인 → 구현. `zip`·`merge`·되살리기·안드로이드 어댑터는 실패를 보고 구현했다 |
+| 11 | 등급 A 의 Red → Green → Refactor 를 다 지키지 않았다 — `exchange.js` 는 구현 전 실패를 돌려 보지 않았고, `Policy.java`·`Kv.java` 는 구현을 먼저 썼고, `zip.js` 는 구현 초안을 쓴 뒤에 실패를 봤고, 리팩터 단계는 어느 모듈에도 없었다(CLAUDE.md 3절과 다르다. 처음 적은 이 칸은 `Kv.java` 만 적어 틀렸다) | 순서를 지키지 않음 | 7.1절 — 변이 시험으로 시험이 빨개지는지 사후 확인, 살아남은 결함 3개를 잡는 시험을 보태고, 리팩터를 했다. 다음부터 시험 → 실패 확인 → 구현 → 리팩터 순서와 그 증거(실패 출력)를 남긴다 |
+
+### 7.1 TDD 사후 점검 (2026-11-10)
+
+사용자 질문("red·green·blue 다 했어?")에 이 세션 대화 기록의 도구 호출 시각으로 대조했다.
+
+| 모듈(등급 A) | 시험 먼저 | Red(구현 전 실패) | Green | Refactor |
+|---|---|---|---|---|
+| `web/core/zip.js` | 예(시험 15:16 → 구현 초안 15:17) | 부분 — 초안을 쓴 뒤, 모듈을 놓기 전에 '모듈 없음' 실패 1건 | 11 통과 | 사후에 했다(아래 표) |
+| `web/core/exchange.js` | 예(시험 15:18:02 → 구현 15:18:54) | 아니오 — 돌리지 않음 | 9 통과 | 사후에 했다(아래 표) |
+| `web/core/merge.js` | 예 | 예 — '모듈 없음' 실패 | 10 통과 | 사후에 했다(아래 표) |
+| `web/store/common.js` 되살리기 | 예 | 예 — 단언 실패 3건 | 21 통과 | 하지 않음(짧아 고칠 곳을 찾지 못함) |
+| `mylearner/storage.py` 되살리기(순수 부분) | 예 | 예 — `FAILED (failures=2, errors=3)` | 통과 | 하지 않음(같음) |
+| `Policy.java` | 아니오(구현 15:34:26 → 시험 15:35:15) | 아니오 | 95 통과(첫 실행 실패 2건은 7절 1) | 하지 않음(MWL 에서 옮김) |
+| `Kv.java` | 아니오(구현 15:34:44 → 시험 15:35:32) | 아니오 | 55 통과 | 하지 않음(MWL 에서 옮김) |
+
+**변이 시험**(시험이 빨개질 수 있나 — 임시 사본에 결함을 하나씩 넣고 그 모듈의 시험을 돌림): 25개 가운데 21개를 잡았다.
+
+| 살아남은 결함 | 뜻 | 조치 |
+|---|---|---|
+| `exchange.js` 머리에 `log.jsonl` 이 빠졌는지 보는 검사를 지움 | 그 경우의 시험이 없었다(파일만 빠진 경우는 있었다) | 시험 보탬 → 이 결함에서 실패, 원래 코드에서 통과 |
+| `exchange.js` 줄 길이 상한 `> LINE_MAX` → `> LINE_MAX + 1` | 경계(65,536·65,537 바이트) 시험이 없었다 | 한글 섞인 줄로 경계 시험 보탬 → 같음 |
+| `merge.js` 미래 판정 `>` → `>=` | 경계(오늘 + `FUTURE_DAYS`) 시험이 없었다 | 경계 시험 보탬 → 같음 |
+| `Kv.java` 파일 `fsync` 지움 | 단위 시험으로는 볼 수 없다(전원 차단 시험이 필요) | 그대로 — 에뮬레이터의 강제 종료 시험(1.2)은 프로세스 종료만 본다 |
+
+**Refactor**(시험은 그대로 통과, 겉 동작은 같게):
+
+| 모듈 | 바꾼 것 |
+|---|---|
+| `merge.js` | 미리보기가 같은 합치기(`L.merge`)를 두 번 하던 것을 한 번으로, 줄 키 계산을 함수 하나로 |
+| `exchange.js` | 오류 만들기 7곳을 `fail(code, msg)` 로, 과정 ID 를 자릿수 자르기 대신 경로 규칙의 무리로 |
+| `zip.js` | 지역 머리·중앙 디렉터리가 같이 쓰는 칸을 함수 하나로, 바이트 잇기를 함수 하나로 |
+
+리팩터 전(HEAD 사본)과 후를 난수 입력 300 회로 맞대 zip 바이트·교환 파일 바이트·열기 결과(정상·잘림·비트 뒤집기)·미리보기·되살리기 계획 2,100건이 같았다. 전체 JS 182건 통과, `check_core_js.py` 위반 0.
 
 ## 8. 실행하지 못한 것
 
 | 무엇 | 이유 | 언제 |
 |---|---|---|
-| GitHub Actions 2종(Windows 묶음 실기 · Linux 에뮬레이터) | 워크플로가 돌려면 push 가 필요하다 — Phase 끝 병합 요청 밖의 push 는 따로 묻는다(CLAUDE.md 11절). 러너의 KVM 은 GitHub changelog(2024-04-02)로만 확인 ⚠️ | 사용자가 push 를 허락하면 — 결과를 이 절에 |
+| Windows 묶음 실기(Actions) 통과 | 첫 실행이 시험 도구 결함으로 앱을 켜기 전에 멈췄다(1.6절, T-015). 에뮬레이터 워크플로는 통과 — 러너 KVM 확인됨 | 고친 커밋을 push 한 다음 실행 — 결과를 1.6절에 |
 | 실제 갤럭시 Z 폴드5·S22 울트라(설치 허들·제조사 WebView·카톡 공유·실제 화면 폭) | 기기 없음 — 에뮬레이터(AOSP Android 16)로 대신 | 체크리스트 2 |
-| 실제 Windows `MyLearner.cmd`·한국어 콘솔 | VM 은 Linux — Actions 로 | 8절 Actions, 체크리스트 3·4 |
+| 실제 Windows `MyLearner.cmd`·한국어 콘솔 | VM 은 Linux — Actions 로(러너는 영문 Windows 라 한국어 콘솔은 `PYTHONIOENCODING=cp949` 흉내) | 1.6절 Actions, 체크리스트 3·4 |
 | 폰 MWL 진도 들여오기(파일 고르기 창) | 에뮬레이터에 MWL 진도 파일을 넣는 단계를 두지 않았다 — 화면은 PC 와 같은 코드(스모크 통과) | 체크리스트 2-8 |
 | 날짜 넘김(밤새) | 시간을 돌리는 시험을 두지 않았다(P3 에서 넘어옴) | 체크리스트 2-7 |
 

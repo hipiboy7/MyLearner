@@ -43,6 +43,15 @@
   function w16(a, n) { a.push(n & 255, (n >>> 8) & 255); }
   function w32(a, n) { a.push(n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255); }
   function r16(b, p) { return b[p] | (b[p + 1] << 8); }
+  function concat(parts) {
+    var out = new Uint8Array(parts.reduce(function (a, b) { return a + b.length; }, 0)), p = 0;
+    parts.forEach(function (a) { out.set(a, p); p += a.length; });
+    return out;
+  }
+  // 지역 머리와 중앙 디렉터리 항목이 같이 쓰는 칸: 플래그 · 방식(저장) · 시각 · 날짜 · CRC · 압축 크기 · 크기 · 이름 길이 · 덧붙임 길이
+  function sharedFields(a, crc, size, nameLen) {
+    w16(a, FLAG_UTF8); w16(a, 0); w16(a, 0); w16(a, DOS_DATE); w32(a, crc); w32(a, size); w32(a, size); w16(a, nameLen); w16(a, 0);
+  }
   function r32(b, p) { return (b[p] | (b[p + 1] << 8) | (b[p + 2] << 16) | (b[p + 3] << 24)) >>> 0; }
 
   // items: [{name, bytes}] → Uint8Array. 저장 방식(무압축)·플래그 UTF-8·시각 고정
@@ -54,22 +63,17 @@
       seen[it.name] = true;
       var name = utf8(it.name), data = it.bytes, crc = crc32(data);
       var h = [];
-      w32(h, SIG_LOCAL); w16(h, 20); w16(h, FLAG_UTF8); w16(h, 0); w16(h, 0); w16(h, DOS_DATE);
-      w32(h, crc); w32(h, data.length); w32(h, data.length); w16(h, name.length); w16(h, 0);
+      w32(h, SIG_LOCAL); w16(h, 20); sharedFields(h, crc, data.length, name.length);
       var c = [];
-      w32(c, SIG_CENTRAL); w16(c, 20); w16(c, 20); w16(c, FLAG_UTF8); w16(c, 0); w16(c, 0); w16(c, DOS_DATE);
-      w32(c, crc); w32(c, data.length); w32(c, data.length); w16(c, name.length); w16(c, 0); w16(c, 0); w16(c, 0); w16(c, 0);
-      w32(c, 0); w32(c, off);
+      w32(c, SIG_CENTRAL); w16(c, 20); w16(c, 20); sharedFields(c, crc, data.length, name.length);
+      w16(c, 0); w16(c, 0); w16(c, 0); w32(c, 0); w32(c, off);   // 주석 길이 · 디스크 · 내부 속성 · 외부 속성 · 지역 머리 위치
       chunks.push(Uint8Array.from(h), name, data);
       central.push(Uint8Array.from(c), name);
       off += h.length + name.length + data.length;
     });
     var cdLen = central.reduce(function (a, b) { return a + b.length; }, 0), e = [];
     w32(e, SIG_END); w16(e, 0); w16(e, 0); w16(e, items.length); w16(e, items.length); w32(e, cdLen); w32(e, off); w16(e, 0);
-    var all = chunks.concat(central, [Uint8Array.from(e)]);
-    var out = new Uint8Array(all.reduce(function (a, b) { return a + b.length; }, 0)), p = 0;
-    all.forEach(function (a) { out.set(a, p); p += a.length; });
-    return out;
+    return concat(chunks.concat(central, [Uint8Array.from(e)]));
   }
 
   function nameOf(bytes, flag) {

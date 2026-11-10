@@ -103,6 +103,14 @@ def req(method: str, path: str, token: str, body=None, cookie: str = None):
     return out
 
 
+def utf8_out() -> None:
+    """이 시험 도구 자신의 출력만 UTF-8 로 — 러너 콘솔은 cp1252 라 한글 print 가 UnicodeEncodeError 로 죽었다
+    (2026-11-10 Actions 첫 실행, 트러블슈팅 T-015). 앱(자식 프로세스)의 출력은 PYTHONIOENCODING=cp949 로 따로 본다."""
+    for s in (sys.stdout, sys.stderr):
+        with contextlib.suppress(AttributeError, ValueError, io.UnsupportedOperation):
+            s.reconfigure(encoding="utf-8", errors="replace")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--python", default="3")
@@ -167,4 +175,5 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
+    utf8_out()
     sys.exit(main())

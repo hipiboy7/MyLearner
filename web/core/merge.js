@@ -15,7 +15,8 @@
 
   function table() { return Object.create(null); }
   // 저장소와 같은 '같은 줄' — 사건은 정규형, 해석하지 못한 줄은 앞뒤 빈칸만 뗀 글(log.parseLine)
-  function keyOf(line) { var p = L.parseLine(line); return p.kind === 'event' ? p.event.line : p.text; }
+  function keyOfParsed(p) { return p.kind === 'event' ? p.event.line : p.text; }
+  function keyOf(line) { return keyOfParsed(L.parseLine(line)); }
   function keySet(lines) { var s = table(); lines.forEach(function (l) { if (String(l).trim()) s[keyOf(l)] = true; }); return s; }
   function cmp(a, b) { return a < b ? -1 : a > b ? 1 : 0; }
 
@@ -28,7 +29,7 @@
     var out = { unknown: 0, bad: 0, newer: 0, future: 0 };
     (o.file || []).forEach(function (line) {
       if (!String(line).trim()) return;
-      var p = L.parseLine(line), key = p.kind === 'event' ? p.event.line : p.text;
+      var p = L.parseLine(line), key = keyOfParsed(p);
       if (seen[key] === true) return;
       seen[key] = true;
       total += 1;
@@ -48,8 +49,8 @@
       if (e.type === 'review') row.reviews += 1; else if (e.type === 'lesson') row.lessons += 1; else row.other += 1;
     });
     // 시계: 합친 뒤(있던 줄 + 파일) 그 기기의 사건을 순번 순으로 — 학습일이 줄면 'back', 오늘 + 1 보다 뒤가 있으면 'ahead'(P2 설계서 3.4절 8·13)
-    var all = L.merge([o.have || [], freshLines]).events, byDev = table();
-    all.forEach(function (e) { if (devs[e.dev]) (byDev[e.dev] = byDev[e.dev] || []).push(e); });
+    var merged = L.merge([o.have || [], freshLines]), byDev = table();
+    merged.events.forEach(function (e) { if (devs[e.dev]) (byDev[e.dev] = byDev[e.dev] || []).push(e); });
     Object.keys(byDev).forEach(function (dev) {
       var list = byDev[dev].sort(function (a, b) { return a.seq - b.seq; }), max = '', back = false, ahead = false;
       list.forEach(function (e) { if (max && e.day < max) back = true; if (e.day > max) max = e.day; if (e.day > limit) ahead = true; });
@@ -59,7 +60,7 @@
     return { total: total, fresh: freshLines.length, freshLines: freshLines,
       devices: Object.keys(devs).map(function (k) { return devs[k]; }).sort(function (a, b) { return cmp(a.first_day, b.first_day) || cmp(a.dev, b.dev); }),
       courses: Object.keys(courses).sort().map(function (k) { return courses[k]; }),
-      conflicts_new: L.merge([o.have || [], freshLines]).counts.conflicts - before,
+      conflicts_new: merged.counts.conflicts - before,
       unknown: out.unknown, bad: out.bad, newer: out.newer, future: out.future };
   }
 

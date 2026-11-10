@@ -1,5 +1,5 @@
 // 등급 A — web/core/zip.js (FR-420·423, docs/P4_설계서_Mobile.md 3.4절). 교환 파일의 zip 쓰기·읽기, CRC-32, 거부 사례.
-// 시험 먼저 2026-11-10 — 모듈이 없을 때 실패를 보고 구현했다(테스트결과서 7절).
+// 시험 먼저 2026-11-10 — 구현 초안을 쓴 뒤, 모듈을 놓기 전에 실패('모듈 없음')를 봤다(테스트결과서 7.1절).
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');

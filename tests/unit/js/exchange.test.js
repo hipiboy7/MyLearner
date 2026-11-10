@@ -1,5 +1,5 @@
 // 등급 A — web/core/exchange.js (FR-420~424, docs/P4_설계서_Mobile.md 3.4절). 교환 파일 만들기·열기, 파일 종류, 해시 대조, 한도.
-// 시험 먼저 2026-11-10 — 모듈이 없을 때 실패를 보고 구현했다(테스트결과서 7절).
+// 시험을 구현보다 먼저 썼으나 구현 전 실패는 돌려 보지 않았다 — 2026-11-10 변이 시험으로 사후 확인(테스트결과서 7.1절).
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -136,6 +136,30 @@ test('거부 — 64 KiB 넘는 줄(저장소가 받지 않는다)·기록 파일
   assert.equal(r.error, 'E-LINE-LONG');
   const bad = await X.open(enc('{"format":"mylearner-course"}\n'), {});
   assert.equal(bad.error, 'E-FILE-KIND');
+});
+
+// 2026-11-10 사후 보강 — 변이 시험(테스트결과서 7.1절)에서 살아남은 두 결함(머리에 log.jsonl 이 빠짐 검사 지우기·줄 길이 경계 + 1)을 잡는다
+test('거부 — 머리의 파일 목록에 log.jsonl 이 없다(과정만 적힘)', async () => {
+  const s = sample().bytes;
+  const noLog = await rezip(s, (it) => it.map((x) => {
+    if (x.name !== 'manifest.json') return x;
+    const m = JSON.parse(Z.text(x.bytes));
+    m.files = m.files.filter((f) => f.path !== 'log.jsonl');
+    return { name: x.name, bytes: enc(JSON.stringify(m)) };
+  }));
+  const r = await X.open(noLog, { inflateRaw: inflate });
+  assert.equal(r.error, 'E-EX-MISSING');
+  assert.match(r.msg, /log\.jsonl/);
+});
+
+test('줄 길이 경계 — UTF-8 64 KiB(65,536 바이트)까지 받고 1 바이트 넘으면 거부(글자 수가 아니라 바이트)', async () => {
+  const line = (n) => '{"x":"' + '가'.repeat(21842) + 'a'.repeat(n) + '"}';   // 8 + 3×21,842 + n 바이트
+  assert.equal(Buffer.byteLength(line(2)), X.LINE_MAX);
+  const ok = await X.open(enc(L.HEADER + '\n' + line(2) + '\n'), {});
+  assert.equal(ok.ok, true, ok.error);
+  assert.equal(ok.lines.length, 1);
+  const over = await X.open(enc(L.HEADER + '\n' + line(3) + '\n'), {});
+  assert.equal(over.error, 'E-LINE-LONG');
 });
 
 test('사용자 과정 — JSON 이 아니면 그 과정만 오류로 남기고 나머지는 연다', async () => {

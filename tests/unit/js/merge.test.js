@@ -62,6 +62,18 @@ test('미리보기 — 새 충돌·모르는 종류·해석하지 못한 줄·�
   assert.equal(p.devices[0].clock, 'ahead');
 });
 
+// 2026-11-10 사후 보강 — 변이 시험(테스트결과서 7.1절)에서 살아남은 결함(미래 판정 > 를 >= 로)을 잡는다
+test('미리보기 — 미래 경계: 오늘 + FUTURE_DAYS 날은 미래가 아니고 그다음 날부터 미래', () => {
+  const C = core('constants'), D = core('dates');
+  const edge = D.addDays(TODAY, C.FUTURE_DAYS);
+  const p0 = M.preview({ have: [], file: [ev(PHONE, 1, edge)], today: TODAY, isOwn: isOwn, known: R.KNOWN });
+  assert.equal(p0.future, 0);
+  assert.equal(p0.devices[0].clock, 'ok');
+  const p1 = M.preview({ have: [], file: [ev(PHONE, 1, edge), ev(PHONE, 2, D.addDays(edge, 1))], today: TODAY, isOwn: isOwn, known: R.KNOWN });
+  assert.equal(p1.future, 1);
+  assert.equal(p1.devices[0].clock, 'ahead');
+});
+
 test('미리보기 — 순번을 따라 학습일이 뒤로 간 기기는 시계 확인, 이 기기 표시', () => {
   const file = [ev(PHONE, 1, '2026-11-05'), ev(PHONE, 2, '2026-11-03'), ev(ME + '-a1b2c3', 1, '2026-11-01')];
   const p = M.preview({ have: [], file: file, today: TODAY, isOwn: isOwn, known: R.KNOWN });

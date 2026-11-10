@@ -13,10 +13,11 @@
   var L = dep('log'), Z = dep('zip'), H = dep('hash'), D = dep('dates');
   var FORMAT = 'mylearner-exchange', VERSION = 1, MIN_READER = 1, READER = 1;
   var LINE_MAX = 65536;   // 저장소(store/common.js MAX_LINE_BYTES · storage.py)가 받는 한 줄의 바이트 — 넘는 줄은 들여와도 저장되지 않는다
-  var COURSE_PATH = /^courses\/[a-z0-9][a-z0-9-]{0,39}\.json$/;
+  var COURSE_PATH = /^courses\/([a-z0-9][a-z0-9-]{0,39})\.json$/;   // 무리 1 = 과정 ID
 
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
   function bad(code, msg) { return { ok: false, error: code, msg: msg || '', kind: null, manifest: null, lines: [], courses: [] }; }
+  function fail(code, msg) { return Object.assign(new Error(msg), { code: code }); }   // open 의 마지막 catch 가 bad 로 바꾼다
 
   // ---------------------------------------------------------------- 만들기
   // {lines, raw, courses, app: {version, edition, label}, dev, now: Date, dayStartHour} → {name, bytes, manifest}. now 를 주입받는다(같은 입력 = 같은 바이트)
@@ -99,25 +100,26 @@
     if (!entry('manifest.json')) return Promise.resolve(bad('E-EX-MISSING', 'manifest.json 이 없다 — MyLearner 교환 파일이 아니다'));
     var manifest;
     return read('manifest.json').then(function (t) {
-      try { manifest = JSON.parse(t); } catch (e) { throw Object.assign(new Error('manifest.json 이 JSON 이 아니다'), { code: 'E-EX-FORMAT' }); }
+      try { manifest = JSON.parse(t); } catch (e) { throw fail('E-EX-FORMAT', 'manifest.json 이 JSON 이 아니다'); }
       if (!manifest || manifest.format !== FORMAT || !Number.isInteger(manifest.version) || !Number.isInteger(manifest.min_reader) || !Array.isArray(manifest.files)) {
-        throw Object.assign(new Error('교환 파일 머리가 아니다'), { code: 'E-EX-FORMAT' });
+        throw fail('E-EX-FORMAT', '교환 파일 머리가 아니다');
       }
-      if (manifest.min_reader > READER) throw Object.assign(new Error('이 앱보다 새 판이 만든 교환 파일 — 앱을 올린다'), { code: 'E-EX-READER' });
+      if (manifest.min_reader > READER) throw fail('E-EX-READER', '이 앱보다 새 판이 만든 교환 파일 — 앱을 올린다');
       var paths = Object.create(null);
       manifest.files.forEach(function (f) {
         if (!f || typeof f.path !== 'string' || (f.path !== 'log.jsonl' && !COURSE_PATH.test(f.path)) || paths[f.path] === true ||
-            !Number.isInteger(f.bytes) || typeof f.sha256 !== 'string') throw Object.assign(new Error('머리의 파일 목록이 틀렸다'), { code: 'E-EX-FORMAT' });
+            !Number.isInteger(f.bytes) || typeof f.sha256 !== 'string') throw fail('E-EX-FORMAT', '머리의 파일 목록이 틀렸다');
         paths[f.path] = true;
       });
-      if (paths['log.jsonl'] !== true) throw Object.assign(new Error('log.jsonl'), { code: 'E-EX-MISSING' });
+      if (paths['log.jsonl'] !== true) throw fail('E-EX-MISSING', 'log.jsonl');
       // 적힌 파일마다: 있나 → 크기·SHA-256
       return manifest.files.reduce(function (p, f) {
         return p.then(function (acc) {
-          if (!entry(f.path)) throw Object.assign(new Error(f.path), { code: 'E-EX-MISSING' });
-          return Z.extract(bytes, entry(f.path), opt.inflateRaw).then(function (b) {
+          var e = entry(f.path);
+          if (!e) throw fail('E-EX-MISSING', f.path);
+          return Z.extract(bytes, e, opt.inflateRaw).then(function (b) {
             var text = Z.text(b);
-            if (b.length !== f.bytes || H.sha256Hex(text) !== f.sha256) throw Object.assign(new Error(f.path + ' 의 내용이 머리와 다르다(옮기다 깨졌다)'), { code: 'E-EX-HASH' });
+            if (b.length !== f.bytes || H.sha256Hex(text) !== f.sha256) throw fail('E-EX-HASH', f.path + ' 의 내용이 머리와 다르다(옮기다 깨졌다)');
             acc[f.path] = text;
             return acc;
           });
@@ -131,8 +133,7 @@
         if (f.path === 'log.jsonl') return;
         var obj = null, err = null;
         try { obj = JSON.parse(texts[f.path]); } catch (e) { err = 'JSON 이 아니다'; }
-        var id = f.path.slice(8, -5);
-        r.courses.push({ id: id, obj: obj, error: err });
+        r.courses.push({ id: COURSE_PATH.exec(f.path)[1], obj: obj, error: err });
       });
       return r;
     }).catch(function (e) { return bad(e.code || 'E-ZIP', e.code ? String(e.message).replace(/^E-[A-Z0-9-]+ /, '') : e.message); });
