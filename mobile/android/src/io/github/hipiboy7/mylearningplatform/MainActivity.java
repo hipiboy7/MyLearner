@@ -337,6 +337,7 @@ public final class MainActivity extends Activity {
         String name = pendingName != null ? pendingName : "교환 파일";
         pendingName = null;
         if (uri == null) {
+            src.delete();   // 취소해도 기록 전체가 담긴 임시 파일을 남기지 않는다(독립 점검 2026-11-10)
             done("save", false, "취소");
             return;
         }

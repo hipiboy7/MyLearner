@@ -63,7 +63,9 @@
   }
 
   function utf8Len(s) { return Z.utf8(s).length; }
-  function longLines(lines) { return lines.filter(function (l) { return l.length * 3 > LINE_MAX && utf8Len(l) > LINE_MAX; }).length; }
+  // 저장소가 받지 않는 길이인가(UTF-8 바이트) — 글자 수로 먼저 걸러 대부분의 줄은 인코딩하지 않는다. core/merge.js 도 정규형에 쓴다
+  function tooLong(l) { return l.length * 3 > LINE_MAX && utf8Len(l) > LINE_MAX; }
+  function longLines(lines) { return lines.filter(tooLong).length; }
   function fromLog(text, kind) {
     var f = L.readFile(text);
     if (!f.ok) return bad(f.error, f.error === 'E-LOG-READER' ? '이 앱보다 새 판이 만든 기록 파일' : '기록 파일 머리가 아니다');
@@ -139,5 +141,5 @@
     }).catch(function (e) { return bad(e.code || 'E-ZIP', e.code ? String(e.message).replace(/^E-[A-Z0-9-]+ /, '') : e.message); });
   }
 
-  return { FORMAT: FORMAT, VERSION: VERSION, READER: READER, LINE_MAX: LINE_MAX, build: build, sniff: sniff, open: open };
+  return { FORMAT: FORMAT, VERSION: VERSION, READER: READER, LINE_MAX: LINE_MAX, tooLong: tooLong, build: build, sniff: sniff, open: open };
 });

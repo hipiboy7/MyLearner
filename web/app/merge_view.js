@@ -23,6 +23,7 @@
     'E-LOG-FORMAT': '기록 파일 머리가 아닙니다.',
     'E-LOG-READER': '이 앱보다 새 판이 만든 기록 파일입니다.',
     'E-LINE-LONG': '64KB 넘는 기록 줄이 있어 저장할 수 없습니다.',
+    'E-SEQ-END': '순번이 끝에 가까운 기록 줄이 있어 합치지 않습니다 - 들이면 그 기기가 더 기록할 수 없게 됩니다(손으로 고친 파일일 수 있습니다).',
     'E-UTF8': '글자(UTF-8)가 깨진 파일입니다.'
   };
 
@@ -116,6 +117,9 @@
       m.res = res;
       if (!res.ok) { m.error = res; return; }
       m.pv = M.preview({ have: A.allLines(), file: res.lines, today: A.today, isOwn: A.isOwn, known: R.KNOWN });
+      // 들이면 저장·기록이 막히는 줄 — 파일째 거부한다(독립 점검 2026-11-10 F-1·F-2)
+      if (m.pv.long) { m.error = { error: 'E-LINE-LONG', msg: '정규형이 64 KiB 를 넘는 줄 ' + m.pv.long + '개' }; return; }
+      if (m.pv.seq_end) { m.error = { error: 'E-SEQ-END', msg: '순번이 ' + M.SEQ_LIMIT + ' 을 넘는 줄 ' + m.pv.seq_end + '개' }; return; }
       m.courses = res.courses.map(courseStatus);
     }).catch(function (e) { m.error = { error: 'E-FILE-KIND', msg: e.message }; });
   }
@@ -214,6 +218,12 @@
       return p.then(function () { return A.store.append(part, A.today); }).then(function (r) { added += r.added; });
     }, Promise.resolve()).then(function () { return added; });
   }
+  // 합치기·되살리기 동안 '저장 중' 으로 둔다 — 날짜 넘김(checkDay)이 여러 번에 나눠 보내는 중간에 다시 읽지 않게(독립 점검 2026-11-10)
+  function hold() {
+    var held = true;
+    A.saving += 1;
+    return function () { if (held) { held = false; A.saving -= 1; } };
+  }
   ACT.mergeRun = function (el) {
     var m = A.mrg;
     if (!m || !m.pv || m.done || m.busy) return;
@@ -221,7 +231,7 @@
     var news = m.courses.filter(function (c) { return c.status === 'new'; });
     if (!root.confirm('지금 기록을 백업한 뒤 새 기록 ' + m.pv.fresh + '줄' + (news.length ? '과 새 과정 ' + news.length + '개' : '') + '를 더합니다. 계속할까요?')) return;
     el.disabled = true; m.busy = true;
-    var backup = null, added = 0, conflicts0 = A.counts.conflicts || 0;
+    var backup = null, added = 0, conflicts0 = A.counts.conflicts || 0, letGo = hold();
     A.flush().then(function (ok) {
       if (!ok) throw new Error('저장 못 한 기록이 있어 먼저 저장해야 합니다');
       return A.store.backup('import-merge');
@@ -236,11 +246,13 @@
     }).then(function () {
       return A.reloadLog();
     }).then(function () {
+      letGo();
       m.busy = false;
       m.done = { added: added, courses: news.length, backup: backup, present: M.present(A.allLines(), m.res.lines), conflicts: Math.max(0, (A.counts.conflicts || 0) - conflicts0) };
       ui.banner('합쳤습니다 - 새 줄 ' + added, 'good');
       route();
     }).catch(function (e) {
+      letGo();
       m.busy = false; el.disabled = false;
       // 덧붙이기까지 갔다면 일부가 저장됐을 수 있다 — 다시 읽어 화면을 맞추고, 같은 파일로 다시 하면 빠진 것만 더한다고 알린다(FR-435)
       A.loadCourses().then(A.reloadLog, A.reloadLog).catch(function () {}).then(function () {
@@ -295,19 +307,22 @@
     if (!r || !r.plan || r.done || r.busy) return;
     if (!root.confirm('지금 기록을 백업한 뒤 다른 기기 기록 ' + r.plan.remove.length + '줄을 빼고 백업에만 있는 ' + r.plan.add + '줄을 되돌립니다. 계속할까요?')) return;
     el.disabled = true; r.busy = true;
+    var letGo = hold();
     A.flush().then(function (ok) {
       if (!ok) throw new Error('저장 못 한 기록이 있어 먼저 저장해야 합니다');
       return A.store.restore(r.name, r.plan.remove);
     }).then(function (res) {
       r.done = res;
-      return A.reloadFresh();
+      return A.reloadLog();
     }).then(function () {
+      letGo();
       r.busy = false;
       ui.banner('되살렸습니다 - 뺀 줄 ' + r.done.removed + ' · 되돌아온 줄 ' + r.done.added, 'good');
       route();
     }).catch(function (e) {
+      letGo();
       r.busy = false; el.disabled = false;
-      A.reloadFresh().catch(function () {}).then(function () { ui.banner('되살리지 못했습니다: ' + e.message, 'bad'); route(); });
+      A.reloadLog().catch(function () {}).then(function () { ui.banner('되살리지 못했습니다: ' + e.message, 'bad'); route(); });
     });
   };
 

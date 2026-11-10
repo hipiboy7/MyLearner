@@ -74,6 +74,29 @@ test('미리보기 — 미래 경계: 오늘 + FUTURE_DAYS 날은 미래가 아�
   assert.equal(p1.devices[0].clock, 'ahead');
 });
 
+// 독립 점검 2026-11-10 F-1·F-2 — 시험 먼저(구현 전 실패 확인): 들이면 저장·기록이 막히는 줄을 센다. 화면(app/merge_view.js)이 파일째 거부한다
+test('미리보기 — 순번이 끝(MAX_SEQ)에 가까운 줄을 센다: SEQ_LIMIT 까지는 괜찮고 넘으면 seq_end', () => {
+  const C = core('constants');
+  assert.equal(M.SEQ_LIMIT, C.MAX_SEQ - 4294967296);
+  const p0 = M.preview({ have: [], file: [ev(PHONE, M.SEQ_LIMIT, '2026-11-02')], today: TODAY, isOwn: isOwn, known: R.KNOWN });
+  assert.equal(p0.seq_end, 0);
+  const p1 = M.preview({ have: [], file: [ev(ME, C.MAX_SEQ, '2026-11-02'), ev(PHONE, M.SEQ_LIMIT + 1, '2026-11-02')], today: TODAY, isOwn: isOwn, known: R.KNOWN });
+  assert.equal(p1.seq_end, 2);
+  const p2 = M.preview({ have: [ev(ME, C.MAX_SEQ, '2026-11-02')], file: [ev(ME, C.MAX_SEQ, '2026-11-02')], today: TODAY, isOwn: isOwn, known: R.KNOWN });
+  assert.equal(p2.seq_end, 0, '이미 있는 줄은 세지 않는다(새 줄만)');
+});
+
+test('미리보기 — 정규형이 64 KiB 를 넘는 새 줄을 센다(1e9 → 1000000000 처럼 정규형이 길어진다)', () => {
+  const X = core('exchange');
+  const base = ev(PHONE, 9, '2026-11-02');
+  const raw = base.slice(0, -1) + ',"zz":[' + new Array(12000).fill('1e9').join(',') + ']}';
+  assert.ok(Buffer.byteLength(raw) <= X.LINE_MAX);
+  const p = M.preview({ have: [], file: [raw, ev(PHONE, 10, '2026-11-02')], today: TODAY, isOwn: isOwn, known: R.KNOWN });
+  assert.ok(Buffer.byteLength(p.freshLines[0]) > X.LINE_MAX);
+  assert.equal(p.long, 1);
+  assert.equal(M.preview({ have: [], file: [ev(PHONE, 10, '2026-11-02')], today: TODAY, isOwn: isOwn, known: R.KNOWN }).long, 0);
+});
+
 test('미리보기 — 순번을 따라 학습일이 뒤로 간 기기는 시계 확인, 이 기기 표시', () => {
   const file = [ev(PHONE, 1, '2026-11-05'), ev(PHONE, 2, '2026-11-03'), ev(ME + '-a1b2c3', 1, '2026-11-01')];
   const p = M.preview({ have: [], file: file, today: TODAY, isOwn: isOwn, known: R.KNOWN });

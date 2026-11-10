@@ -16,27 +16,27 @@
 - **릴리스 서명 키를 만들었다**(보류 결정 3): 원본 이 계정 `~/.config/mylearner/`(600), 사본 이 계정 `/data` 개인 폴더 `keys/mylearner/`(700·600, `cmp` 같음). 서명 인증서 SHA-256 `7589128ce39f53ef32dfffa269405d8c07d625248273a23b50ce6d25e0a9b18c`. **VM 밖 한 부는 사용자가 보관해야 한다**(체크리스트 1절)
 - 에뮬레이터 시스템 이미지 `system-images;android-36;default;x86_64` 를 받았다(받기 전 `df -h /data` 31G — Docker 볼륨 `mylearner-android-<uid>` 2.05 GB). 에뮬레이터 시험 24건 통과(강제 종료 뒤 남음·시스템 저장 창으로 교환 파일·회전·뒤로 가기)
 - 시험·화면에서 찾아 고친 것: 에뮬레이터 세그폴트(T-012), BOM 날 글자(T-013), 강제 종료 뒤 읽기 전용 띠(T-014), 폴드 폭에서 표 잘림·메뉴 숨음(시험 도구가 놓치던 것까지 — 테스트결과서 7절)
-- 이어서(사용자 답 "1 push 해, 2 독립 점검 해, 3 테스트도 red·green·blue 다 했어?"): `impl-phase4` push → Actions 첫 실행 — 에뮬레이터 통과(KVM·24건), Windows 묶음 실기는 시험 도구가 러너 콘솔(cp1252)에서 죽음(T-015 고침, 21단계를 cp1252 로). TDD 사후 점검 — Red·Refactor 를 다 지키지 않았음을 대화 기록으로 확인해 7절 11 을 바로잡고, 변이 시험(25개 중 21 잡음)·경계 시험 3건·리팩터(`merge`·`exchange`·`zip`, 전후 2,100건 같음)를 했다(테스트결과서 7.1절). 독립 점검 sonnet 1개 시작
+- 이어서(사용자 답 "1 push 해, 2 독립 점검 해, 3 테스트도 red·green·blue 다 했어?"): `impl-phase4` push → Actions 첫 실행 — 에뮬레이터 통과(KVM·24건), Windows 묶음 실기는 시험 도구가 러너 콘솔(cp1252)에서 죽음(T-015 고침, 21단계를 cp1252 로). TDD 사후 점검 — Red·Refactor 를 다 지키지 않았음을 대화 기록으로 확인해 7절 11 을 바로잡고, 변이 시험(25개 중 21 잡음)·경계 시험 3건·리팩터(`merge`·`exchange`·`zip`, 전후 2,100건 같음)를 했다(테스트결과서 7.1절). 독립 점검 sonnet 1개(12분 40초·토큰 약 24만) — 확인된 지적 4(중 2·하 2) + 읽어서 확인한 2. F-1(순번 끝 줄 → 기록 멈춤)·F-2(정규형이 64 KiB 넘는 줄)·F-4(되살린 뒤 넘겨받은 탭이 뺀 줄을 메모리에 되살려 N/N 거짓)·저장 취소 임시 파일·합치기 중 날짜 넘김을 고쳤다(시험 먼저 — 실패 확인 → 고침 → 리팩터 `exchange.tooLong`). F-3(64 MiB 파일 8초 멈춤)은 받아들임. FR-437 더함(테스트결과서 5.2절). T-015 고친 커밋에서 Actions 2종 모두 통과(Windows 3.9·3.14 각 13건)
 - 사람용 문서: [`docs/P4_테스트결과서_Mobile.md`](../docs/P4_테스트결과서_Mobile.md), [`docs/P4_체크리스트_Mobile.md`](../docs/P4_체크리스트_Mobile.md), README, 트러블슈팅 T-012~014, Architecture, CLAUDE.md 0절 디스크, 스크린샷 `docs/screenshots/P4/`
 
 ## 2. 검증 상태
 
-- `bash scripts/verify.sh`(23단계) — 이 커밋 직전에 돌려 통과한 뒤 커밋한다. JS 182건·Python 275건·자바 150건·에뮬레이터 24건(따로)·묶음 실기 13건
-- 아직 없는 것: Windows 묶음 실기 Actions 통과(T-015 고친 커밋의 실행), 독립 점검 결과 — 아래 3절 1·2
+- `bash scripts/verify.sh`(23단계) — 이 커밋 직전에 돌려 통과한 뒤 커밋한다. JS 187건·Python 275건·자바 150건·에뮬레이터 24건(따로)·묶음 실기 13건
+- Actions: `e73737b` 에서 `windows-bundle`(3.9·3.14)·`android-emulator` 통과(테스트결과서 1.6절). 독립 점검 반영 커밋도 push 해 Actions 가 다시 돈다 — 결과는 `gh run list --repo hipiboy7/MyLearner --limit 4`
 
 ## 3. 다음 단계
 
-1. Actions: 에뮬레이터는 통과(테스트결과서 1.6절). T-015 고친 커밋의 `windows-bundle`(3.9·3.14) 결과를 1.6절에 — `gh run list --repo hipiboy7/MyLearner --limit 4`. 실패하면 고친다(러너 Python 판은 바꾸지 말고 사용자에게 묻는다)
-2. 독립 점검(CLAUDE.md 12절, 2026-11-10 사용자 허락 — sonnet 1개) — 합치기·되살리기(유실)·교환 파일 zip 입력·안드로이드 다리. 지적은 원문으로 확인한 뒤 반영, 테스트결과서 5.2절
-3. 사용자: 서명 키 두 파일의 VM 밖 사본(체크리스트 1절)
-4. Phase 4 병합 요청이 오면: 전체 검증 → history → 병합 → push → 릴리스 `v0.4.0`(APK·폐쇄망 zip·`.tgz`·인터넷판·점검 묶음 — CLAUDE.md 7절. APK 는 태그 커밋에서 `bash scripts/build_android.sh` 로 다시)
-5. 체크리스트 피드백 — 폴드5·S22 의 실제 화면 폭(설정 → 이 앱)이 오면 `scripts/app_smoke.py` `PHONE_WIDTHS` 와 설계서 3.7절을 고친다. GitHub 앱에서 Release 가 받아지면 CLAUDE.md 7절 ⚠️ 를 지운다
-6. 보류 결정 8(폐쇄망 점검)이 오면 보류 결정 7 확정(변함없음)
-7. private 로 되돌릴 때(보류 결정 10): 워크플로를 끄거나 줄이고 CLAUDE.md 0·7·11절을 되돌린다
+1. 독립 점검 반영 커밋의 Actions 2종 결과 확인(`gh run list --repo hipiboy7/MyLearner --limit 4`) — 실패하면 고치고 테스트결과서 1.6절에
+2. 사용자: 서명 키 두 파일의 VM 밖 사본(체크리스트 1절)
+3. Phase 4 병합 요청이 오면: 전체 검증 → history → 병합 → push → 릴리스 `v0.4.0`(APK·폐쇄망 zip·`.tgz`·인터넷판·점검 묶음 — CLAUDE.md 7절. APK 는 태그 커밋에서 `bash scripts/build_android.sh` 로 다시)
+4. 체크리스트 피드백 — 폴드5·S22 의 실제 화면 폭(설정 → 이 앱)이 오면 `scripts/app_smoke.py` `PHONE_WIDTHS` 와 설계서 3.7절을 고친다. GitHub 앱에서 Release 가 받아지면 CLAUDE.md 7절 ⚠️ 를 지운다
+5. 보류 결정 8(폐쇄망 점검)이 오면 보류 결정 7 확정(변함없음)
+6. private 로 되돌릴 때(보류 결정 10): 워크플로를 끄거나 줄이고 CLAUDE.md 0·7·11절을 되돌린다
 
 ## 4. 판단·관찰
 
 - 되살리기는 '줄을 빼는' 유일한 동작이다 — 결과를 `(지금 − 뺄 줄) ∪ 백업` 으로 정해, 뺀 줄은 늘 직전 백업에 있고 그 백업을 되살리면 돌아오게 했다. 서버는 줄을 해석하지 않고 백업 글을 밖에 내지 않는다(폐쇄망판도 되살리기를 쓴다)
 - 모바일 에뮬레이션(CDP `mobile: true`)은 넓은 내용에 맞춰 레이아웃 폭을 늘려, `innerWidth` 와 비교한 넘침 검사가 늘 통과했다 — 스크린샷을 직접 보고 찾았다. 검사는 정한 폭과 비교한다
 - 다른 프로젝트의 시제품을 옮길 때 실행 옵션의 주석(MWL 의 `swangle_indirect` 이유)까지 읽었으면 세그폴트 진단 30분을 아꼈다
+- TDD: 등급 A 를 '시험 먼저'로만 지키고 실패 확인·리팩터를 빠뜨렸다 — 사용자가 물어 대화 기록으로 대조했다. 변이 시험이 경계 시험 셋의 빈칸을 찾았다(테스트결과서 7.1절). 독립 점검 반영은 시험 → 실패 확인 → 고침 → 리팩터 순서로 했다
 - 비용: `python3 scripts/usage_cost.py --record` — 기준점 뒤 누적 $196.88(이 세션 추정 $29.94, 16:24)

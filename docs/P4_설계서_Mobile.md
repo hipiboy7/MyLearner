@@ -2,6 +2,7 @@
 
 - 작성 2026-11-10 / 대응 요구사항: [`P4_요구사항정의서_Mobile.md`](P4_요구사항정의서_Mobile.md) FR-401~481, NFR-401~408 / 상위 문서: [`설계서_Architecture.md`](설계서_Architecture.md), [`P3_설계서_PC.md`](P3_설계서_PC.md), [`P2_설계서_Core.md`](P2_설계서_Core.md)
 - 코드: `web/core/`(zip·exchange·merge), `web/store/`(android·더하기), `web/app/`(merge_view·더하기), `mylearner/`(storage·server 더하기), `config/editions/mobile.json`, `mobile/android/`, `scripts/`(build_android.sh·pack_app.py·ci_windows_bundle.py·check_workflows.py), `.github/workflows/` / 시험: `tests/unit/js/`, `tests/integration/py/`, `tests/ui/`, `mobile/android/test/`, `mobile/android/e2e/`
+- 정정 이력: 2026-11-10 — 독립 점검 반영(테스트결과서 5.2절): 3.5절 미리보기 `long`·`seq_end` 와 파일째 거부(FR-437), 다시 읽기(`reloadLog`)는 저장소 + 저장 못 한 줄(메모리와 합치지 않는다 — F-4), 합치기·되살리기 동안 '저장 중'
 - 정정 이력: 2026-11-10 — 구현하며 바꾼 것: 3.2절 가상 주소 경로(`/web/` 없이 — MWL 과 같게), 3.3절 `singleWriter`(T-014), 3.9절 에뮬레이터 옵션(T-012)·시스템 이미지, 3.10절 폰 폭 검사 방법·교환 파일 속성 시험 파일, 3.7절 메뉴 줄바꿈 폭(40~60rem)
 - 옮겨 온 코드의 출처: MWL `e55b9c0` 의 `mobile/android/`(`MainActivity`·`Policy`·`ShareProvider`·`Mirror` 의 원자적 쓰기·셸 스크립트·`mobile/android/tools/pack.py`·`mobile/android/tools/docker-build.sh`·`mobile/android/e2e/emulator_test.py` — MWL 쪽 같은 이름), `scripts/build_android.sh`
 
@@ -161,7 +162,7 @@ mylearner-exchange-<학습일>-<기기 앞 6자리>.zip   (항목 순서 고정 
 | 함수 | 입력 → 출력 |
 |---|---|
 | `keyOf(line)` | 사건이면 정규형, 아니면 앞뒤 빈칸 뗀 글(`log.parseLine`) — 저장소와 같은 '같은 줄' |
-| `preview({have, file, today, isOwn, known})` | `have`·`file` = 줄 배열. 결과 `{total, fresh, freshLines, devices: [{dev, own, total, fresh, first_day, last_day, clock}], courses: [{course, reviews, lessons, other}], conflicts_new, unknown, bad, newer, future}` |
+| `preview({have, file, today, isOwn, known})` | `have`·`file` = 줄 배열. 결과 `{total, fresh, freshLines, devices: [{dev, own, total, fresh, first_day, last_day, clock}], courses: [{course, reviews, lessons, other}], conflicts_new, unknown, bad, newer, future, long, seq_end}` · `SEQ_LIMIT` = `MAX_SEQ` − 2^32 |
 | `present(haveAfter, file)` | `{present, total}` — 파일의 줄(키)마다 기록에 있는지(N/N) |
 | `restorePlan({onlyCurrent, onlyBackup, isOwn})` | `{remove: [줄], keep_own, add: onlyBackup, by_dev: [{dev, remove}]}` — `onlyCurrent` 가운데 이 기기 사건이 아닌 것(해석하지 못한 줄 포함)이 `remove` |
 | `reminderDays({exportedAt, firstOwnT, now, days})` | 띠를 띄울 날 수 또는 `null` |
@@ -169,7 +170,7 @@ mylearner-exchange-<학습일>-<기기 앞 6자리>.zip   (항목 순서 고정 
 - `fresh` = 파일의 키 가운데 `have` 에 없는 것(파일 안 중복은 하나). 덧붙일 때는 키 꼴(정규형)로 보낸다 — 앱이 쓰는 줄과 같은 글이라 저장소 합집합이 그대로 통한다
 - `devices[].clock`: 합친 뒤 그 기기의 학습일 가운데 `today + 1` 보다 뒤가 있으면 `'ahead'`, 순번을 따라 학습일이 줄어드는 곳이 있으면 `'back'`, 아니면 `'ok'`(P2 설계서 3.4절 8·13)
 - `courses[]`: 새 사건을 `data.course`(없으면 `-`)로 묶고 `review`·`lesson`·그 밖을 센다
-- `conflicts_new` = `merge([have, fresh]).counts.conflicts − merge([have]).counts.conflicts`. `unknown` = 새 사건 가운데 `known`(다시 계산이 아는 종류 — `replay.KNOWN`)에 없는 종류. `bad`·`newer` = 새 해석하지 못한 줄. `future` = 새 사건 가운데 학습일 > `today + 1`
+- `conflicts_new` = `merge([have, fresh]).counts.conflicts − merge([have]).counts.conflicts`. `unknown` = 새 사건 가운데 `known`(다시 계산이 아는 종류 — `replay.KNOWN`)에 없는 종류. `bad`·`newer` = 새 해석하지 못한 줄. `future` = 새 사건 가운데 학습일 > `today + 1`. `long` = 정규형이 64 KiB(`exchange.LINE_MAX`, `exchange.tooLong`)를 넘는 새 줄, `seq_end` = 순번 > `SEQ_LIMIT` 인 새 사건 — 둘 중 하나라도 있으면 화면이 `E-LINE-LONG`·`E-SEQ-END` 로 파일째 거부(FR-437)
 - `isOwn(dev)`: 이 기기 = `dev == 기기 바탕` 또는 `dev` 가 `기기 바탕 + '-'` 로 시작(서버 모드는 브라우저마다 꼬리가 붙는다 — P3 설계서 3.2절)
 - 사용자 과정 판정(화면): `course.validate` 실패 → `invalid`, 묶음 과정과 ID 같음 → `bundled`(싣지 않음), 지금 없음 → `new`(저장), 정규형이 같음 → `same`, 다름 → `diff`(지금 것을 둔다 — Phase 5)
 
@@ -178,7 +179,7 @@ mylearner-exchange-<학습일>-<기기 앞 6자리>.zip   (항목 순서 고정 
 ```
 #/import/merge  [파일 고르기] → 읽는 중 → (오류: 코드와 풀이 · 다른 파일 고르기)
                 → 미리보기 표 넷(파일 · 기기 · 과정 · 사용자 과정) + 주의(충돌·모르는 종류·미래·시계 확인)
-                → [백업하고 합치기] confirm → flush → backup('import-merge') → append(freshLines) → saveCourse(new) → loadCourses → reloadLog
+                → [백업하고 합치기] confirm → ('저장 중' 잡기) flush → backup('import-merge') → append(freshLines) → saveCourse(new) → loadCourses → reloadLog(저장소 + 저장 못 한 줄)
                 → 결과: 더한 줄 · 파일의 줄 N/N 이 기록에 있음 · 새 충돌 · [이 들여오기 되돌리기](#/restore/<그 백업>)
 ```
 
@@ -254,7 +255,7 @@ store.restore(name, remove) → Promise<{removed, added, backup}>        지금 
 3. `python3 mobile/android/e2e/emulator_test.py dist/android/MyLearningPlatform-v<판>-test.apk <캡처 폴더> --fetch` — 시스템 이미지(`system-images;android-36;default;x86_64` — AOSP, 시스템 저장 창 있음)를 컨테이너 안 `sdkmanager` 로 Docker 볼륨 `mylearner-android-<uid>` 에 받는 단계만 네트워크를 쓰고, 에뮬레이터는 `--network none` + `--device /dev/kvm` + `-gpu swangle_indirect -feature -ModemSimulator -change-locale ko-KR`(트러블슈팅 T-012). 누르기는 디버그 빌드의 WebView DevTools(CDP — 표준 라이브러리 웹소켓)로, 시스템 저장 창만 uiautomator 로
 4. 캡처·보고서를 artifact(7일). 기록 내용·토큰은 싣지 않는다
 
-KVM 근거: GitHub changelog 2024-04-02 "2-vCPU GitHub-hosted Linux runners will be able to make use of hardware acceleration for Android testing" — 리눅스는 러너 사용자가 KVM 을 쓰게 해야 한다(위 udev 규칙). 실제로 되는지는 첫 실행으로 확인한다 ⚠️
+KVM 근거: GitHub changelog 2024-04-02 "2-vCPU GitHub-hosted Linux runners will be able to make use of hardware acceleration for Android testing" — 리눅스는 러너 사용자가 KVM 을 쓰게 해야 한다(위 udev 규칙). 첫 실행(2026-11-10, `ubuntu-24.04` 이미지 20261101.360)에서 `/dev/kvm` 이 열리고 에뮬레이터 시험 24건이 통과했다(테스트결과서 1.6절)
 
 **`scripts/check_workflows.py`**(전체 검증): `.github/workflows/*.yml` 마다 — 맨 위 `permissions:` 아래 `contents: read` 만, `pull_request_target`·`workflow_run` 없음, 모든 `uses:` 가 `@<40자리 16진>`, `secrets.` 참조 0, `run:` 안 `${{ github.event.` 0(주입), `actions/checkout` 에 `persist-credentials: false`, `upload-artifact` 에 `retention-days`. YAML 해석 없이 줄 단위로 본다(PyYAML 없이 3.9~3.14)
 

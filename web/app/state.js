@@ -143,14 +143,9 @@
   }
 
   // ---------------------------------------------------------------- 사건 만들기·저장(FR-326)
+  // 저장소 내용으로 바꿔 읽는다(+ 저장 못 한 줄). 메모리와 합치지 않는다 — 다른 탭이 되살려 저장소에서 빠진 줄이 쓰기를 넘겨받은 탭에서
+  // 되살아나 합치기가 그 줄을 '있음'으로 보고 N/N 을 거짓으로 맞췄다(독립 점검 2026-11-10 F-4. P3 에는 저장소가 늘기만 해 합집합이어도 같았다)
   function reloadLog() {
-    return App.store.loadLog().then(function (lines) {
-      setEvents(lines.concat(App.events.map(function (e) { return e.line; }), App.raw));
-      recompute(false);
-    });
-  }
-  // 저장소 내용으로 바꿔 읽는다(+ 저장 못 한 줄) — 되살리기처럼 저장소에서 줄이 빠진 뒤에 쓴다. reloadLog 는 합집합이라 뺀 줄이 메모리에 남는다(P4)
-  function reloadFresh() {
     return App.store.loadLog().then(function (lines) {
       setEvents(lines.concat(App.pending));
       recompute(false);
@@ -174,6 +169,10 @@
     }
     var stamp = L.stamp(new Date(), settings().day_start_hour);
     var seq = nextSeq();
+    if (seq > C.MAX_SEQ) {   // 들여온 줄이 이 기기 순번을 끝까지 썼다 — 만들면 던진다(독립 점검 F-1. 이제 합치기가 그런 파일을 거부한다)
+      ui.banner('이 기기의 기록 순번이 끝에 닿아 기록하지 않았습니다(E-SEQ-END)', 'bad');
+      return Promise.resolve(false);
+    }
     var ev = L.make(Object.assign({ dev: App.dev, seq: seq, t: stamp.t, day: stamp.day, type: type }, fields));
     if (SC.utf8Length(ev.line) > SC.MAX_LINE_BYTES) {   // 서버가 받지 않는 길이 — 만들면 그 뒤 저장이 모두 막힌다(S3)
       ui.banner('기록 하나가 64KB 를 넘어 저장하지 않았습니다 - 적은 글을 줄여 주세요', 'bad');
@@ -290,7 +289,7 @@
     root.addEventListener('storage', function (ev) {
       if (!App.ready) return;
       if (ev.key === SC.KEYS.writer) leaseTick();
-      else if (SC.isLogKey(ev.key) && App.writer === 'other') reloadFresh().then(function () { if (ns.route) ns.route(); });   // 쓰는 탭이 되살리면 줄이 빠진다 — 합집합이 아니라 바꿔 읽는다
+      else if (SC.isLogKey(ev.key) && App.writer === 'other') reloadLog().then(function () { if (ns.route) ns.route(); });   // 쓰는 탭이 되살리면 줄이 빠진다 — 합집합이 아니라 바꿔 읽는다
     });
   }
 
@@ -333,6 +332,6 @@
   App.isOwn = isOwn; App.allLines = allLines; App.storeLabel = storeLabel;
   App.boot = boot; App.course = course; App.regular = regular; App.settings = settings; App.plan = plan; App.recompute = recompute;
   App.render = render; App.lessonHref = lessonHref; App.allowLink = allowLink; App.record = record; App.flush = flush; App.takeover = takeover;
-  App.reloadLog = reloadLog; App.reloadFresh = reloadFresh; App.loadCourses = loadCourses; App.checkDay = checkDay; App.setEvents = setEvents; App.own = own; App.canWrite = canWrite;
+  App.reloadLog = reloadLog; App.loadCourses = loadCourses; App.checkDay = checkDay; App.setEvents = setEvents; App.own = own; App.canWrite = canWrite;
   ns.app = App;
 })(typeof self !== 'undefined' ? self : this);

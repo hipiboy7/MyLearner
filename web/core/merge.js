@@ -1,5 +1,5 @@
 /* MyLearner web/core/merge.js — 다른 기기 기록 합치기의 계산(등급 A): 미리보기(새 줄·기기·과정·새 충돌·모르는 종류·해석하지 못한 줄·미래·시계),
- * 들여온 뒤 N/N 확인, 백업 시점으로 되살리기 계획(백업 ∪ 이 기기 줄), 내보내기 알림 날 수. 저장은 하지 않는다 — 화면이 저장 어댑터로.
+ * 들이면 저장·기록이 막히는 줄 세기(순번 끝·정규형 64 KiB 넘음 — 독립 점검 2026-11-10 F-1·F-2), 들여온 뒤 N/N 확인, 백업 시점으로 되살리기 계획(백업 ∪ 이 기기 줄), 내보내기 알림 날 수. 저장은 하지 않는다 — 화면이 저장 어댑터로.
  * 입력: 줄 배열·오늘·이 기기 판정 / 출력: MyLearner.merge / 트리거: app/merge_view.js
  * 문서: docs/P4_요구사항정의서_Mobile.md FR-413·430~435·440~442, docs/P4_설계서_Mobile.md 3.5·3.6절, docs/P2_설계서_Core.md 3.3·3.4절 */
 (function (root, factory) {
@@ -10,8 +10,10 @@
   if (node) module.exports = mod; else ns.merge = mod;
 })(typeof self !== 'undefined' ? self : this, function (dep) {
   'use strict';
-  var L = dep('log'), D = dep('dates'), C = dep('constants');
+  var L = dep('log'), D = dep('dates'), C = dep('constants'), X = dep('exchange');
   var MS_DAY = 86400000;
+  // 이보다 큰 순번을 들이면 그 기기가 2^32 건도 더 기록하지 못한다(다음 순번이 MAX_SEQ 를 넘는다) — 손으로 만든 파일만 가능. 화면이 파일째 거부한다(F-1)
+  var SEQ_LIMIT = C.MAX_SEQ - 4294967296;
 
   function table() { return Object.create(null); }
   // 저장소와 같은 '같은 줄' — 사건은 정규형, 해석하지 못한 줄은 앞뒤 빈칸만 뗀 글(log.parseLine)
@@ -26,7 +28,7 @@
     var known = table();
     (o.known || []).forEach(function (k) { known[k] = true; });
     var total = 0, freshLines = [], devs = table(), courses = table();
-    var out = { unknown: 0, bad: 0, newer: 0, future: 0 };
+    var out = { unknown: 0, bad: 0, newer: 0, future: 0, long: 0, seq_end: 0 };
     (o.file || []).forEach(function (line) {
       if (!String(line).trim()) return;
       var p = L.parseLine(line), key = keyOfParsed(p);
@@ -35,6 +37,7 @@
       total += 1;
       var fresh = have[key] !== true;
       if (fresh) freshLines.push(key);
+      if (fresh && X.tooLong(key)) out.long += 1;   // 저장소가 받지 않는 길이(F-2 — 정규형이 길어질 수 있다)
       if (p.kind !== 'event') { if (fresh) out[p.reason === 'newer' ? 'newer' : 'bad'] += 1; return; }
       var e = p.event, d = devs[e.dev] || (devs[e.dev] = { dev: e.dev, own: !!o.isOwn(e.dev), total: 0, fresh: 0, first_day: e.day, last_day: e.day, clock: 'ok' });
       d.total += 1;
@@ -44,6 +47,7 @@
       d.fresh += 1;
       if (known[e.type] !== true) out.unknown += 1;
       if (e.day > limit) out.future += 1;
+      if (e.seq > SEQ_LIMIT) out.seq_end += 1;
       var c = typeof e.data.course === 'string' ? e.data.course : '-';
       var row = courses[c] || (courses[c] = { course: c, reviews: 0, lessons: 0, other: 0 });
       if (e.type === 'review') row.reviews += 1; else if (e.type === 'lesson') row.lessons += 1; else row.other += 1;
@@ -61,7 +65,7 @@
       devices: Object.keys(devs).map(function (k) { return devs[k]; }).sort(function (a, b) { return cmp(a.first_day, b.first_day) || cmp(a.dev, b.dev); }),
       courses: Object.keys(courses).sort().map(function (k) { return courses[k]; }),
       conflicts_new: merged.counts.conflicts - before,
-      unknown: out.unknown, bad: out.bad, newer: out.newer, future: out.future };
+      unknown: out.unknown, bad: out.bad, newer: out.newer, future: out.future, long: out.long, seq_end: out.seq_end };
   }
 
   // 들여온 뒤: 파일의 줄(키)마다 기록에 있는가 → {present, total}
@@ -95,5 +99,5 @@
     return n > o.days ? n : null;
   }
 
-  return { keyOf: keyOf, preview: preview, present: present, restorePlan: restorePlan, reminderDays: reminderDays };
+  return { SEQ_LIMIT: SEQ_LIMIT, keyOf: keyOf, preview: preview, present: present, restorePlan: restorePlan, reminderDays: reminderDays };
 });
