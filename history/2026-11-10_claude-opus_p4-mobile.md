@@ -45,3 +45,18 @@
 
 - 순서: 전체 검증 → 이 history 커밋(`impl-phase4`) → `main` 에 `merge --no-ff` → push(`main`·`impl-phase4` — 브랜치는 지우지 않는다) → 병합 커밋에서 README 명령으로 과정 3개·묶음·APK(릴리스 키) → `v0.4.0` Release → 받아 검사합 확인
 - 결과(태그·파일·SHA-256)는 릴리스 뒤 이 절 아래에 덧붙인다(문서만 바뀌는 두 번째 병합)
+- 병합: `main` `7a0c846`(`--no-ff`) → push(`main`·`impl-phase4`). 병합 커밋에서 README 명령으로 다시 만든 과정 파일 3개는 앞 빌드와 같은 바이트, 묶음 입력 차이(`git diff --stat 7a0c846 HEAD -- web mylearner config scripts tools mobile`) 0
+- **릴리스 `v0.4.0`** — https://github.com/hipiboy7/MyLearner/releases/tag/v0.4.0 , 태그 → `7a0c846`, 정식(pre-release 아님), `releases/latest` = `v0.4.0`
+
+| 파일 | 바이트 | SHA-256 |
+|---|---|---|
+| `MyLearningPlatform-v0.4.0.apk` | 2460756 | `d63e20ae601bfe4821ff4451e6a26e5eaf4cf1c543e7bd1bdc46c8f6f5f95d9d` |
+| `mylearner-closed-v0.4.0.zip` | 2433317 | `7763b8254f15ff0c051827a525ec4ac6cb74406612d9677b3384a7710b4800b4` |
+| `mylearner-closed-v0.4.0.tgz` | 2392768 | `cde422564528a8b1ff0cf18dc51767a43aab00c8fe925afcefe94bf31783db50` |
+| `mylearner-internet-v0.4.0.zip` | 2433531 | `38f4180c9fd6ec964f86dfa9a0fa5754d6ccab775e5a5e048cf6b01fd00e1e20` |
+| `mylearner-internet-v0.4.0.tgz` | 2392797 | `b41dff0f94eadb7bc7571586892423d325adeb4a526c41ca4e9a07f5d190768e` |
+| `mylearner-probe-v1.tgz` | 34694 | `9193c63e104e16734b5ec6009e26f4aab680f0b879065e45df178cd5aa670263`(`v0.3.0` 과 같음) |
+
+  - APK: 릴리스 키(서명 인증서 SHA-256 `7589128ce39f53ef32dfffa269405d8c07d625248273a23b50ce6d25e0a9b18c`), 서명 전 SHA-256 `056a539bc5c3059e04244a6b7ac760432272f6067f89d47491aba47ab4dd4cf8`, 권한 0·exported 1·디버그 표시 없음(빌드의 `pack.py check`)
+  - 확인: `gh release view` 일곱 파일 `uploaded` · `gh release download` 뒤 `sha256sum -c SHA256SUMS.txt` 여섯 다 `OK` · 로그인 없는 `curl -L` → `200`
+  - 사용자가 확인할 것: GitHub 앱에서 APK 가 받아지고 설치되는지(CLAUDE.md 7절 ⚠️ — P4 체크리스트 2-1)
