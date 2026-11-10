@@ -4,7 +4,7 @@
 - 계속 고치는 문서다. Phase 마다 정한 것을 해당 절에 더하고, 아직 정하지 않은 것은 "Phase N 에서 정한다"로 남긴다
 - 정정 이력: 2026-10-15 — 7절 시험(Python)에 3.14(`python:3.14.8-slim`)를 더했다(사용자 승인)
 - 정정 이력: 2026-10-15 — 6절 '비밀'에 AI 키를 보내는 조건을 더했다(P1 독립 점검 — Phase 6 의 AI 대리 호출도 따른다)
-- 정정 이력: 2026-11-10 — 8절 APK 행에 받는 길(GitHub Release → 폰의 GitHub 앱, CLAUDE.md 7절 'APK 릴리스')을 더했다(사용자 지시)
+- 정정 이력: 2026-11-10 — 8절에 받는 길(이 저장소 GitHub Release → 폰의 GitHub 앱, CLAUDE.md 7절 '릴리스')을 더했다(사용자 지시)
 - 정정 이력: 2026-11-09 — Phase 3 에서 정한 것: 2절 판 설정 경로, 3절 화면·저장 어댑터·서버·Learn 변환기 행, 7절 접근성 검사·안드로이드 빌드 이미지, 8절 앱 묶음, 11절 디렉토리, 12절 추적성, 13절 접근성 검사 방법
 - 정정 이력: 2026-10-15 — Phase 2 에서 정한 것: 3절(MWL 변환기는 Phase 2), 5절 형식 값, 6절 JS 파일 꼴·상수 위치 확정, 7·9절 JS 시험(Node 22.23.3·내장 커버리지), 11절 디렉토리, 12절 추적성
 
@@ -103,8 +103,10 @@
 | 묶음 | 내용 | 만드는 것 | Phase |
 |---|---|---|---|
 | 점검 묶음 `dist/mylearner-probe-v<판>.tgz` | `ai_probe.py`·`browser_probe.html`·`README_KO.txt` | `python3 scripts/pack_probe.py` | 1 |
-| 폐쇄망 `dist/mylearner-closed-v<판>.tgz` / 인터넷판 `dist/mylearner-internet-v<판>.tgz`·`.zip` | 앱 전체(웹·서버·과정 자료 — 같은 묶음, 판 설정만 다름) | `python3 scripts/pack_app.py --edition closed\|internet` | 3 |
-| APK | 새 패키지 이름·서명 키. GitHub Release 로 내고 폰의 GitHub 앱으로 받는다 — 절차는 CLAUDE.md 7절 'APK 릴리스', 받는 곳은 보류 결정 9 | Phase 4 | 4 |
+| 폐쇄망 `dist/mylearner-closed-v<판>.tgz` / 인터넷판 `dist/mylearner-internet-v<판>.tgz`·`.zip` | 앱 전체(웹·서버·과정 자료 — 같은 묶음, 판 설정만 다름) | `python3 scripts/pack_app.py --edition closed\|internet` | 3 — 폐쇄망 `.zip` 은 4(폐쇄망 반입은 zip, P4 인터뷰 3번) |
+| APK | 새 패키지 이름·서명 키 | Phase 4 | 4 |
+
+모든 묶음과 APK 는 이 저장소의 GitHub Release(`v<판>`)로 내고, 사용자는 폰의 GitHub 앱(내 계정)에서 받는다 — 절차는 CLAUDE.md 7절 '릴리스'(첫 릴리스 `v0.3.0`, 2026-11-10).
 
 모든 묶음은 같은 입력이면 같은 바이트이고, 폐쇄망 묶음에는 외부 URL 이 없다(CLAUDE.md 5·13절) — 검사는 전체 검증에 있다.
 

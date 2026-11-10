@@ -1,5 +1,6 @@
 # P3 체크리스트 — PC 에서 배우기 (써 보기)
 
+- 정정 이력: 2026-11-10 — 2·4절 묶음을 GitHub 릴리스 `v0.3.0` 에서 받는 길을 더했다(CLAUDE.md 7절 '릴리스'). 폐쇄망 zip 은 Phase 4(P4 인터뷰 3번)
 - 작성 2026-11-09 / 대응: [`P3_테스트결과서_PC.md`](P3_테스트결과서_PC.md), [`P3_설계서_PC.md`](P3_설계서_PC.md)
 - 순서대로 하고 칸마다 "하면 → 보여야 할 것"을 확인한다. 1 은 이 VM(MyLearner 저장소 `/data/projects/MyLearner`, 브랜치 `impl-phase3`), 2~3 은 내 PC(Windows · Chrome), 4 는 폐쇄망 PC 에서 한다
 - 1 의 명령은 이 VM 에서 적은 그대로 실행해 확인했다(2026-11-09). 2~4 의 Windows 쪽(`MyLearner.cmd`·`py -3`·실제 Chrome)은 **미실행**이다 — 이 VM 의 Linux·헤드리스 Chromium 153 으로 같은 흐름을 확인했다(테스트결과서 1.4·8절)
@@ -22,7 +23,7 @@
 
 ## 2. 내 PC — 서버 모드 (인터넷판)
 
-- [ ] 하면: VM 의 `dist/mylearner-internet-v0.3.0.zip` 을 내 PC 로 옮겨(쓰는 파일 전송 방법으로) 푼다
+- [ ] 하면: GitHub 앱(내 계정) → 저장소 → MyLearner → 릴리스 → `v0.3.0` → Assets 에서 `mylearner-internet-v0.3.0.zip` 을 받아(또는 VM 의 `dist/` 에서 옮겨) 내 PC 에서 푼다
   → 보여야 할 것: 폴더 `mylearner-internet-v0.3.0` 안에 `MyLearner.cmd`·`README_KO.txt`·`mylearner`·`web`·`config.json`
 - [ ] 하면: `MyLearner.cmd` 를 두 번 누른다
   → 보여야 할 것: 검은 창에 `MyLearner 0.3.0 인터넷판 - http://127.0.0.1:8770/?token=…` 과 `데이터 폴더: …\data`, Chrome 이 열리며(주소는 한 번 쓰는 `?once=…` — 열리면 사라진다) **오늘** 화면. 왼쪽 위 `인터넷판`, 왼쪽 아래 `서버 모드`
@@ -46,7 +47,7 @@
 
 ## 4. 폐쇄망 PC — 반입 · MWL 진도 들여오기 (폐쇄망판)
 
-- [ ] 하면: `dist/mylearner-closed-v0.3.0.tgz` 를 반입해 `tar -xzf mylearner-closed-v0.3.0.tgz`(안 되면 반디집·7-Zip) → `MyLearner.cmd`
+- [ ] 하면: 릴리스 `v0.3.0` 의 `mylearner-closed-v0.3.0.tgz`(또는 VM 의 `dist/`)를 반입해 `tar -xzf mylearner-closed-v0.3.0.tgz`(안 되면 반디집·7-Zip) → `MyLearner.cmd`
   → 보여야 할 것: 왼쪽 위 `폐쇄망판`. 포트는 8770(MWL 8765 와 함께 켤 수 있다)
 - [ ] 하면: 아무 강의에서 문서 주소가 있는 곳을 본다 → 보여야 할 것: 주소가 밑줄 링크가 아니라 글로 보인다. 설정 → '기록 파일 내려받기' 단추가 없다
 - [ ] 하면: MWL 에서 설정 → 진도 내보내기(JSON) → MyLearner 과정 → 'MWL 진도 들여오기' → 그 파일 고르기
