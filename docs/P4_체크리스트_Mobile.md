@@ -3,7 +3,7 @@
 - 작성 2026-11-10 / 대응: [`P4_테스트결과서_Mobile.md`](P4_테스트결과서_Mobile.md), [`P4_설계서_Mobile.md`](P4_설계서_Mobile.md), [`P4_요구사항정의서_Mobile.md`](P4_요구사항정의서_Mobile.md)
 - 순서대로 하고 칸마다 "하면 → 보여야 할 것"을 확인한다. 1 은 이 VM(MyLearner 저장소 `/data/projects/MyLearner`, 브랜치 `impl-phase4`), 2 는 폰(갤럭시 Z 폴드5 · S22 울트라), 3 은 내 PC(Windows · Chrome), 4 는 폐쇄망 PC 에서 한다. 폰 순서는 MWL `docs/checklist/android-app.md`(14칸)를 본떠 MyLearner 화면에 맞췄다
 - 1 의 명령은 이 VM 에서 적은 그대로 실행해 확인했다(2026-11-10). 2~4 는 **미실행**이다 — 이 VM 의 에뮬레이터(Android 16 · API 36)와 헤드리스 Chromium 으로 같은 흐름을 확인했다(테스트결과서 1·8절). 실제 갤럭시·Windows·Chrome 은 이 체크리스트가 첫 시험이다
-- Phase 4 를 `main` 에 병합하면 GitHub 릴리스 `v0.4.0` 에 APK·폐쇄망 zip·인터넷판 zip 이 올라간다(CLAUDE.md 7절 '릴리스'). 그 전에는 1 에서 만든 `dist/` 의 파일을 옮겨 쓴다
+- GitHub 릴리스 `v0.4.0`(2026-11-10, `main` `7a0c846`)에 APK·폐쇄망 zip·`.tgz`·인터넷판 zip·`.tgz`·점검 묶음이 있다(CLAUDE.md 7절 '릴리스'). 1 은 VM 에서 직접 만들 때만
 
 ## 1. 묶음·APK 만들기 (이 VM)
 
